@@ -1,0 +1,15 @@
+[package]
+name = "petname"
+version = "0.1.0"
+authors = ["Gavin Panella <gavinpanella@gmail.com>"]
+
+[lib]
+name = "petname"
+path = "src/lib.rs"
+
+[[bin]]
+name = "petname"
+path = "src/main.rs"
+
+[dependencies]
+rand = "^0.3.15"
