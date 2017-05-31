@@ -22,11 +22,13 @@ fn main() {
 
     println!("--");
 
-    let some_names: Vec<&str> = names.iter().take(5).collect();
-    println!("Random names: {:?}", some_names);
+    let some_names = names.iter().take(5).collect::<Vec<_>>().join(" ");
+    println!("Names: {}", some_names);
+
+    let some_names = names.iter_random().take(5).collect::<Vec<_>>().join(" ");
+    println!("Random names: {}", some_names);
 
     println!(
         "Random petname: {}-{}-{}", adverbs.random(),
         adjectives.random(), names.random());
-
 }

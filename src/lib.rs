@@ -1,5 +1,7 @@
 extern crate rand;
 
+use self::rand::Rng;
+
 
 pub enum WordKind {Adjective, Adverb, Name}
 pub enum ListKind {Large, Medium, Small}
@@ -40,11 +42,15 @@ impl<'a> WordList<'a> {
     }
 
     pub fn random(&self) -> &'a str {
-        self.words[rand::random::<usize>() % self.words.len()]
+        rand::thread_rng().choose(&self.words).unwrap()
     }
 
     pub fn iter(&self) -> WordListIter {
-        WordListIter{wordlist: self}
+        WordListIter{wordlist: self, index: 0}
+    }
+
+    pub fn iter_random(&self) -> WordListRandomIter {
+        WordListRandomIter{wordlist: self}
     }
 
     pub fn len(&self) -> usize {
@@ -59,9 +65,29 @@ impl<'a> WordList<'a> {
 
 pub struct WordListIter<'a> {
     wordlist: &'a WordList<'a>,
+    index: usize,
 }
 
 impl<'a> Iterator for WordListIter<'a> {
+    type Item = &'a str;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index < self.wordlist.len() {
+            let next = Some(self.wordlist.words[self.index]);
+            self.index += 1;
+            next
+        }
+        else {
+            None
+        }
+    }
+}
+
+pub struct WordListRandomIter<'a> {
+    wordlist: &'a WordList<'a>,
+}
+
+impl<'a> Iterator for WordListRandomIter<'a> {
     type Item = &'a str;
 
     fn next(&mut self) -> Option<Self::Item> {
