@@ -42,6 +42,8 @@ fn main() {
         petname::Name, petname::Large);
 
     let opt_words = matches.value_of("words").unwrap();
+    let opt_separator = matches.value_of("separator").unwrap();
+
     let count: u16 = opt_words.parse().unwrap_or_else(|error| {
         writeln!(
             std::io::stderr(), "--words={} could not be parsed: {}",
@@ -49,17 +51,15 @@ fn main() {
         process::exit(1);
     });
 
-    let mut words: Vec<&str> = Vec::new();
+    let mut words = Vec::with_capacity(count as usize);
     for num in (0..count).rev() {
-        let word = match num {
+        words.push(match num {
             0 => names.random(),
             1 => adjectives.random(),
             _ => adverbs.random(),
-        };
-        words.push(word);
+        });
     }
 
-    let separator = matches.value_of("separator").unwrap();
-    let petname = words.join(separator);
+    let petname = words.join(opt_separator);
     println!("{}", petname);
 }
