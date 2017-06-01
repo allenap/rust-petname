@@ -4,7 +4,6 @@ extern crate rand;
 
 use self::rand::Rng;
 
-
 pub enum WordKind {Adjective, Adverb, Name}
 pub enum ListKind {Large, Medium, Small}
 
@@ -108,6 +107,27 @@ impl<'a> Iterator for WordListRandomIter<'a> {
         Some(self.wordlist.random())
     }
 }
+
+
+pub fn petname(words: u16, separator: &str) -> String {
+    // Load these for now. Once `const fn` is enabled in stable it may
+    // be possible to switch to completely compile-time loading.
+    let adverbs = WordList::load(Adverb, Large);
+    let adjectives = WordList::load(Adjective, Large);
+    let names = WordList::load(Name, Large);
+    // Adverbs all the way, finishing with adjective then name.
+    let mut parts = Vec::with_capacity(words as usize);
+    for num in (0..words).rev() {
+        parts.push(match num {
+            0 => names.random(),
+            1 => adjectives.random(),
+            _ => adverbs.random(),
+        });
+    };
+    // Join the string parts.
+    parts.join(separator)
+}
+
 
 
 #[cfg(test)]

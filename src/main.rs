@@ -3,7 +3,7 @@ extern crate clap;
 
 mod lib;
 
-use lib as petname;
+use lib::petname;
 use clap::{Arg, App};
 use std::io::Write;
 use std::process;
@@ -34,32 +34,15 @@ fn main() {
              .takes_value(true))
         .get_matches();
 
-    let adjectives = petname::WordList::load(
-        petname::Adjective, petname::Large);
-    let adverbs = petname::WordList::load(
-        petname::Adverb, petname::Large);
-    let names = petname::WordList::load(
-        petname::Name, petname::Large);
-
     let opt_words = matches.value_of("words").unwrap();
     let opt_separator = matches.value_of("separator").unwrap();
 
-    let count: u16 = opt_words.parse().unwrap_or_else(|error| {
+    let opt_words: u16 = opt_words.parse().unwrap_or_else(|error| {
         writeln!(
             std::io::stderr(), "--words={} could not be parsed: {}",
             opt_words, error).ok();
         process::exit(1);
     });
 
-    let mut words = Vec::with_capacity(count as usize);
-    for num in (0..count).rev() {
-        words.push(match num {
-            0 => names.random(),
-            1 => adjectives.random(),
-            _ => adverbs.random(),
-        });
-    }
-
-    let petname = words.join(opt_separator);
-    println!("{}", petname);
+    println!("{}", petname(opt_words, opt_separator));
 }
