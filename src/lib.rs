@@ -46,11 +46,11 @@ impl<'a> WordList<'a> {
     }
 
     pub fn iter(&self) -> WordListIter {
-        WordListIter{wordlist: self, index: 0}
+        WordListIter::new(self)
     }
 
     pub fn iter_random(&self) -> WordListRandomIter {
-        WordListRandomIter{wordlist: self}
+        WordListRandomIter::new(self)
     }
 
     pub fn len(&self) -> usize {
@@ -66,6 +66,12 @@ impl<'a> WordList<'a> {
 pub struct WordListIter<'a> {
     wordlist: &'a WordList<'a>,
     index: usize,
+}
+
+impl<'a> WordListIter<'a> {
+    fn new(wordlist: &'a WordList) -> Self {
+        Self{wordlist: wordlist, index: 0}
+    }
 }
 
 impl<'a> Iterator for WordListIter<'a> {
@@ -85,6 +91,12 @@ impl<'a> Iterator for WordListIter<'a> {
 
 pub struct WordListRandomIter<'a> {
     wordlist: &'a WordList<'a>,
+}
+
+impl<'a> WordListRandomIter<'a> {
+    fn new(wordlist: &'a WordList) -> Self {
+        Self{wordlist: wordlist}
+    }
 }
 
 impl<'a> Iterator for WordListRandomIter<'a> {
