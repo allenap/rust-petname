@@ -24,7 +24,6 @@ pub fn generate<RNG>(
             _ => rng.choose(&petnames.adverbs).unwrap(),
         });
     };
-    // Join the string parts.
     parts.join(separator)
 }
 
@@ -66,8 +65,36 @@ impl<'a> Petnames<'a> {
 #[cfg(test)]
 mod tests {
 
+    use super::{generate, Petnames, rand};
+
     #[test]
-    fn test() {
+    fn default_petnames_has_adjectives() {
+        let petnames = Petnames::default();
+        assert_ne!(petnames.adjectives.len(), 0);
+    }
+
+    #[test]
+    fn default_petnames_has_adverbs() {
+        let petnames = Petnames::default();
+        assert_ne!(petnames.adverbs.len(), 0);
+    }
+
+    #[test]
+    fn default_petnames_has_names() {
+        let petnames = Petnames::default();
+        assert_ne!(petnames.names.len(), 0);
+    }
+
+    #[test]
+    fn generate_uses_adverb_adjective_name() {
+        let petnames = Petnames{
+            adjectives: vec!("adjective"),
+            adverbs: vec!("adverb"),
+            names: vec!("name"),
+        };
+        assert_eq!(
+            generate(&petnames, &mut rand::thread_rng(), 3, "-"),
+            "adverb-adjective-name");
     }
 
 }
