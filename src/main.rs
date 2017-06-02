@@ -34,9 +34,8 @@ fn main() {
              .takes_value(true))
         .get_matches();
 
-    let opt_words = matches.value_of("words").unwrap();
     let opt_separator = matches.value_of("separator").unwrap();
-
+    let opt_words = matches.value_of("words").unwrap();
     let opt_words: u16 = opt_words.parse().unwrap_or_else(|error| {
         writeln!(
             std::io::stderr(), "--words={} could not be parsed: {}",
