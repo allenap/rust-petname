@@ -1,12 +1,21 @@
 extern crate rand;
 
 
+/// Convenience function to generate a new petname from default word lists.
 pub fn petname(words: u8, separator: &str) -> String {
     Petnames::default().generate(
         &mut rand::thread_rng(), words, separator)
 }
 
 
+/// Word lists and the logic to combine them into _petnames_.
+///
+/// A _petname_ with `n` words will contain, in order:
+///
+///   * 1 adjective when `n >= 2`, otherwise 0 adjectives.
+///   * `n - 2` adverbs when `n >= 2`.
+///   * 1 name / noun.
+///
 pub struct Petnames<'a> {
     pub adjectives: Vec<&'a str>,
     pub adverbs: Vec<&'a str>,
@@ -15,6 +24,7 @@ pub struct Petnames<'a> {
 
 impl<'a> Petnames<'a> {
 
+    /// Constructs a new `Petnames` with default word lists.
     pub fn default() -> Petnames<'a> {
         let adjectives = concat!(
             include_str!("../words/large/adjectives.txt"), "\n",
@@ -38,6 +48,16 @@ impl<'a> Petnames<'a> {
         }
     }
 
+    /// Generate a new petname.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # extern crate rand;
+    /// # extern crate petname;
+    /// let mut rng = rand::thread_rng();
+    /// petname::Petnames::default().generate(&mut rng, 7, ":");
+    /// ```
     pub fn generate<RNG>(
         &self, rng: &mut RNG, words: u8, separator: &str) -> String
         where RNG: rand::Rng
