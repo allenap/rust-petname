@@ -2,6 +2,11 @@
 name = "petname"
 version = "0.1.0"
 authors = ["Gavin Panella <gavinpanella@gmail.com>"]
+description = "Generate human readable random names."
+homepage = "https://github.com/allenap/rust-petname"
+repository = "https://github.com/allenap/rust-petname.git"
+license-file = "LICENSE"
+readme = "README.md"
 
 [lib]
 name = "petname"
