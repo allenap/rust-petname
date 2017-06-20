@@ -9,7 +9,7 @@ and command-line tool in [Rust](https://www.rust-lang.org/).
 To install the command-line tool:
 
   * [Install cargo](https://crates.io/install),
-  * Install this crate: `cargo install rust-petname`.
+  * Install this crate: `cargo install petname`.
 
 Alternatively, to hack the source:
 
