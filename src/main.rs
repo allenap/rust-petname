@@ -28,15 +28,18 @@ fn main() {
         .arg(Arg::with_name("separator")
              .short("s")
              .long("separator")
-             .value_name("SEPARATOR")
+             .value_name("SEP")
              .default_value("-")
              .help("Separator between words")
              .takes_value(true))
         .get_matches();
 
+    // Unwrapping is safe because these options have defaults.
     let opt_separator = matches.value_of("separator").unwrap();
     let opt_words = matches.value_of("words").unwrap();
-    let opt_words: u16 = opt_words.parse().unwrap_or_else(|error| {
+
+    // Parse the words option into a number.
+    let opt_words: u8 = opt_words.parse().unwrap_or_else(|error| {
         writeln!(
             std::io::stderr(), "--words={} could not be parsed: {}",
             opt_words, error).ok();

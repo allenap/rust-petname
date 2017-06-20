@@ -1,30 +1,9 @@
-#![allow(dead_code)]
-
 extern crate rand;
 
 
-pub fn petname(words: u16, separator: &str) -> String {
-    let petnames = Petnames::default();
-    let mut rng = rand::thread_rng();
-    generate(&petnames, &mut rng, words, separator)
-}
-
-
-pub fn generate<RNG>(
-    petnames: &Petnames, rng: &mut RNG,
-    words: u16, separator: &str) -> String
-    where RNG: rand::Rng
-{
-    // Adverbs all the way, finishing with adjective then name.
-    let mut parts = Vec::with_capacity(words as usize);
-    for num in (0..words).rev() {
-        parts.push(*match num {
-            0 => rng.choose(&petnames.names).unwrap(),
-            1 => rng.choose(&petnames.adjectives).unwrap(),
-            _ => rng.choose(&petnames.adverbs).unwrap(),
-        });
-    };
-    parts.join(separator)
+pub fn petname(words: u8, separator: &str) -> String {
+    Petnames::default().generate(
+        &mut rand::thread_rng(), words, separator)
 }
 
 
@@ -59,13 +38,29 @@ impl<'a> Petnames<'a> {
         }
     }
 
+    pub fn generate<RNG>(
+        &self, rng: &mut RNG, words: u8, separator: &str) -> String
+        where RNG: rand::Rng
+    {
+        // Adverbs all the way, finishing with adjective then name.
+        let mut parts = Vec::with_capacity(words as usize);
+        for num in (0..words).rev() {
+            parts.push(*match num {
+                0 => rng.choose(&self.names).unwrap(),
+                1 => rng.choose(&self.adjectives).unwrap(),
+                _ => rng.choose(&self.adverbs).unwrap(),
+            });
+        };
+        parts.join(separator)
+    }
+
 }
 
 
 #[cfg(test)]
 mod tests {
 
-    use super::{generate, Petnames, rand};
+    use super::{petname, Petnames, rand};
 
     #[test]
     fn default_petnames_has_adjectives() {
@@ -93,8 +88,18 @@ mod tests {
             names: vec!("name"),
         };
         assert_eq!(
-            generate(&petnames, &mut rand::thread_rng(), 3, "-"),
+            petnames.generate(&mut rand::thread_rng(), 3, "-"),
             "adverb-adjective-name");
+    }
+
+    #[test]
+    fn petname_renders_desired_number_of_words() {
+        assert_eq!(petname(7, "-").split("-").count(), 7);
+    }
+
+    #[test]
+    fn petname_renders_with_desired_separator() {
+        assert_eq!(petname(7, "@").split("@").count(), 7);
     }
 
 }
