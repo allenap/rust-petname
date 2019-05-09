@@ -4,10 +4,8 @@ use self::rand::seq::SliceRandom;
 
 /// Convenience function to generate a new petname from default word lists.
 pub fn petname(words: u8, separator: &str) -> String {
-    Petnames::default().generate(
-        &mut rand::thread_rng(), words, separator)
+    Petnames::default().generate(&mut rand::thread_rng(), words, separator)
 }
-
 
 /// Word lists and the logic to combine them into _petnames_.
 ///
@@ -24,25 +22,33 @@ pub struct Petnames<'a> {
 }
 
 impl<'a> Petnames<'a> {
-
     /// Constructs a new `Petnames` with default word lists.
     pub fn default() -> Petnames<'a> {
         let adjectives = concat!(
-            include_str!("../words/large/adjectives.txt"), "\n",
-            include_str!("../words/medium/adjectives.txt"), "\n",
-            include_str!("../words/small/adjectives.txt"), "\n",
+            include_str!("../words/large/adjectives.txt"),
+            "\n",
+            include_str!("../words/medium/adjectives.txt"),
+            "\n",
+            include_str!("../words/small/adjectives.txt"),
+            "\n",
         );
         let adverbs = concat!(
-            include_str!("../words/large/adverbs.txt"), "\n",
-            include_str!("../words/medium/adverbs.txt"), "\n",
-            include_str!("../words/small/adverbs.txt"), "\n",
+            include_str!("../words/large/adverbs.txt"),
+            "\n",
+            include_str!("../words/medium/adverbs.txt"),
+            "\n",
+            include_str!("../words/small/adverbs.txt"),
+            "\n",
         );
         let names = concat!(
-            include_str!("../words/large/names.txt"), "\n",
-            include_str!("../words/medium/names.txt"), "\n",
-            include_str!("../words/small/names.txt"), "\n",
+            include_str!("../words/large/names.txt"),
+            "\n",
+            include_str!("../words/medium/names.txt"),
+            "\n",
+            include_str!("../words/small/names.txt"),
+            "\n",
         );
-        Self{
+        Self {
             adjectives: adjectives.split_whitespace().collect(),
             adverbs: adverbs.split_whitespace().collect(),
             names: names.split_whitespace().collect(),
@@ -59,9 +65,9 @@ impl<'a> Petnames<'a> {
     /// let mut rng = rand::thread_rng();
     /// petname::Petnames::default().generate(&mut rng, 7, ":");
     /// ```
-    pub fn generate<RNG>(
-        &self, rng: &mut RNG, words: u8, separator: &str) -> String
-        where RNG: rand::Rng
+    pub fn generate<RNG>(&self, rng: &mut RNG, words: u8, separator: &str) -> String
+    where
+        RNG: rand::Rng,
     {
         // Adverbs all the way, finishing with adjective then name.
         let mut parts = Vec::with_capacity(words as usize);
@@ -71,17 +77,15 @@ impl<'a> Petnames<'a> {
                 1 => self.adjectives.choose(rng).unwrap(),
                 _ => self.adverbs.choose(rng).unwrap(),
             });
-        };
+        }
         parts.join(separator)
     }
-
 }
-
 
 #[cfg(test)]
 mod tests {
 
-    use super::{petname, Petnames, rand};
+    use super::{petname, rand, Petnames};
 
     #[test]
     fn default_petnames_has_adjectives() {
@@ -103,14 +107,15 @@ mod tests {
 
     #[test]
     fn generate_uses_adverb_adjective_name() {
-        let petnames = Petnames{
-            adjectives: vec!("adjective"),
-            adverbs: vec!("adverb"),
-            names: vec!("name"),
+        let petnames = Petnames {
+            adjectives: vec!["adjective"],
+            adverbs: vec!["adverb"],
+            names: vec!["name"],
         };
         assert_eq!(
             petnames.generate(&mut rand::thread_rng(), 3, "-"),
-            "adverb-adjective-name");
+            "adverb-adjective-name"
+        );
     }
 
     #[test]
