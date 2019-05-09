@@ -1,5 +1,6 @@
 extern crate rand;
 
+use self::rand::seq::SliceRandom;
 
 /// Convenience function to generate a new petname from default word lists.
 pub fn petname(words: u8, separator: &str) -> String {
@@ -66,9 +67,9 @@ impl<'a> Petnames<'a> {
         let mut parts = Vec::with_capacity(words as usize);
         for num in (0..words).rev() {
             parts.push(*match num {
-                0 => rng.choose(&self.names).unwrap(),
-                1 => rng.choose(&self.adjectives).unwrap(),
-                _ => rng.choose(&self.adverbs).unwrap(),
+                0 => self.names.choose(rng).unwrap(),
+                1 => self.adjectives.choose(rng).unwrap(),
+                _ => self.adverbs.choose(rng).unwrap(),
             });
         };
         parts.join(separator)
