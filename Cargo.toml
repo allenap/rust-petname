@@ -1,6 +1,6 @@
 [package]
 name = "petname"
-version = "0.1.2"
+version = "0.2.0"
 authors = ["Gavin Panella <gavinpanella@gmail.com>"]
 description = "Generate human readable random names."
 homepage = "https://github.com/allenap/rust-petname"
@@ -17,5 +17,5 @@ path = "src/main.rs"
 doc = false
 
 [dependencies]
-clap = "^2.24.2"
-rand = "^0.3.15"
+clap = "^2.33.0"
+rand = "^0.6.5"
