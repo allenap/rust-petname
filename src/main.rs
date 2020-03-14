@@ -5,8 +5,7 @@ mod lib;
 
 use clap::{App, Arg};
 use lib::Petnames;
-use std::io::Write;
-use std::process;
+use std::str::FromStr;
 
 fn main() {
     let matches = App::new("rust-petname")
@@ -24,7 +23,8 @@ fn main() {
                 .value_name("WORDS")
                 .default_value("2")
                 .help("Number of words in name")
-                .takes_value(true),
+                .takes_value(true)
+                .validator(can_be_parsed::<u8>),
         )
         .arg(
             Arg::with_name("separator")
@@ -39,12 +39,21 @@ fn main() {
             Arg::with_name("complexity")
                 .short("c")
                 .long("complexity")
-                .value_name("COMPLEXITY")
+                .value_name("COM")
                 .possible_values(&["0", "1", "2"])
                 .hide_possible_values(true)
                 .default_value("0")
                 .help("Use small words (0), medium words (1), or large words (2)")
                 .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("count")
+                .long("count")
+                .value_name("COUNT")
+                .default_value("1")
+                .help("Generate multiple names. Set to 0 to produce infinite names!")
+                .takes_value(true)
+                .validator(can_be_parsed::<u64>),
         )
         .get_matches();
 
@@ -52,18 +61,11 @@ fn main() {
     let opt_separator = matches.value_of("separator").unwrap();
     let opt_words = matches.value_of("words").unwrap();
     let opt_complexity = matches.value_of("complexity").unwrap();
+    let opt_count = matches.value_of("count").unwrap();
 
-    // Parse the words option into a number.
-    let opt_words: u8 = opt_words.parse().unwrap_or_else(|error| {
-        writeln!(
-            std::io::stderr(),
-            "--words={} could not be parsed: {}",
-            opt_words,
-            error
-        )
-        .ok();
-        process::exit(1);
-    });
+    // Parse words and count into numbers. Validated so unwrapping is okay.
+    let opt_words: u8 = opt_words.parse().unwrap();
+    let opt_count: u64 = opt_count.parse().unwrap();
 
     // Select the appropriate word list.
     let petnames = match opt_complexity {
@@ -73,5 +75,30 @@ fn main() {
         _ => Petnames::small(),
     };
 
-    println!("{}", petnames.generate_one(opt_words, opt_separator));
+    // We're going to need a source of randomness.
+    let mut rng = rand::thread_rng();
+
+    // Stream if count is 0.
+    if opt_count == 0 {
+        loop {
+            let petname = petnames.generate(&mut rng, opt_words, opt_separator);
+            println!("{}", petname);
+        }
+    } else {
+        for _ in 1..=opt_count {
+            let petname = petnames.generate(&mut rng, opt_words, opt_separator);
+            println!("{}", petname);
+        }
+    }
+}
+
+fn can_be_parsed<INTO>(value: String) -> Result<(), String>
+where
+    INTO: FromStr,
+    <INTO as FromStr>::Err: std::fmt::Display,
+{
+    match value.parse::<INTO>() {
+        Err(e) => Err(format!("{}", e)),
+        Ok(_) => Ok(()),
+    }
 }
