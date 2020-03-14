@@ -74,6 +74,14 @@ fn main() {
                 .help("Generate names where each word begins with the same letter")
                 .takes_value(false),
         )
+        .arg(
+            // For compatibility with upstream.
+            Arg::with_name("ubuntu")
+                .short("u")
+                .long("ubuntu")
+                .help("Alias; see --alliterate")
+                .takes_value(false),
+        )
         .get_matches();
 
     // Unwrapping is safe because these options have defaults.
@@ -82,7 +90,7 @@ fn main() {
     let opt_complexity = matches.value_of("complexity").unwrap();
     let opt_count = matches.value_of("count").unwrap();
     let opt_letters = matches.value_of("letters").unwrap();
-    let opt_alliterate = matches.is_present("alliterate");
+    let opt_alliterate = matches.is_present("alliterate") || matches.is_present("ubuntu");
 
     // Parse numbers. Validated so unwrapping is okay.
     let opt_words: u8 = opt_words.parse().unwrap();
