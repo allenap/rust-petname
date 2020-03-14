@@ -20,4 +20,4 @@ doc = false
 
 [dependencies]
 clap = "^2.33.0"
-rand = "^0.7.0"
+rand = "^0.7.3"
