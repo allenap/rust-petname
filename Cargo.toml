@@ -2,10 +2,15 @@
 name = "petname"
 version = "0.2.0"
 authors = ["Gavin Panella <gavinpanella@gmail.com>"]
-description = "Generate human readable random names."
-homepage = "https://github.com/allenap/rust-petname"
-license = "Apache-2.0"
+edition = "2018"
+description = "Generate human readable random names. Usable as a library and from the command-line."
 readme = "README.md"
+repository = "https://github.com/allenap/rust-petname"
+license = "Apache-2.0"
+categories = ["command-line-utilities"]
+
+[badges]
+travis-ci = { repository = "allenap/rust-petname", branch = "master" }
 
 [lib]
 name = "petname"
@@ -18,4 +23,4 @@ doc = false
 
 [dependencies]
 clap = "^2.33.0"
-rand = "^0.7.0"
+rand = "^0.7.3"

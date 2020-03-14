@@ -127,5 +127,4 @@ mod tests {
     fn petname_renders_with_desired_separator() {
         assert_eq!(petname(7, "@").split("@").count(), 7);
     }
-
 }
