@@ -61,6 +61,19 @@ impl<'a> Petnames<'a> {
         }
     }
 
+    /// Keep words matching a predicate.
+    ///
+    /// This is just a convenience wrapper that applies the same predicate to
+    /// the adjectives, adverbs, and names lists.
+    pub fn retain<F>(&mut self, predicate: F)
+    where
+        F: Fn(&&str) -> bool,
+    {
+        self.adjectives.retain(&predicate);
+        self.adverbs.retain(&predicate);
+        self.names.retain(&predicate);
+    }
+
     /// Generate a new petname.
     ///
     /// # Examples
