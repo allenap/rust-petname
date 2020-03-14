@@ -39,7 +39,7 @@ fn main() {
             Arg::with_name("complexity")
                 .short("c")
                 .long("complexity")
-                .value_name("COMPLEXITY")
+                .value_name("COM")
                 .possible_values(&["0", "1", "2"])
                 .hide_possible_values(true)
                 .default_value("0")
