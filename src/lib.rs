@@ -89,6 +89,10 @@ impl<'a> Petnames<'a> {
     }
 }
 
+impl<'a> Default for Petnames<'a> {
+    fn default() -> Self { Self::default() }
+}
+
 #[cfg(test)]
 mod tests {
 
