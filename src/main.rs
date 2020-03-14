@@ -5,6 +5,7 @@ mod lib;
 
 use clap::{App, Arg};
 use lib::Petnames;
+use std::str::FromStr;
 
 fn main() {
     let matches = App::new("rust-petname")
@@ -23,7 +24,7 @@ fn main() {
                 .default_value("2")
                 .help("Number of words in name")
                 .takes_value(true)
-                .validator(is_u8),
+                .validator(can_be_parsed::<u8>),
         )
         .arg(
             Arg::with_name("separator")
@@ -52,7 +53,7 @@ fn main() {
                 .default_value("1")
                 .help("Generate multiple names. Set to 0 to produce infinite names!")
                 .takes_value(true)
-                .validator(is_u64),
+                .validator(can_be_parsed::<u64>),
         )
         .get_matches();
 
@@ -91,15 +92,12 @@ fn main() {
     }
 }
 
-fn is_u8(value: String) -> Result<(), String> {
-    match value.parse::<u8>() {
-        Err(e) => Err(format!("{}", e)),
-        Ok(_) => Ok(()),
-    }
-}
-
-fn is_u64(value: String) -> Result<(), String> {
-    match value.parse::<u64>() {
+fn can_be_parsed<INTO>(value: String) -> Result<(), String>
+where
+    INTO: FromStr,
+    <INTO as FromStr>::Err: std::fmt::Display,
+{
+    match value.parse::<INTO>() {
         Err(e) => Err(format!("{}", e)),
         Ok(_) => Ok(()),
     }
