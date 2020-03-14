@@ -51,7 +51,7 @@ fn main() {
                 .long("count")
                 .value_name("COUNT")
                 .default_value("1")
-                .help("Generate multiple names. Set to 0 to produce infinite names!")
+                .help("Generate multiple names; pass 0 to produce infinite names!")
                 .takes_value(true)
                 .validator(can_be_parsed::<usize>),
         )

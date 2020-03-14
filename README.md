@@ -29,10 +29,11 @@ FLAGS:
     -V, --version    Prints version information
 
 OPTIONS:
-    -c, --complexity <COM>    Use small words (0), medium words (1), or large words (2) [default: 0]
-        --count <COUNT>       Generate multiple names. Set to 0 to produce infinite names! [default: 1]
-    -s, --separator <SEP>     Separator between words [default: -]
-    -w, --words <WORDS>       Number of words in name [default: 2]
+    -c, --complexity <COM>     Use small words (0), medium words (1), or large words (2) [default: 0]
+        --count <COUNT>        Generate multiple names; pass 0 to produce infinite names! [default: 1]
+    -l, --letters <LETTERS>    Maxiumum number of letters in each word; 0 for unlimited [default: 0]
+    -s, --separator <SEP>      Separator between words [default: -]
+    -w, --words <WORDS>        Number of words in name [default: 2]
 
 Based on Dustin Kirkland's petname project <https://github.com/dustinkirkland/petname>.
 
