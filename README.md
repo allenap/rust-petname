@@ -59,7 +59,7 @@ suitably_overdelicate_jamee
 
 ### Performance
 
-This implementation is considerably faster:
+This implementation is considerably faster than the upstream `petname`:
 
 ```
 $ time /usr/bin/petname
@@ -106,7 +106,7 @@ sys     0m0.000s
 
 That's nearly 400,000 (four hundred thousand) times faster!
 
-Howver, this speed **is** truly useful if you want to apply an external filter
+However, this speed **is** truly useful if you want to apply an external filter
 to the names being generated:
 
 ```
