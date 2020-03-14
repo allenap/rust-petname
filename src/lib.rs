@@ -1,10 +1,9 @@
-extern crate rand;
-
-use self::rand::seq::SliceRandom;
+use rand::seq::SliceRandom;
 
 /// Convenience function to generate a new petname from default word lists.
+#[allow(dead_code)]
 pub fn petname(words: u8, separator: &str) -> String {
-    Petnames::default().generate(&mut rand::thread_rng(), words, separator)
+    Petnames::default().generate_one(words, separator)
 }
 
 /// Word lists and the logic to combine them into _petnames_.
@@ -22,32 +21,39 @@ pub struct Petnames<'a> {
 }
 
 impl<'a> Petnames<'a> {
-    /// Constructs a new `Petnames` with default word lists.
+    /// Constructs a new `Petnames` from the default (small) word lists.
     pub fn default() -> Petnames<'a> {
-        let adjectives = concat!(
-            include_str!("../words/large/adjectives.txt"),
-            "\n",
-            include_str!("../words/medium/adjectives.txt"),
-            "\n",
+        Self::small()
+    }
+
+    /// Constructs a new `Petnames` from the small word lists.
+    pub fn small() -> Petnames<'a> {
+        Self::init(
             include_str!("../words/small/adjectives.txt"),
-            "\n",
-        );
-        let adverbs = concat!(
-            include_str!("../words/large/adverbs.txt"),
-            "\n",
-            include_str!("../words/medium/adverbs.txt"),
-            "\n",
             include_str!("../words/small/adverbs.txt"),
-            "\n",
-        );
-        let names = concat!(
-            include_str!("../words/large/names.txt"),
-            "\n",
-            include_str!("../words/medium/names.txt"),
-            "\n",
             include_str!("../words/small/names.txt"),
-            "\n",
-        );
+        )
+    }
+
+    /// Constructs a new `Petnames` from the medium word lists.
+    pub fn medium() -> Petnames<'a> {
+        Self::init(
+            include_str!("../words/medium/adjectives.txt"),
+            include_str!("../words/medium/adverbs.txt"),
+            include_str!("../words/medium/names.txt"),
+        )
+    }
+
+    /// Constructs a new `Petnames` from the large word lists.
+    pub fn large() -> Petnames<'a> {
+        Self::init(
+            include_str!("../words/large/adjectives.txt"),
+            include_str!("../words/large/adverbs.txt"),
+            include_str!("../words/large/names.txt"),
+        )
+    }
+
+    fn init(adjectives: &'a str, adverbs: &'a str, names: &'a str) -> Petnames<'a> {
         Self {
             adjectives: adjectives.split_whitespace().collect(),
             adverbs: adverbs.split_whitespace().collect(),
@@ -60,8 +66,6 @@ impl<'a> Petnames<'a> {
     /// # Examples
     ///
     /// ```rust
-    /// # extern crate rand;
-    /// # extern crate petname;
     /// let mut rng = rand::thread_rng();
     /// petname::Petnames::default().generate(&mut rng, 7, ":");
     /// ```
@@ -80,12 +84,26 @@ impl<'a> Petnames<'a> {
         }
         parts.join(separator)
     }
+
+    /// Generate a single new petname.
+    ///
+    /// This is like `generate` but uses `rand::thread_rng` as the random
+    /// source. For efficiency use `generate` when creating multiple names, or
+    /// when you want to use a custom source of randomness.
+    pub fn generate_one(&self, words: u8, separator: &str) -> String {
+        self.generate(&mut rand::thread_rng(), words, separator)
+    }
+}
+
+impl<'a> Default for Petnames<'a> {
+    fn default() -> Self { Self::default() }
 }
 
 #[cfg(test)]
 mod tests {
 
-    use super::{petname, rand, Petnames};
+    use rand;
+    use super::{petname, Petnames};
 
     #[test]
     fn default_petnames_has_adjectives() {
