@@ -14,9 +14,8 @@ fn main() {
         .author(crate_authors!())
         .about("Generate human readable random names.")
         .after_help(concat!(
-            "Based on Dustin Kirkland's petname libraries ",
-            "<http://blog.dustinkirkland.com/2015/01/introducing",
-            "-petname-libraries-for.html>."
+            "Based on Dustin Kirkland's petname project ",
+            "<https://github.com/dustinkirkland/petname>."
         ))
         .arg(
             Arg::with_name("words")
