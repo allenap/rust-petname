@@ -42,6 +42,39 @@ suitably_overdelicate_jamee
 ```
 
 
+## Library
+
+There's a `petname::Petnames` struct:
+
+```rust
+pub struct Petnames<'a> {
+    pub adjectives: Vec<&'a str>,
+    pub adverbs: Vec<&'a str>,
+    pub names: Vec<&'a str>,
+}
+```
+
+You can populate this with your own word lists, but there's a convenient default
+which uses the word lists from upstream [petname][]. The other thing you need is
+a random number generator from [rand][]:
+
+```rust
+let mut rng = rand::thread_rng();
+let pname = petname::Petnames::default().generate(&mut rng, 7, ":");
+```
+
+There's also a convenience function that'll do this for you:
+
+```rust
+let pname = petname::petname(7, ":")
+```
+
+It's probably best to use the `generate` method if you're building more than a
+handful of names.
+
+[rand]: https://crates.io/crates/rand
+
+
 ## Getting Started
 
 To install the command-line tool:
