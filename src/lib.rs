@@ -1,6 +1,4 @@
-extern crate rand;
-
-use self::rand::seq::SliceRandom;
+use rand::seq::SliceRandom;
 
 /// Convenience function to generate a new petname from default word lists.
 pub fn petname(words: u8, separator: &str) -> String {
@@ -67,8 +65,6 @@ impl<'a> Petnames<'a> {
     /// # Examples
     ///
     /// ```rust
-    /// # extern crate rand;
-    /// # extern crate petname;
     /// let mut rng = rand::thread_rng();
     /// petname::Petnames::default().generate(&mut rng, 7, ":");
     /// ```
@@ -96,7 +92,8 @@ impl<'a> Default for Petnames<'a> {
 #[cfg(test)]
 mod tests {
 
-    use super::{petname, rand, Petnames};
+    use rand;
+    use super::{petname, Petnames};
 
     #[test]
     fn default_petnames_has_adjectives() {
