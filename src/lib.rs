@@ -22,32 +22,39 @@ pub struct Petnames<'a> {
 }
 
 impl<'a> Petnames<'a> {
-    /// Constructs a new `Petnames` with default word lists.
+    /// Constructs a new `Petnames` from the default (small) word lists.
     pub fn default() -> Petnames<'a> {
-        let adjectives = concat!(
-            include_str!("../words/large/adjectives.txt"),
-            "\n",
-            include_str!("../words/medium/adjectives.txt"),
-            "\n",
+        Self::small()
+    }
+
+    /// Constructs a new `Petnames` from the small word lists.
+    pub fn small() -> Petnames<'a> {
+        Self::init(
             include_str!("../words/small/adjectives.txt"),
-            "\n",
-        );
-        let adverbs = concat!(
-            include_str!("../words/large/adverbs.txt"),
-            "\n",
-            include_str!("../words/medium/adverbs.txt"),
-            "\n",
             include_str!("../words/small/adverbs.txt"),
-            "\n",
-        );
-        let names = concat!(
-            include_str!("../words/large/names.txt"),
-            "\n",
-            include_str!("../words/medium/names.txt"),
-            "\n",
             include_str!("../words/small/names.txt"),
-            "\n",
-        );
+        )
+    }
+
+    /// Constructs a new `Petnames` from the medium word lists.
+    pub fn medium() -> Petnames<'a> {
+        Self::init(
+            include_str!("../words/medium/adjectives.txt"),
+            include_str!("../words/medium/adverbs.txt"),
+            include_str!("../words/medium/names.txt"),
+        )
+    }
+
+    /// Constructs a new `Petnames` from the large word lists.
+    pub fn large() -> Petnames<'a> {
+        Self::init(
+            include_str!("../words/large/adjectives.txt"),
+            include_str!("../words/large/adverbs.txt"),
+            include_str!("../words/large/names.txt"),
+        )
+    }
+
+    fn init(adjectives: &'a str, adverbs: &'a str, names: &'a str) -> Petnames<'a> {
         Self {
             adjectives: adjectives.split_whitespace().collect(),
             adverbs: adverbs.split_whitespace().collect(),
