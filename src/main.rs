@@ -5,6 +5,8 @@ mod lib;
 
 use clap::{App, Arg};
 use lib::Petnames;
+use rand::seq::IteratorRandom;
+use std::collections::HashSet;
 use std::str::FromStr;
 
 fn main() {
@@ -65,6 +67,21 @@ fn main() {
                 .takes_value(true)
                 .validator(can_be_parsed::<usize>),
         )
+        .arg(
+            Arg::with_name("alliterate")
+                .short("a")
+                .long("alliterate")
+                .help("Generate names where each word begins with the same letter")
+                .takes_value(false),
+        )
+        .arg(
+            // For compatibility with upstream.
+            Arg::with_name("ubuntu")
+                .short("u")
+                .long("ubuntu")
+                .help("Alias; see --alliterate")
+                .takes_value(false),
+        )
         .get_matches();
 
     // Unwrapping is safe because these options have defaults.
@@ -73,6 +90,7 @@ fn main() {
     let opt_complexity = matches.value_of("complexity").unwrap();
     let opt_count = matches.value_of("count").unwrap();
     let opt_letters = matches.value_of("letters").unwrap();
+    let opt_alliterate = matches.is_present("alliterate") || matches.is_present("ubuntu");
 
     // Parse numbers. Validated so unwrapping is okay.
     let opt_words: u8 = opt_words.parse().unwrap();
@@ -94,6 +112,20 @@ fn main() {
 
     // We're going to need a source of randomness.
     let mut rng = rand::thread_rng();
+
+    // If requested, choose a random letter then discard all words that do not
+    // begin with that letter.
+    if opt_alliterate {
+        // We choose the first letter from the intersection of the first letters
+        // of each word list in `petnames`.
+        let firsts =
+            common_first_letters(&petnames.adjectives, &[&petnames.adverbs, &petnames.names]);
+        // Choose the first letter at random; fails if there are no letters.
+        match firsts.iter().choose(&mut rng) {
+            Some(c) => petnames.retain(|s| s.chars().next() == Some(*c)),
+            None => panic!("no letters in common"), // TODO: do this without a panic.
+        };
+    }
 
     // Stream if count is 0.
     if opt_count == 0 {
@@ -118,4 +150,15 @@ where
         Err(e) => Err(format!("{}", e)),
         Ok(_) => Ok(()),
     }
+}
+
+fn common_first_letters(init: &[&str], more: &[&[&str]]) -> HashSet<char> {
+    let mut firsts = first_letters(init);
+    let firsts_other: Vec<HashSet<char>> = more.iter().map(|list| first_letters(list)).collect();
+    firsts.retain(|c| firsts_other.iter().all(|fs| fs.contains(c)));
+    firsts
+}
+
+fn first_letters(names: &[&str]) -> HashSet<char> {
+    names.iter().filter_map(|s| s.chars().next()).collect()
 }
