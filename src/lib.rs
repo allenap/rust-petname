@@ -61,6 +61,28 @@ impl<'a> Petnames<'a> {
         }
     }
 
+    /// Keep words matching a predicate.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// let mut petnames = petname::Petnames::default();
+    /// petnames.retain(|s| s.starts_with("b"));
+    /// petnames.generate_one(2, ".");
+    /// ```
+    ///
+    /// This is merely a convenience wrapper that applies the same predicate to
+    /// the adjectives, adverbs, and names lists.
+    ///
+    pub fn retain<F>(&mut self, predicate: F)
+    where
+        F: Fn(&&str) -> bool,
+    {
+        self.adjectives.retain(&predicate);
+        self.adverbs.retain(&predicate);
+        self.names.retain(&predicate);
+    }
+
     /// Generate a new petname.
     ///
     /// # Examples
@@ -69,6 +91,11 @@ impl<'a> Petnames<'a> {
     /// let mut rng = rand::thread_rng();
     /// petname::Petnames::default().generate(&mut rng, 7, ":");
     /// ```
+    ///
+    /// # Panics
+    ///
+    /// If a word list is empty.
+    ///
     pub fn generate<RNG>(&self, rng: &mut RNG, words: u8, separator: &str) -> String
     where
         RNG: rand::Rng,
@@ -96,14 +123,16 @@ impl<'a> Petnames<'a> {
 }
 
 impl<'a> Default for Petnames<'a> {
-    fn default() -> Self { Self::default() }
+    fn default() -> Self {
+        Self::default()
+    }
 }
 
 #[cfg(test)]
 mod tests {
 
-    use rand;
     use super::{petname, Petnames};
+    use rand;
 
     #[test]
     fn default_petnames_has_adjectives() {
