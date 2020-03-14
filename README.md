@@ -29,8 +29,9 @@ FLAGS:
     -V, --version    Prints version information
 
 OPTIONS:
-    -s, --separator <SEP>    Separator between words [default: -]
-    -w, --words <WORDS>      Number of words in name [default: 2]
+    -c, --complexity <COMPLEXITY>    Use small words (0), medium words (1), or large words (2) [default: 0]
+    -s, --separator <SEP>            Separator between words [default: -]
+    -w, --words <WORDS>              Number of words in name [default: 2]
 
 Based on Dustin Kirkland's petname project <https://github.com/dustinkirkland/petname>.
 
