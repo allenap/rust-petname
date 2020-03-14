@@ -18,8 +18,8 @@ also maintains libraries for [Python 2 & 3][petname-py], and
 ## Command-line utility
 
 If you have [installed Cargo][install-cargo], you can install rust-petname with
-`cargo install rust-petname`. This puts a `petname` binary in `~/.cargo/bin`,
-which the Cargo installation process will probably have added to your `PATH`.
+`cargo install petname`. This puts a `petname` binary in `~/.cargo/bin`, which
+the Cargo installation process will probably have added to your `PATH`.
 
 The `petname` binary from rust-petname is _almost_ drop-in compatible with the
 original `petname`. It's missing a `-d, --dir` option, and is more strict when
