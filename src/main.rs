@@ -53,7 +53,17 @@ fn main() {
                 .default_value("1")
                 .help("Generate multiple names. Set to 0 to produce infinite names!")
                 .takes_value(true)
-                .validator(can_be_parsed::<u64>),
+                .validator(can_be_parsed::<usize>),
+        )
+        .arg(
+            Arg::with_name("letters")
+                .short("l")
+                .long("letters")
+                .value_name("LETTERS")
+                .default_value("0")
+                .help("Maxiumum number of letters in each word; 0 for unlimited")
+                .takes_value(true)
+                .validator(can_be_parsed::<usize>),
         )
         .get_matches();
 
@@ -62,18 +72,25 @@ fn main() {
     let opt_words = matches.value_of("words").unwrap();
     let opt_complexity = matches.value_of("complexity").unwrap();
     let opt_count = matches.value_of("count").unwrap();
+    let opt_letters = matches.value_of("letters").unwrap();
 
-    // Parse words and count into numbers. Validated so unwrapping is okay.
+    // Parse numbers. Validated so unwrapping is okay.
     let opt_words: u8 = opt_words.parse().unwrap();
-    let opt_count: u64 = opt_count.parse().unwrap();
+    let opt_count: usize = opt_count.parse().unwrap();
+    let opt_letters: usize = opt_letters.parse().unwrap();
 
     // Select the appropriate word list.
-    let petnames = match opt_complexity {
+    let mut petnames = match opt_complexity {
         "0" => Petnames::small(),
         "1" => Petnames::medium(),
         "2" => Petnames::large(),
         _ => Petnames::small(),
     };
+
+    // If requested, limit the number of letters.
+    if opt_letters != 0 {
+        petnames.retain(|s| s.len() <= opt_letters);
+    }
 
     // We're going to need a source of randomness.
     let mut rng = rand::thread_rng();
