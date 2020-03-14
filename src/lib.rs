@@ -109,14 +109,16 @@ impl<'a> Petnames<'a> {
 }
 
 impl<'a> Default for Petnames<'a> {
-    fn default() -> Self { Self::default() }
+    fn default() -> Self {
+        Self::default()
+    }
 }
 
 #[cfg(test)]
 mod tests {
 
-    use rand;
     use super::{petname, Petnames};
+    use rand;
 
     #[test]
     fn default_petnames_has_adjectives() {
