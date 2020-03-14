@@ -1,8 +1,9 @@
 use rand::seq::SliceRandom;
 
 /// Convenience function to generate a new petname from default word lists.
+#[allow(dead_code)]
 pub fn petname(words: u8, separator: &str) -> String {
-    Petnames::default().generate(&mut rand::thread_rng(), words, separator)
+    Petnames::default().generate_one(words, separator)
 }
 
 /// Word lists and the logic to combine them into _petnames_.
@@ -82,6 +83,15 @@ impl<'a> Petnames<'a> {
             });
         }
         parts.join(separator)
+    }
+
+    /// Generate a single new petname.
+    ///
+    /// This is like `generate` but uses `rand::thread_rng` as the random
+    /// source. For efficiency use `generate` when creating multiple names, or
+    /// when you want to use a custom source of randomness.
+    pub fn generate_one(&self, words: u8, separator: &str) -> String {
+        self.generate(&mut rand::thread_rng(), words, separator)
     }
 }
 
