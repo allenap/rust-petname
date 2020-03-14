@@ -22,11 +22,13 @@ Gavin Panella <gavinpanella@gmail.com>
 Generate human readable random names.
 
 USAGE:
-    petname [OPTIONS]
+    petname [FLAGS] [OPTIONS]
 
 FLAGS:
-    -h, --help       Prints help information
-    -V, --version    Prints version information
+    -a, --alliterate    Generate names where each word begins with the same letter
+    -h, --help          Prints help information
+    -u, --ubuntu        Alias; see --alliterate
+    -V, --version       Prints version information
 
 OPTIONS:
     -c, --complexity <COM>     Use small words (0), medium words (1), or large words (2) [default: 0]
