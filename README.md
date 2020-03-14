@@ -2,8 +2,8 @@
 
 A [petname][petname-intro] library and command-line tool in [Rust][rust-lang].
 Dustin Kirkland's [petname][] project is the inspiration for this project. The
-word lists and command-line UX here are taken from that project. Check it out!
-Dustin also maintains libraries for [Python 2 & 3][petname-py], and
+word lists and command-line UX here are taken from there. Check it out! Dustin
+also maintains libraries for [Python 2 & 3][petname-py], and
 [Golang][petname-go].
 
 [rust-lang]: https://www.rust-lang.org/
