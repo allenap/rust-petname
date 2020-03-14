@@ -9,6 +9,9 @@ repository = "https://github.com/allenap/rust-petname"
 license = "Apache-2.0"
 categories = ["command-line-utilities"]
 
+[badges]
+travis-ci = { repository = "allenap/rust-petname", branch = "master" }
+
 [lib]
 name = "petname"
 path = "src/lib.rs"
