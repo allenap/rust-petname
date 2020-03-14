@@ -66,7 +66,13 @@ let mut rng = rand::thread_rng();
 let pname = petname::Petnames::default().generate(&mut rng, 7, ":");
 ```
 
-There's also a convenience function that'll do this for you:
+Or, to use the default random number generator:
+
+```rust
+let pname = petname::Petnames::default().generate_one(7, ":");
+```
+
+There's a convenience function that'll do this for you:
 
 ```rust
 let pname = petname::petname(7, ":")
@@ -74,6 +80,15 @@ let pname = petname::petname(7, ":")
 
 It's probably best to use the `generate` method if you're building more than a
 handful of names.
+
+You can modify the word lists to, for example, only use words beginning with the
+letter "b":
+
+```rust
+let mut petnames = petname::Petnames::default();
+petnames.retain(|s| s.starts_with("b"));
+petnames.generate_one(3, ".");
+```
 
 [rand]: https://crates.io/crates/rand
 
