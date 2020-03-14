@@ -17,7 +17,7 @@ also maintains libraries for [Python 2 & 3][petname-py], and
 
 ```
 $ petname --help
-rust-petname 1.0.2
+rust-petname 1.0.3
 Gavin Panella <gavinpanella@gmail.com>
 Generate human readable random names.
 
