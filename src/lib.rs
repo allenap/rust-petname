@@ -18,6 +18,7 @@ pub type Words<'a> = Vec<&'a str>;
 ///   * 1 adjective when `n >= 2`, otherwise 0 adjectives.
 ///   * 1 name / noun when `n >= 1`, otherwise 0 names.
 ///
+#[derive(Clone, Debug, PartialEq)]
 pub struct Petnames<'a> {
     pub adjectives: Words<'a>,
     pub adverbs: Words<'a>,
@@ -81,13 +82,13 @@ impl<'a> Petnames<'a> {
     /// This is merely a convenience wrapper that applies the same predicate to
     /// the adjectives, adverbs, and names lists.
     ///
-    pub fn retain<F>(&mut self, predicate: F)
+    pub fn retain<F>(&mut self, mut predicate: F)
     where
-        F: Fn(&&str) -> bool,
+        F: FnMut(&str) -> bool,
     {
-        self.adjectives.retain(&predicate);
-        self.adverbs.retain(&predicate);
-        self.names.retain(&predicate);
+        self.adjectives.retain(|word| predicate(word));
+        self.adverbs.retain(|word| predicate(word));
+        self.names.retain(|word| predicate(word));
     }
 
     /// Calculate the cardinality of this `Petnames`.
@@ -204,6 +205,14 @@ mod tests {
     fn default_petnames_has_names() {
         let petnames = Petnames::default();
         assert_ne!(petnames.names.len(), 0);
+    }
+
+    #[test]
+    fn retain_applies_given_predicate() {
+        let petnames_expected = Petnames::init("bob", "bob", "bob jane");
+        let mut petnames = Petnames::init("alice bob carol", "alice bob", "bob carol jane");
+        petnames.retain(|word| word.len() < 5);
+        assert_eq!(petnames_expected, petnames);
     }
 
     #[test]
