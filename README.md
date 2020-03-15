@@ -187,6 +187,20 @@ Alternatively, to hack the source:
 After installing the source (see above) run tests with: `cargo test`.
 
 
+## Making a release
+
+1. Bump version in [`Cargo.toml`][Cargo.toml].
+2. Paste updated `--help` output into [`README.md`][README.md] (this file; see
+   near the top). On macOS the command `cargo run -- --help | pbcopy` is
+   helpful.
+3. Build && test: `cargo build && cargo test`. The latter on its own does do a
+   build, but a test build can hide warnings about dead code, so do both.
+4. Commit with message "Bump version to _VERSION_."
+5. Tag with "v_VERSION_", e.g. `git tag v1.0.10`.
+6. Push: `git push --tags`.
+7. Publish: `cargo publish`.
+
+
 ## License
 
 This project is licensed under the Apache 2.0 License. See the
