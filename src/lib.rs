@@ -10,9 +10,9 @@ pub fn petname(words: u8, separator: &str) -> String {
 ///
 /// A _petname_ with `n` words will contain, in order:
 ///
+///   * `n - 2` adverbs when `n >= 2`, otherwise 0 adverbs.
 ///   * 1 adjective when `n >= 2`, otherwise 0 adjectives.
-///   * `n - 2` adverbs when `n >= 2`.
-///   * 1 name / noun.
+///   * 1 name / noun when `n >= 1`, otherwise 0 names.
 ///
 pub struct Petnames<'a> {
     pub adjectives: Vec<&'a str>,
