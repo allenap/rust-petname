@@ -6,6 +6,9 @@ pub fn petname(words: u8, separator: &str) -> String {
     Petnames::default().generate_one(words, separator)
 }
 
+/// A word list.
+pub type Words<'a> = Vec<&'a str>;
+
 /// Word lists and the logic to combine them into _petnames_.
 ///
 /// A _petname_ with `n` words will contain, in order:
@@ -15,9 +18,9 @@ pub fn petname(words: u8, separator: &str) -> String {
 ///   * 1 name / noun when `n >= 1`, otherwise 0 names.
 ///
 pub struct Petnames<'a> {
-    pub adjectives: Vec<&'a str>,
-    pub adverbs: Vec<&'a str>,
-    pub names: Vec<&'a str>,
+    pub adjectives: Words<'a>,
+    pub adverbs: Words<'a>,
+    pub names: Words<'a>,
 }
 
 impl<'a> Petnames<'a> {
