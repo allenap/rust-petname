@@ -22,12 +22,12 @@ pub struct Petnames<'a> {
 
 impl<'a> Petnames<'a> {
     /// Constructs a new `Petnames` from the default (small) word lists.
-    pub fn default() -> Petnames<'a> {
+    pub fn default() -> Self {
         Self::small()
     }
 
     /// Constructs a new `Petnames` from the small word lists.
-    pub fn small() -> Petnames<'a> {
+    pub fn small() -> Self {
         Self::init(
             include_str!("../words/small/adjectives.txt"),
             include_str!("../words/small/adverbs.txt"),
@@ -36,7 +36,7 @@ impl<'a> Petnames<'a> {
     }
 
     /// Constructs a new `Petnames` from the medium word lists.
-    pub fn medium() -> Petnames<'a> {
+    pub fn medium() -> Self {
         Self::init(
             include_str!("../words/medium/adjectives.txt"),
             include_str!("../words/medium/adverbs.txt"),
@@ -45,7 +45,7 @@ impl<'a> Petnames<'a> {
     }
 
     /// Constructs a new `Petnames` from the large word lists.
-    pub fn large() -> Petnames<'a> {
+    pub fn large() -> Self {
         Self::init(
             include_str!("../words/large/adjectives.txt"),
             include_str!("../words/large/adverbs.txt"),
@@ -53,7 +53,7 @@ impl<'a> Petnames<'a> {
         )
     }
 
-    fn init(adjectives: &'a str, adverbs: &'a str, names: &'a str) -> Petnames<'a> {
+    pub fn init(adjectives: &'a str, adverbs: &'a str, names: &'a str) -> Self {
         Self {
             adjectives: adjectives.split_whitespace().collect(),
             adverbs: adverbs.split_whitespace().collect(),
