@@ -12,11 +12,12 @@ use std::path;
 use std::process;
 use std::str::FromStr;
 
-use clap::{App, Arg};
+use clap::Arg;
 use rand::seq::IteratorRandom;
 
 fn main() {
-    match run() {
+    let matches = app().get_matches();
+    match run(matches) {
         Err(e) => {
             eprintln!("Error: {}", e);
             process::exit(1);
@@ -51,8 +52,8 @@ impl From<io::Error> for Error {
     }
 }
 
-fn run() -> Result<(), Error> {
-    let matches = App::new("rust-petname")
+fn app<'a, 'b>() -> clap::App<'a, 'b> {
+    clap::App::new("rust-petname")
         .version(crate_version!())
         .author(crate_authors!())
         .about("Generate human readable random names.")
@@ -133,8 +134,9 @@ fn run() -> Result<(), Error> {
                 .help("Alias; see --alliterate")
                 .takes_value(false),
         )
-        .get_matches();
+}
 
+fn run<'a>(matches: clap::ArgMatches<'a>) -> Result<(), Error> {
     // Unwrapping is safe because these options have defaults.
     let opt_separator = matches.value_of("separator").unwrap();
     let opt_words = matches.value_of("words").unwrap();
