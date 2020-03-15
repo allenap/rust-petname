@@ -23,4 +23,5 @@ doc = false
 
 [dependencies]
 clap = "^2.33.0"
+itertools = "^0.9.0"
 rand = "^0.7.3"
