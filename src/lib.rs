@@ -98,15 +98,10 @@ impl<'a> Petnames<'a> {
     /// This can saturate. If the total possible combinations of words exceeds
     /// `u128::MAX` then this will return `u128::MAX`.
     pub fn cardinality(&self, words: u8) -> u128 {
-        let mut total: u128 = if words == 0 { 0 } else { 1 };
-        for num in (0..words).rev() {
-            total = total.saturating_mul(match num {
-                0 => self.names.len() as u128,
-                1 => self.adjectives.len() as u128,
-                _ => self.adverbs.len() as u128,
-            });
-        }
-        total
+        let init: u128 = if words == 0 { 0 } else { 1 };
+        Lists(self, words)
+            .map(|list| list.len() as u128)
+            .fold(init, |acc, len| acc.saturating_mul(len))
     }
 
     /// Generate a new petname.
@@ -118,24 +113,15 @@ impl<'a> Petnames<'a> {
     /// petname::Petnames::default().generate(&mut rng, 7, ":");
     /// ```
     ///
-    /// # Panics
-    ///
-    /// If a word list is empty.
-    ///
     pub fn generate<RNG>(&self, rng: &mut RNG, words: u8, separator: &str) -> String
     where
         RNG: rand::Rng,
     {
-        // Adverbs all the way, finishing with adjective then name.
-        let mut parts = Vec::with_capacity(words as usize);
-        for num in (0..words).rev() {
-            parts.push(*match num {
-                0 => self.names.choose(rng).unwrap(),
-                1 => self.adjectives.choose(rng).unwrap(),
-                _ => self.adverbs.choose(rng).unwrap(),
-            });
-        }
-        parts.join(separator)
+        Lists(self, words)
+            .filter_map(|list| list.choose(rng))
+            .cloned()
+            .collect::<Vec<&str>>()
+            .join(separator)
     }
 
     /// Generate a single new petname.
@@ -151,6 +137,41 @@ impl<'a> Petnames<'a> {
 impl<'a> Default for Petnames<'a> {
     fn default() -> Self {
         Self::default()
+    }
+}
+
+/// Iterator over a `Petnames`' word lists.
+///
+/// This yields the appropriate lists from which to select a word when
+/// constructing a petname of `n` words. For example, if you want 3 words in
+/// your petname, this will first yield the adverbs word list, then adjectives,
+/// then names.
+struct Lists<'a>(&'a Petnames<'a>, u8);
+
+impl<'a> Iterator for Lists<'a> {
+    type Item = &'a Words<'a>;
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (0, Some(self.1 as usize))
+    }
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let Self(petnames, ref mut word) = self;
+        match word {
+            0 => None,
+            1 => {
+                *word -= 1;
+                Some(&petnames.names)
+            }
+            2 => {
+                *word -= 1;
+                Some(&petnames.adjectives)
+            }
+            _ => {
+                *word -= 1;
+                Some(&petnames.adverbs)
+            }
+        }
     }
 }
 
