@@ -1,7 +1,3 @@
-use std::fs;
-use std::io;
-use std::path;
-
 use rand::seq::SliceRandom;
 
 /// Convenience function to generate a new petname from default word lists.
@@ -55,23 +51,6 @@ impl<'a> Petnames<'a> {
             include_str!("../words/large/adverbs.txt"),
             include_str!("../words/large/names.txt"),
         )
-    }
-
-    /// Load word lists from the given directory.
-    ///
-    /// This function expects to find three files in that directory:
-    /// `adjectives.txt`, `adverbs.txt`, and `names.txt`. Each should be valid
-    /// UTF-8, and contain words separated by whitespace. These will be loaded
-    /// into the corresponding `Petnames` fields.
-    ///
-    /// XXX: Does not compile.
-    pub fn load<T: AsRef<path::Path>>(dirname: T) -> io::Result<Self> {
-        let dirname = dirname.as_ref();
-        Ok(Self::init(
-            &fs::read_to_string(dirname.join("adjectives.txt"))?,
-            &fs::read_to_string(dirname.join("adverbs.txt"))?,
-            &fs::read_to_string(dirname.join("names.txt"))?,
-        ))
     }
 
     fn init(adjectives: &'a str, adverbs: &'a str, names: &'a str) -> Self {
