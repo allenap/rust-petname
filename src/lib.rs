@@ -81,13 +81,13 @@ impl<'a> Petnames<'a> {
     /// This is merely a convenience wrapper that applies the same predicate to
     /// the adjectives, adverbs, and names lists.
     ///
-    pub fn retain<F>(&mut self, predicate: F)
+    pub fn retain<F>(&mut self, mut predicate: F)
     where
-        F: Fn(&&str) -> bool,
+        F: FnMut(&str) -> bool,
     {
-        self.adjectives.retain(&predicate);
-        self.adverbs.retain(&predicate);
-        self.names.retain(&predicate);
+        self.adjectives.retain(|word| predicate(word));
+        self.adverbs.retain(|word| predicate(word));
+        self.names.retain(|word| predicate(word));
     }
 
     /// Calculate the cardinality of this `Petnames`.
