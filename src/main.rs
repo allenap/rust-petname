@@ -5,6 +5,7 @@ mod lib;
 use lib::Petnames;
 
 use std::collections::HashSet;
+use std::fmt;
 use std::fs;
 use std::io;
 use std::path;
@@ -21,7 +22,27 @@ fn main() {
     }
 }
 
-fn run() -> io::Result<()> {
+enum Error {
+    IoError(io::Error),
+    FileIoError(path::PathBuf, io::Error),
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match *self {
+            Error::IoError(ref e) => write!(f, "{}", e),
+            Error::FileIoError(ref path, ref e) => write!(f, "{}: {}", e, path.display()),
+        }
+    }
+}
+
+impl From<io::Error> for Error {
+    fn from(error: io::Error) -> Self {
+        Error::IoError(error)
+    }
+}
+
+fn run() -> Result<(), Error> {
     let matches = App::new("rust-petname")
         .version(crate_version!())
         .author(crate_authors!())
@@ -209,12 +230,17 @@ impl Words {
     // Load word lists from the given directory. This function expects to find three
     // files in that directory: `adjectives.txt`, `adverbs.txt`, and `names.txt`.
     // Each should be valid UTF-8, and contain words separated by whitespace.
-    fn load<T: AsRef<path::Path>>(dirname: T) -> io::Result<Self> {
+    fn load<T: AsRef<path::Path>>(dirname: T) -> Result<Self, Error> {
         let dirname = dirname.as_ref();
         Ok(Self::Custom(
-            fs::read_to_string(dirname.join("adjectives.txt"))?,
-            fs::read_to_string(dirname.join("adverbs.txt"))?,
-            fs::read_to_string(dirname.join("names.txt"))?,
+            read_file_to_string(dirname.join("adjectives.txt"))?,
+            read_file_to_string(dirname.join("adverbs.txt"))?,
+            read_file_to_string(dirname.join("names.txt"))?,
         ))
     }
+}
+
+fn read_file_to_string<P: AsRef<path::Path>>(path: P) -> Result<String, Error> {
+    fs::read_to_string(&path)
+        .map_err(|error| Error::FileIoError(path.as_ref().to_path_buf(), error))
 }
