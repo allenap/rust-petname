@@ -25,6 +25,8 @@ fn main() {
 enum Error {
     IoError(io::Error),
     FileIoError(path::PathBuf, io::Error),
+    CardinalityError(String),
+    AlliterationError(String),
 }
 
 impl fmt::Display for Error {
@@ -32,6 +34,8 @@ impl fmt::Display for Error {
         match *self {
             Error::IoError(ref e) => write!(f, "{}", e),
             Error::FileIoError(ref path, ref e) => write!(f, "{}: {}", e, path.display()),
+            Error::CardinalityError(ref message) => write!(f, "cardinality is zero: {}", message),
+            Error::AlliterationError(ref message) => write!(f, "cannot alliterate: {}", message),
         }
     }
 }
@@ -166,6 +170,13 @@ fn run() -> Result<(), Error> {
         petnames.retain(|s| s.len() <= opt_letters);
     }
 
+    // Check cardinality.
+    if petnames.cardinality(opt_words) == 0 {
+        return Err(Error::CardinalityError(
+            "no petnames to choose from; try relaxing constraints".to_string(),
+        ));
+    }
+
     // We're going to need a source of randomness.
     let mut rng = rand::thread_rng();
 
@@ -179,7 +190,11 @@ fn run() -> Result<(), Error> {
         // Choose the first letter at random; fails if there are no letters.
         match firsts.iter().choose(&mut rng) {
             Some(c) => petnames.retain(|s| s.chars().next() == Some(*c)),
-            None => panic!("no letters in common"), // TODO: do this without a panic.
+            None => {
+                return Err(Error::AlliterationError(
+                    "word lists have no initial letters in common".to_string(),
+                ))
+            }
         };
     }
 
