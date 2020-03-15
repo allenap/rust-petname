@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use rand::seq::SliceRandom;
 
 /// Convenience function to generate a new petname from default word lists.
@@ -98,10 +99,10 @@ impl<'a> Petnames<'a> {
     /// This can saturate. If the total possible combinations of words exceeds
     /// `u128::MAX` then this will return `u128::MAX`.
     pub fn cardinality(&self, words: u8) -> u128 {
-        let init: u128 = if words == 0 { 0 } else { 1 };
         Lists(self, words)
             .map(|list| list.len() as u128)
-            .fold(init, |acc, len| acc.saturating_mul(len))
+            .fold1(u128::saturating_mul)
+            .unwrap_or(0u128)
     }
 
     /// Generate a new petname.
@@ -113,6 +114,12 @@ impl<'a> Petnames<'a> {
     /// petname::Petnames::default().generate(&mut rng, 7, ":");
     /// ```
     ///
+    /// # Notes
+    ///
+    /// This may return fewer words than you request if one or more of the word
+    /// lists are empty. For example, if there are no adverbs, requesting 3 or
+    /// more words may still yield only "doubtful-salmon".
+    ///
     pub fn generate<RNG>(&self, rng: &mut RNG, words: u8, separator: &str) -> String
     where
         RNG: rand::Rng,
@@ -120,8 +127,8 @@ impl<'a> Petnames<'a> {
         Lists(self, words)
             .filter_map(|list| list.choose(rng))
             .cloned()
-            .collect::<Vec<&str>>()
-            .join(separator)
+            .intersperse(separator)
+            .collect::<String>()
     }
 
     /// Generate a single new petname.
