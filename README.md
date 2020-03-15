@@ -21,13 +21,13 @@ If you have [installed Cargo][install-cargo], you can install rust-petname with
 `cargo install petname`. This puts a `petname` binary in `~/.cargo/bin`, which
 the Cargo installation process will probably have added to your `PATH`.
 
-The `petname` binary from rust-petname is _almost_ drop-in compatible with the
-original `petname`. It's missing a `-d, --dir` option, and is more strict when
-validating arguments, but for most uses it should behave the same.
+The `petname` binary from rust-petname is drop-in compatible with the original
+`petname`. It's more strict when validating arguments, but for most uses it
+should behave the same.
 
 ```
 $ petname --help
-rust-petname 1.0.5
+rust-petname 1.0.6
 Gavin Panella <gavinpanella@gmail.com>
 Generate human readable random names.
 
@@ -43,6 +43,7 @@ FLAGS:
 OPTIONS:
     -c, --complexity <COM>     Use small words (0), medium words (1), or large words (2) [default: 0]
         --count <COUNT>        Generate multiple names; pass 0 to produce infinite names! [default: 1]
+    -d, --dir <DIR>            Directory containing adjectives.txt, adverbs.txt, names.txt
     -l, --letters <LETTERS>    Maxiumum number of letters in each word; 0 for unlimited [default: 0]
     -s, --separator <SEP>      Separator between words [default: -]
     -w, --words <WORDS>        Number of words in name [default: 2]

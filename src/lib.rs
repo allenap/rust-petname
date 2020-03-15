@@ -94,6 +94,7 @@ impl<'a> Petnames<'a> {
     ///
     /// This can saturate. If the total possible combinations of words exceeds
     /// `u128::MAX` then this will return `u128::MAX`.
+    #[allow(dead_code)]
     pub fn cardinality(&self, words: u8) -> u128 {
         let mut total: u128 = if words == 0 { 0 } else { 1 };
         for num in (0..words).rev() {
