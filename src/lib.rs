@@ -53,6 +53,9 @@ impl<'a> Petnames<'a> {
         )
     }
 
+    /// Constructs a new `Petnames` from the given word lists.
+    ///
+    /// The words are extracted from the given strings by splitting on whitespace.
     pub fn init(adjectives: &'a str, adverbs: &'a str, names: &'a str) -> Self {
         Self {
             adjectives: adjectives.split_whitespace().collect(),
