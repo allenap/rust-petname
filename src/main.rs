@@ -16,9 +16,14 @@ use clap::{App, Arg};
 use rand::seq::IteratorRandom;
 
 fn main() {
-    if let Err(e) = run() {
-        eprintln!("Error: {}", e);
-        process::exit(1);
+    match run() {
+        Err(e) => {
+            eprintln!("Error: {}", e);
+            process::exit(1);
+        }
+        Ok(()) => {
+            process::exit(0);
+        }
     }
 }
 
