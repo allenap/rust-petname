@@ -86,6 +86,26 @@ impl<'a> Petnames<'a> {
         self.names.retain(&predicate);
     }
 
+    /// Calculate the cardinality of this `Petnames`.
+    ///
+    /// If this is low, names may be repeated by the generator with a higher
+    /// frequency than your use-case may allow. If it is 0 (zero) the generator
+    /// will panic (unless `words` is also zero).
+    ///
+    /// This can saturate. If the total possible combinations of words exceeds
+    /// `u128::MAX` then this will return `u128::MAX`.
+    pub fn cardinality(&self, words: u8) -> u128 {
+        let mut total: u128 = if words == 0 { 0 } else { 1 };
+        for num in (0..words).rev() {
+            total = total.saturating_mul(match num {
+                0 => self.names.len() as u128,
+                1 => self.adjectives.len() as u128,
+                _ => self.adverbs.len() as u128,
+            });
+        }
+        total
+    }
+
     /// Generate a new petname.
     ///
     /// # Examples
@@ -153,6 +173,17 @@ mod tests {
     fn default_petnames_has_names() {
         let petnames = Petnames::default();
         assert_ne!(petnames.names.len(), 0);
+    }
+
+    #[test]
+    fn default_petnames_has_non_zero_cardinality() {
+        let petnames = Petnames::default();
+        // This test will need to be adjusted when word lists change.
+        assert_eq!(0, petnames.cardinality(0));
+        assert_eq!(456, petnames.cardinality(1));
+        assert_eq!(204744, petnames.cardinality(2));
+        assert_eq!(53438184, petnames.cardinality(3));
+        assert_eq!(13947366024, petnames.cardinality(4));
     }
 
     #[test]
