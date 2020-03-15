@@ -5,24 +5,55 @@ mod lib;
 use lib::Petnames;
 
 use std::collections::HashSet;
+use std::fmt;
 use std::fs;
 use std::io;
 use std::path;
 use std::process;
 use std::str::FromStr;
 
-use clap::{App, Arg};
+use clap::Arg;
 use rand::seq::IteratorRandom;
 
 fn main() {
-    if let Err(e) = run() {
-        eprintln!("Error: {}", e);
-        process::exit(1);
+    let matches = app().get_matches();
+    match run(matches) {
+        Err(e) => {
+            eprintln!("Error: {}", e);
+            process::exit(1);
+        }
+        Ok(()) => {
+            process::exit(0);
+        }
     }
 }
 
-fn run() -> io::Result<()> {
-    let matches = App::new("rust-petname")
+enum Error {
+    IoError(io::Error),
+    FileIoError(path::PathBuf, io::Error),
+    CardinalityError(String),
+    AlliterationError(String),
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match *self {
+            Error::IoError(ref e) => write!(f, "{}", e),
+            Error::FileIoError(ref path, ref e) => write!(f, "{}: {}", e, path.display()),
+            Error::CardinalityError(ref message) => write!(f, "cardinality is zero: {}", message),
+            Error::AlliterationError(ref message) => write!(f, "cannot alliterate: {}", message),
+        }
+    }
+}
+
+impl From<io::Error> for Error {
+    fn from(error: io::Error) -> Self {
+        Error::IoError(error)
+    }
+}
+
+fn app<'a, 'b>() -> clap::App<'a, 'b> {
+    clap::App::new("rust-petname")
         .version(crate_version!())
         .author(crate_authors!())
         .about("Generate human readable random names.")
@@ -103,8 +134,9 @@ fn run() -> io::Result<()> {
                 .help("Alias; see --alliterate")
                 .takes_value(false),
         )
-        .get_matches();
+}
 
+fn run<'a>(matches: clap::ArgMatches<'a>) -> Result<(), Error> {
     // Unwrapping is safe because these options have defaults.
     let opt_separator = matches.value_of("separator").unwrap();
     let opt_words = matches.value_of("words").unwrap();
@@ -145,6 +177,13 @@ fn run() -> io::Result<()> {
         petnames.retain(|s| s.len() <= opt_letters);
     }
 
+    // Check cardinality.
+    if petnames.cardinality(opt_words) == 0 {
+        return Err(Error::CardinalityError(
+            "no petnames to choose from; try relaxing constraints".to_string(),
+        ));
+    }
+
     // We're going to need a source of randomness.
     let mut rng = rand::thread_rng();
 
@@ -158,7 +197,11 @@ fn run() -> io::Result<()> {
         // Choose the first letter at random; fails if there are no letters.
         match firsts.iter().choose(&mut rng) {
             Some(c) => petnames.retain(|s| s.chars().next() == Some(*c)),
-            None => panic!("no letters in common"), // TODO: do this without a panic.
+            None => {
+                return Err(Error::AlliterationError(
+                    "word lists have no initial letters in common".to_string(),
+                ))
+            }
         };
     }
 
@@ -209,12 +252,17 @@ impl Words {
     // Load word lists from the given directory. This function expects to find three
     // files in that directory: `adjectives.txt`, `adverbs.txt`, and `names.txt`.
     // Each should be valid UTF-8, and contain words separated by whitespace.
-    fn load<T: AsRef<path::Path>>(dirname: T) -> io::Result<Self> {
+    fn load<T: AsRef<path::Path>>(dirname: T) -> Result<Self, Error> {
         let dirname = dirname.as_ref();
         Ok(Self::Custom(
-            fs::read_to_string(dirname.join("adjectives.txt"))?,
-            fs::read_to_string(dirname.join("adverbs.txt"))?,
-            fs::read_to_string(dirname.join("names.txt"))?,
+            read_file_to_string(dirname.join("adjectives.txt"))?,
+            read_file_to_string(dirname.join("adverbs.txt"))?,
+            read_file_to_string(dirname.join("names.txt"))?,
         ))
     }
+}
+
+fn read_file_to_string<P: AsRef<path::Path>>(path: P) -> Result<String, Error> {
+    fs::read_to_string(&path)
+        .map_err(|error| Error::FileIoError(path.as_ref().to_path_buf(), error))
 }
