@@ -2,12 +2,16 @@
 extern crate clap;
 
 mod lib;
+use lib::Petnames;
+
+use std::collections::HashSet;
+use std::fs;
+use std::io;
+use std::path;
+use std::str::FromStr;
 
 use clap::{App, Arg};
-use lib::Petnames;
 use rand::seq::IteratorRandom;
-use std::collections::HashSet;
-use std::str::FromStr;
 
 fn main() {
     let matches = App::new("rust-petname")
@@ -46,6 +50,15 @@ fn main() {
                 .hide_possible_values(true)
                 .default_value("0")
                 .help("Use small words (0), medium words (1), or large words (2)")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("directory")
+                .short("d")
+                .long("dir")
+                .value_name("DIR")
+                .help("Directory containing adjectives.txt, adverbs.txt, names.txt")
+                .conflicts_with("complexity")
                 .takes_value(true),
         )
         .arg(
@@ -92,17 +105,31 @@ fn main() {
     let opt_letters = matches.value_of("letters").unwrap();
     let opt_alliterate = matches.is_present("alliterate") || matches.is_present("ubuntu");
 
+    // Optional arguments without defaults.
+    let opt_directory = matches.value_of("directory");
+
     // Parse numbers. Validated so unwrapping is okay.
     let opt_words: u8 = opt_words.parse().unwrap();
     let opt_count: usize = opt_count.parse().unwrap();
     let opt_letters: usize = opt_letters.parse().unwrap();
 
+    // Load custom word lists, if specified.
+    let (adjectives, adverbs, names) = match opt_directory {
+        Some(dirname) => load_word_lists(dirname).unwrap(), // TODO: not with unwrap.
+        None => ("".to_string(), "".to_string(), "".to_string()),
+    };
+
     // Select the appropriate word list.
-    let mut petnames = match opt_complexity {
-        "0" => Petnames::small(),
-        "1" => Petnames::medium(),
-        "2" => Petnames::large(),
-        _ => Petnames::small(),
+    let mut petnames = match (opt_directory, opt_complexity) {
+        (None, "0") => Petnames::small(),
+        (None, "1") => Petnames::medium(),
+        (None, "2") => Petnames::large(),
+        (None, _) => Petnames::small(),
+        (Some(_), _) => Petnames {
+            adjectives: adjectives.split_whitespace().collect(),
+            adverbs: adverbs.split_whitespace().collect(),
+            names: names.split_whitespace().collect(),
+        },
     };
 
     // If requested, limit the number of letters.
@@ -161,4 +188,16 @@ fn common_first_letters(init: &[&str], more: &[&[&str]]) -> HashSet<char> {
 
 fn first_letters(names: &[&str]) -> HashSet<char> {
     names.iter().filter_map(|s| s.chars().next()).collect()
+}
+
+// Load word lists from the given directory. This function expects to find three
+// files in that directory: `adjectives.txt`, `adverbs.txt`, and `names.txt`.
+// Each should be valid UTF-8, and contain words separated by whitespace.
+fn load_word_lists<T: AsRef<path::Path>>(dirname: T) -> io::Result<(String, String, String)> {
+    let dirname = dirname.as_ref();
+    Ok((
+        fs::read_to_string(dirname.join("adjectives.txt"))?,
+        fs::read_to_string(dirname.join("adverbs.txt"))?,
+        fs::read_to_string(dirname.join("names.txt"))?,
+    ))
 }
