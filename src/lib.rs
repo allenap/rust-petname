@@ -53,7 +53,7 @@ impl<'a> Petnames<'a> {
         )
     }
 
-    fn init(adjectives: &'a str, adverbs: &'a str, names: &'a str) -> Self {
+    pub fn init(adjectives: &'a str, adverbs: &'a str, names: &'a str) -> Self {
         Self {
             adjectives: adjectives.split_whitespace().collect(),
             adverbs: adverbs.split_whitespace().collect(),

@@ -8,12 +8,20 @@ use std::collections::HashSet;
 use std::fs;
 use std::io;
 use std::path;
+use std::process;
 use std::str::FromStr;
 
 use clap::{App, Arg};
 use rand::seq::IteratorRandom;
 
 fn main() {
+    if let Err(e) = run() {
+        eprintln!("Error: {}", e);
+        process::exit(1);
+    }
+}
+
+fn run() -> io::Result<()> {
     let matches = App::new("rust-petname")
         .version(crate_version!())
         .author(crate_authors!())
@@ -114,21 +122,21 @@ fn main() {
     let opt_letters: usize = opt_letters.parse().unwrap();
 
     // Load custom word lists, if specified.
-    let (adjectives, adverbs, names) = match opt_directory {
-        Some(dirname) => load_word_lists(dirname).unwrap(), // TODO: not with unwrap.
-        None => ("".to_string(), "".to_string(), "".to_string()),
+    let words = match opt_directory {
+        Some(dirname) => Words::load(dirname)?,
+        None => Words::Builtin,
     };
 
     // Select the appropriate word list.
-    let mut petnames = match (opt_directory, opt_complexity) {
-        (None, "0") => Petnames::small(),
-        (None, "1") => Petnames::medium(),
-        (None, "2") => Petnames::large(),
-        (None, _) => Petnames::small(),
-        (Some(_), _) => Petnames {
-            adjectives: adjectives.split_whitespace().collect(),
-            adverbs: adverbs.split_whitespace().collect(),
-            names: names.split_whitespace().collect(),
+    let mut petnames = match words {
+        Words::Custom(ref adjectives, ref adverbs, ref names) => {
+            Petnames::init(&adjectives, &adverbs, &names)
+        }
+        Words::Builtin => match opt_complexity {
+            "0" => Petnames::small(),
+            "1" => Petnames::medium(),
+            "2" => Petnames::large(),
+            _ => Petnames::small(),
         },
     };
 
@@ -166,6 +174,8 @@ fn main() {
             println!("{}", petname);
         }
     }
+
+    Ok(())
 }
 
 fn can_be_parsed<INTO>(value: String) -> Result<(), String>
@@ -190,14 +200,21 @@ fn first_letters(names: &[&str]) -> HashSet<char> {
     names.iter().filter_map(|s| s.chars().next()).collect()
 }
 
-// Load word lists from the given directory. This function expects to find three
-// files in that directory: `adjectives.txt`, `adverbs.txt`, and `names.txt`.
-// Each should be valid UTF-8, and contain words separated by whitespace.
-fn load_word_lists<T: AsRef<path::Path>>(dirname: T) -> io::Result<(String, String, String)> {
-    let dirname = dirname.as_ref();
-    Ok((
-        fs::read_to_string(dirname.join("adjectives.txt"))?,
-        fs::read_to_string(dirname.join("adverbs.txt"))?,
-        fs::read_to_string(dirname.join("names.txt"))?,
-    ))
+enum Words {
+    Custom(String, String, String),
+    Builtin,
+}
+
+impl Words {
+    // Load word lists from the given directory. This function expects to find three
+    // files in that directory: `adjectives.txt`, `adverbs.txt`, and `names.txt`.
+    // Each should be valid UTF-8, and contain words separated by whitespace.
+    fn load<T: AsRef<path::Path>>(dirname: T) -> io::Result<Self> {
+        let dirname = dirname.as_ref();
+        Ok(Self::Custom(
+            fs::read_to_string(dirname.join("adjectives.txt"))?,
+            fs::read_to_string(dirname.join("adverbs.txt"))?,
+            fs::read_to_string(dirname.join("names.txt"))?,
+        ))
+    }
 }
