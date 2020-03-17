@@ -217,6 +217,17 @@ where
     separator: String,
 }
 
+impl<'a, RNG> Names<'a, RNG>
+where
+    RNG: rand::Rng,
+{
+    /// Calculate the cardinality of this iterator; see `Petnames::cardinality`.
+    #[allow(dead_code)]
+    pub fn cardinality(&self) -> u128 {
+        self.petnames.cardinality(self.words)
+    }
+}
+
 impl<'a, RNG> Iterator for Names<'a, RNG>
 where
     RNG: rand::Rng,
@@ -295,6 +306,14 @@ mod tests {
     #[test]
     fn petname_renders_with_desired_separator() {
         assert_eq!(petname(7, "@").split("@").count(), 7);
+    }
+
+    #[test]
+    fn petnames_iter_has_cardinality() {
+        let mut rng = rand::thread_rng();
+        let petnames = Petnames::init("a b", "c d e", "f g h i");
+        let names = petnames.iter(&mut rng, 3, ".");
+        assert_eq!(24u128, names.cardinality());
     }
 
     #[test]
