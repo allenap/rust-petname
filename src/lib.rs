@@ -246,7 +246,7 @@ where
 mod tests {
 
     use super::{petname, Petnames};
-    use rand;
+    use rand::rngs::mock::StepRng;
 
     #[test]
     fn default_petnames_has_adjectives() {
@@ -293,7 +293,7 @@ mod tests {
             names: vec!["name"],
         };
         assert_eq!(
-            petnames.generate(&mut rand::thread_rng(), 3, "-"),
+            petnames.generate(&mut StepRng::new(0, 1), 3, "-"),
             "adverb-adjective-name"
         );
     }
@@ -310,7 +310,7 @@ mod tests {
 
     #[test]
     fn petnames_iter_has_cardinality() {
-        let mut rng = rand::thread_rng();
+        let mut rng = StepRng::new(0, 1);
         let petnames = Petnames::init("a b", "c d e", "f g h i");
         let names = petnames.iter(&mut rng, 3, ".");
         assert_eq!(24u128, names.cardinality());
@@ -318,7 +318,7 @@ mod tests {
 
     #[test]
     fn petnames_iter_yields_names() {
-        let mut rng = rand::thread_rng();
+        let mut rng = StepRng::new(0, 1);
         let petnames = Petnames::init("foo", "bar", "baz");
         let names = petnames.iter(&mut rng, 3, ".");
         // Definintely an Iterator...
