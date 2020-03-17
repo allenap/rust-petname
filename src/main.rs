@@ -205,16 +205,17 @@ fn run<'a>(matches: clap::ArgMatches<'a>) -> Result<(), Error> {
         };
     }
 
+    // Get an iterator for the names we want to print out.
+    let names = petnames.iter(&mut rng, opt_words, opt_separator);
+
     // Stream if count is 0.
     if opt_count == 0 {
-        loop {
-            let petname = petnames.generate(&mut rng, opt_words, opt_separator);
-            println!("{}", petname);
+        for name in names {
+            println!("{}", name);
         }
     } else {
-        for _ in 1..=opt_count {
-            let petname = petnames.generate(&mut rng, opt_words, opt_separator);
-            println!("{}", petname);
+        for name in names.take(opt_count) {
+            println!("{}", name);
         }
     }
 

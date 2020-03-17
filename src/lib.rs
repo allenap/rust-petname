@@ -140,6 +140,29 @@ impl<'a> Petnames<'a> {
     pub fn generate_one(&self, words: u8, separator: &str) -> String {
         self.generate(&mut rand::thread_rng(), words, separator)
     }
+
+    /// Iterator yielding petnames.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// let mut rng = rand::thread_rng();
+    /// let petnames = petname::Petnames::default();
+    /// let mut iter = petnames.iter(&mut rng, 4, "_");
+    /// println!("name: {}", iter.next().unwrap());
+    /// ```
+    ///
+    pub fn iter<RNG>(&self, rng: &'a mut RNG, words: u8, separator: &str) -> Names<RNG>
+    where
+        RNG: rand::Rng,
+    {
+        Names {
+            petnames: self,
+            rng: rng,
+            words: words,
+            separator: separator.to_string(),
+        }
+    }
 }
 
 impl<'a> Default for Petnames<'a> {
@@ -180,6 +203,31 @@ impl<'a> Iterator for Lists<'a> {
                 Some(&petnames.adverbs)
             }
         }
+    }
+}
+
+/// Iterator yielding petnames.
+pub struct Names<'a, RNG>
+where
+    RNG: rand::Rng,
+{
+    petnames: &'a Petnames<'a>,
+    rng: &'a mut RNG,
+    words: u8,
+    separator: String,
+}
+
+impl<'a, RNG> Iterator for Names<'a, RNG>
+where
+    RNG: rand::Rng,
+{
+    type Item = String;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        Some(
+            self.petnames
+                .generate(self.rng, self.words, &self.separator),
+        )
     }
 }
 
@@ -247,5 +295,15 @@ mod tests {
     #[test]
     fn petname_renders_with_desired_separator() {
         assert_eq!(petname(7, "@").split("@").count(), 7);
+    }
+
+    #[test]
+    fn petnames_iter_yields_names() {
+        let mut rng = rand::thread_rng();
+        let petnames = Petnames::init("foo", "bar", "baz");
+        let names = petnames.iter(&mut rng, 3, ".");
+        // Definintely an Iterator...
+        let mut iter: Box<dyn Iterator<Item = _>> = Box::new(names);
+        assert_eq!(Some("bar.foo.baz".to_string()), iter.next());
     }
 }
