@@ -29,26 +29,26 @@ fn main() {
 }
 
 enum Error {
-    IoError(io::Error),
-    FileIoError(path::PathBuf, io::Error),
-    CardinalityError(String),
-    AlliterationError(String),
+    Io(io::Error),
+    FileIo(path::PathBuf, io::Error),
+    Cardinality(String),
+    Alliteration(String),
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
-            Error::IoError(ref e) => write!(f, "{}", e),
-            Error::FileIoError(ref path, ref e) => write!(f, "{}: {}", e, path.display()),
-            Error::CardinalityError(ref message) => write!(f, "cardinality is zero: {}", message),
-            Error::AlliterationError(ref message) => write!(f, "cannot alliterate: {}", message),
+            Error::Io(ref e) => write!(f, "{}", e),
+            Error::FileIo(ref path, ref e) => write!(f, "{}: {}", e, path.display()),
+            Error::Cardinality(ref message) => write!(f, "cardinality is zero: {}", message),
+            Error::Alliteration(ref message) => write!(f, "cannot alliterate: {}", message),
         }
     }
 }
 
 impl From<io::Error> for Error {
     fn from(error: io::Error) -> Self {
-        Error::IoError(error)
+        Error::Io(error)
     }
 }
 
@@ -136,7 +136,7 @@ fn app<'a, 'b>() -> clap::App<'a, 'b> {
         )
 }
 
-fn run<'a>(matches: clap::ArgMatches<'a>) -> Result<(), Error> {
+fn run(matches: clap::ArgMatches) -> Result<(), Error> {
     // Unwrapping is safe because these options have defaults.
     let opt_separator = matches.value_of("separator").unwrap();
     let opt_words = matches.value_of("words").unwrap();
@@ -179,7 +179,7 @@ fn run<'a>(matches: clap::ArgMatches<'a>) -> Result<(), Error> {
 
     // Check cardinality.
     if petnames.cardinality(opt_words) == 0 {
-        return Err(Error::CardinalityError(
+        return Err(Error::Cardinality(
             "no petnames to choose from; try relaxing constraints".to_string(),
         ));
     }
@@ -196,9 +196,9 @@ fn run<'a>(matches: clap::ArgMatches<'a>) -> Result<(), Error> {
             common_first_letters(&petnames.adjectives, &[&petnames.adverbs, &petnames.names]);
         // Choose the first letter at random; fails if there are no letters.
         match firsts.iter().choose(&mut rng) {
-            Some(c) => petnames.retain(|s| s.chars().next() == Some(*c)),
+            Some(c) => petnames.retain(|s| s.starts_with(*c)),
             None => {
-                return Err(Error::AlliterationError(
+                return Err(Error::Alliteration(
                     "word lists have no initial letters in common".to_string(),
                 ))
             }
@@ -264,6 +264,5 @@ impl Words {
 }
 
 fn read_file_to_string<P: AsRef<path::Path>>(path: P) -> Result<String, Error> {
-    fs::read_to_string(&path)
-        .map_err(|error| Error::FileIoError(path.as_ref().to_path_buf(), error))
+    fs::read_to_string(&path).map_err(|error| Error::FileIo(path.as_ref().to_path_buf(), error))
 }
