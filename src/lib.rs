@@ -158,8 +158,8 @@ impl<'a> Petnames<'a> {
     {
         Names {
             petnames: self,
-            rng: rng,
-            words: words,
+            rng,
+            words,
             separator: separator.to_string(),
         }
     }
