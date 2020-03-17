@@ -7,7 +7,7 @@ use lib::Petnames;
 use std::collections::HashSet;
 use std::fmt;
 use std::fs;
-use std::io;
+use std::io::{self, Write};
 use std::path;
 use std::process;
 use std::str::FromStr;
@@ -18,6 +18,9 @@ use rand::seq::IteratorRandom;
 fn main() {
     let matches = app().get_matches();
     match run(matches) {
+        Err(Error::Disconnected) => {
+            process::exit(0);
+        }
         Err(e) => {
             eprintln!("Error: {}", e);
             process::exit(1);
@@ -33,6 +36,7 @@ enum Error {
     FileIo(path::PathBuf, io::Error),
     Cardinality(String),
     Alliteration(String),
+    Disconnected,
 }
 
 impl fmt::Display for Error {
@@ -42,6 +46,7 @@ impl fmt::Display for Error {
             Error::FileIo(ref path, ref e) => write!(f, "{}: {}", e, path.display()),
             Error::Cardinality(ref message) => write!(f, "cardinality is zero: {}", message),
             Error::Alliteration(ref message) => write!(f, "cannot alliterate: {}", message),
+            Error::Disconnected => write!(f, "caller disconnected / stopped reading"),
         }
     }
 }
@@ -208,14 +213,18 @@ fn run(matches: clap::ArgMatches) -> Result<(), Error> {
     // Get an iterator for the names we want to print out.
     let names = petnames.iter(&mut rng, opt_words, opt_separator);
 
+    // Manage stdout.
+    let stdout = io::stdout();
+    let mut handle = stdout.lock();
+
     // Stream if count is 0.
     if opt_count == 0 {
         for name in names {
-            println!("{}", name);
+            writeln!(handle, "{}", name).map_err(suppress_disconnect)?;
         }
     } else {
         for name in names.take(opt_count) {
-            println!("{}", name);
+            writeln!(handle, "{}", name)?;
         }
     }
 
@@ -265,4 +274,11 @@ impl Words {
 
 fn read_file_to_string<P: AsRef<path::Path>>(path: P) -> Result<String, Error> {
     fs::read_to_string(&path).map_err(|error| Error::FileIo(path.as_ref().to_path_buf(), error))
+}
+
+fn suppress_disconnect(err: io::Error) -> Error {
+    match err.kind() {
+        io::ErrorKind::BrokenPipe => Error::Disconnected,
+        _ => err.into(),
+    }
 }
