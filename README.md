@@ -154,7 +154,16 @@ let pname = petname::petname(7, ":")
 ```
 
 It's probably best to use the `generate` method if you're building more than a
-handful of names.
+handful of names...
+
+Or use `iter`:
+
+```
+let mut rng = rand::thread_rng();
+let petnames = petname::Petnames::default();
+let ten_thousand_names: Vec<String> =
+  petnames.iter(&mut rng, 3, "_").take(10000).collect();
+```
 
 You can modify the word lists to, for example, only use words beginning with the
 letter "b":
