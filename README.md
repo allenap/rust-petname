@@ -64,14 +64,14 @@ This implementation is considerably faster than the upstream `petname`:
 
 ```
 $ time /usr/bin/petname
-steady-monitor
+fit-lark
 
-real    0m0.027s
-user    0m0.028s
-sys     0m0.002s
+real    0m0.038s
+user    0m0.032s
+sys     0m0.008s
 
-$ time /home/gavin/.cargo/bin/petname
-sharp-lobster
+$ time target/release/petname
+cool-guinea
 
 real    0m0.002s
 user    0m0.002s
@@ -88,34 +88,36 @@ real    0m32.058s
 user    0m29.360s
 sys     0m5.163s
 
-$ time { for i in $(seq 1000); do /home/gavin/.cargo/bin/petname; done; } > /dev/null
+$ time { for i in $(seq 1000); do target/release/petname; done; } > /dev/null
 
 real    0m2.199s
 user    0m1.333s
 sys     0m0.987s
 ```
 
-rust-petname also has a `--count` option that speeds this up further:
+To be fair, `/usr/bin/petname` is a shell script. The Go command-line version
+(available from the golang-petname package on Ubuntu) is comparable to the Rust
+version for speed, but has very limited options compared to its shell-script
+ancestor and to rust-petname.
+
+Lastly, rust-petname has a `--count` option that speeds up generation of names
+considerably:
 
 ```
-$ time /home/gavin/.cargo/bin/petname --count 1000 > /dev/null
+$ time target/release/petname --count=10000000 > /dev/null
 
-real    0m0.005s
-user    0m0.004s
-sys     0m0.000s
+real    0m1.327s
+user    0m1.322s
+sys     0m0.004s
 ```
 
-That's nearly 400,000 (four hundred thousand) times faster!
-
-However, this speed **is** truly useful if you want to apply an external filter
-to the names being generated:
+That's ~240,000 (two hundred and forty thousand) times faster, for about 7.5
+million petnames a second on this hardware. This is useful if you want to apply
+an external filter to the names being generated:
 
 ```
-$ petname --words=3 --count=0 | grep 'doubt.*salmon'
+$ petname --words=3 --count=0 | grep 'love.*\bsalmon$'
 ```
-
-(This should generate some matches, but it might take a long time. With the
-original `petname` it will take ~400k times longer.)
 
 
 ## Library
