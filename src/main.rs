@@ -31,6 +31,7 @@ fn main() {
     }
 }
 
+#[derive(Debug)]
 enum Error {
     Io(io::Error),
     FileIo(path::PathBuf, io::Error),
@@ -210,23 +211,46 @@ fn run(matches: clap::ArgMatches) -> Result<(), Error> {
         };
     }
 
-    // Get an iterator for the names we want to print out.
-    let names = petnames.iter(&mut rng, opt_words, opt_separator);
-
     // Manage stdout.
     let stdout = io::stdout();
     let mut writer = io::BufWriter::new(stdout.lock());
 
-    // Stream if count is 0.
-    if opt_count == 0 {
-        for name in names {
-            writeln!(writer, "{}", name).map_err(suppress_disconnect)?;
+    let (s, r) = crossbeam::channel::bounded(4 * 10);
+    let _ = crossbeam::scope(|scope| {
+        let mut handles = Vec::new();
+        for _ in 0..4 {
+            handles.push(scope.spawn(|_| {
+                let mut rng = rand::thread_rng();
+                // Get an iterator for the names we want to print out.
+                let names = petnames.iter(&mut rng, opt_words, opt_separator);
+                for name in names {
+                    if let Err(_) = s.send(name) {
+                        break;
+                    }
+                }
+            }))
         }
-    } else {
-        for name in names.take(opt_count) {
-            writeln!(writer, "{}", name)?;
+
+        // Stream if count is 0.
+        if opt_count == 0 {
+            for name in r.iter() {
+                writeln!(writer, "{}", name)
+                    .map_err(suppress_disconnect)
+                    .unwrap();
+            }
+        } else {
+            for name in r.iter().take(opt_count) {
+                writeln!(writer, "{}", name).unwrap();
+            }
         }
-    }
+
+        drop(r);
+
+        for handle in handles.drain(..) {
+            handle.join().unwrap();
+        }
+    })
+    .unwrap();
 
     Ok(())
 }

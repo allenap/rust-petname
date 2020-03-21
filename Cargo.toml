@@ -23,5 +23,6 @@ doc = false
 
 [dependencies]
 clap = "^2.33.0"
+crossbeam = "^0.7.3"
 itertools = "^0.9.0"
 rand = "^0.7.3"
