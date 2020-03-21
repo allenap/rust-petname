@@ -215,16 +215,16 @@ fn run(matches: clap::ArgMatches) -> Result<(), Error> {
 
     // Manage stdout.
     let stdout = io::stdout();
-    let mut handle = stdout.lock();
+    let mut writer = io::BufWriter::new(stdout.lock());
 
     // Stream if count is 0.
     if opt_count == 0 {
         for name in names {
-            writeln!(handle, "{}", name).map_err(suppress_disconnect)?;
+            writeln!(writer, "{}", name).map_err(suppress_disconnect)?;
         }
     } else {
         for name in names.take(opt_count) {
-            writeln!(handle, "{}", name)?;
+            writeln!(writer, "{}", name)?;
         }
     }
 
