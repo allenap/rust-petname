@@ -1,6 +1,6 @@
 [package]
 name = "petname"
-version = "1.0.12"
+version = "1.0.13"
 authors = ["Gavin Panella <gavinpanella@gmail.com>"]
 edition = "2018"
 description = "Generate human readable random names. Usable as a library and from the command-line."

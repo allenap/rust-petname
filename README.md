@@ -26,7 +26,7 @@ should behave the same.
 
 ```
 $ petname --help
-rust-petname 1.0.12
+rust-petname 1.0.13
 Gavin Panella <gavinpanella@gmail.com>
 Generate human readable random names.
 
