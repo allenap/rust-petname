@@ -14,7 +14,6 @@ also maintains libraries for [Python 2 & 3][petname-py], and
 [petname-py]: https://pypi.org/project/petname/
 [petname-go]: https://github.com/dustinkirkland/golang-petname
 
-
 ## Command-line utility
 
 If you have [installed Cargo][install-cargo], you can install rust-petname with
@@ -56,7 +55,6 @@ untaunting-paxton
 $ petname -s _ -w 3
 suitably_overdelicate_jamee
 ```
-
 
 ### Performance
 
@@ -119,7 +117,6 @@ an external filter to the names being generated:
 $ petname --words=3 --count=0 | grep 'love.*\bsalmon$'
 ```
 
-
 ## Library
 
 There's a `petname::Petnames` struct:
@@ -176,27 +173,24 @@ petnames.generate_one(3, ".");
 
 [rand]: https://crates.io/crates/rand
 
-
 ## Getting Started
 
 To install the command-line tool:
 
-  * [Install Cargo][install-cargo],
-  * Install this crate: `cargo install petname`.
+- [Install Cargo][install-cargo],
+- Install this crate: `cargo install petname`.
 
 Alternatively, to hack the source:
 
-  * [Install Cargo][install-cargo],
-  * Clone this repository,
-  * Build it: `cargo build`.
+- [Install Cargo][install-cargo],
+- Clone this repository,
+- Build it: `cargo build`.
 
 [install-cargo]: https://crates.io/install
-
 
 ## Running the tests
 
 After installing the source (see above) run tests with: `cargo test`.
-
 
 ## Making a release
 
@@ -210,7 +204,6 @@ After installing the source (see above) run tests with: `cargo test`.
 5. Tag with "v`$VERSION`", e.g. `git tag v1.0.10`.
 6. Push: `git push --tags`.
 7. Publish: `cargo publish`.
-
 
 ## License
 
