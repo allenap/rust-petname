@@ -3,6 +3,7 @@ use rand::seq::SliceRandom;
 
 /// Convenience function to generate a new petname from default word lists.
 #[allow(dead_code)]
+#[cfg(feature = "std_rng")]
 pub fn petname(words: u8, separator: &str) -> String {
     Petnames::default().generate_one(words, separator)
 }
@@ -76,6 +77,7 @@ impl<'a> Petnames<'a> {
     /// ```rust
     /// let mut petnames = petname::Petnames::default();
     /// petnames.retain(|s| s.starts_with("b"));
+    /// # #[cfg(feature = "std_rng")]
     /// petnames.generate_one(2, ".");
     /// ```
     ///
@@ -111,7 +113,9 @@ impl<'a> Petnames<'a> {
     /// # Examples
     ///
     /// ```rust
+    /// # #[cfg(feature = "std_rng")]
     /// let mut rng = rand::thread_rng();
+    /// # #[cfg(feature = "std_rng")]
     /// petname::Petnames::default().generate(&mut rng, 7, ":");
     /// ```
     ///
@@ -137,6 +141,7 @@ impl<'a> Petnames<'a> {
     /// This is like `generate` but uses `rand::thread_rng` as the random
     /// source. For efficiency use `generate` when creating multiple names, or
     /// when you want to use a custom source of randomness.
+    #[cfg(feature = "std_rng")]
     pub fn generate_one(&self, words: u8, separator: &str) -> String {
         self.generate(&mut rand::thread_rng(), words, separator)
     }
@@ -146,9 +151,13 @@ impl<'a> Petnames<'a> {
     /// # Examples
     ///
     /// ```rust
+    /// # #[cfg(feature = "std_rng")]
     /// let mut rng = rand::thread_rng();
+    /// # #[cfg(feature = "std_rng")]
     /// let petnames = petname::Petnames::default();
+    /// # #[cfg(feature = "std_rng")]
     /// let mut iter = petnames.iter(&mut rng, 4, "_");
+    /// # #[cfg(feature = "std_rng")]
     /// println!("name: {}", iter.next().unwrap());
     /// ```
     ///
@@ -245,7 +254,9 @@ where
 #[cfg(test)]
 mod tests {
 
-    use super::{petname, Petnames};
+    #[cfg(feature = "std_rng")]
+    use super::petname;
+    use super::Petnames;
     use rand::rngs::mock::StepRng;
 
     #[test]
@@ -299,11 +310,13 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "std_rng")]
     fn petname_renders_desired_number_of_words() {
         assert_eq!(petname(7, "-").split("-").count(), 7);
     }
 
     #[test]
+    #[cfg(feature = "std_rng")]
     fn petname_renders_with_desired_separator() {
         assert_eq!(petname(7, "@").split("@").count(), 7);
     }
