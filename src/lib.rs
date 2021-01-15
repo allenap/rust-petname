@@ -4,8 +4,9 @@ use rand::seq::SliceRandom;
 /// Convenience function to generate a new petname from default word lists.
 #[allow(dead_code)]
 #[cfg(feature = "std_rng")]
+#[cfg(feature = "default_dictionary")]
 pub fn petname(words: u8, separator: &str) -> String {
-    Petnames::default().generate_one(words, separator)
+    Petnames::new().generate_one(words, separator)
 }
 
 /// A word list.
@@ -28,11 +29,13 @@ pub struct Petnames<'a> {
 
 impl<'a> Petnames<'a> {
     /// Constructs a new `Petnames` from the default (small) word lists.
-    pub fn default() -> Self {
-        Self::small()
+    #[cfg(feature = "default_dictionary")]
+    pub fn new() -> Self {
+        Self::default()
     }
 
     /// Constructs a new `Petnames` from the small word lists.
+    #[cfg(feature = "default_dictionary")]
     pub fn small() -> Self {
         Self::init(
             include_str!("../words/small/adjectives.txt"),
@@ -42,6 +45,7 @@ impl<'a> Petnames<'a> {
     }
 
     /// Constructs a new `Petnames` from the medium word lists.
+    #[cfg(feature = "default_dictionary")]
     pub fn medium() -> Self {
         Self::init(
             include_str!("../words/medium/adjectives.txt"),
@@ -51,6 +55,7 @@ impl<'a> Petnames<'a> {
     }
 
     /// Constructs a new `Petnames` from the large word lists.
+    #[cfg(feature = "default_dictionary")]
     pub fn large() -> Self {
         Self::init(
             include_str!("../words/large/adjectives.txt"),
@@ -75,8 +80,11 @@ impl<'a> Petnames<'a> {
     /// # Examples
     ///
     /// ```rust
+    /// # #[cfg(feature = "default_dictionary")]
     /// let mut petnames = petname::Petnames::default();
+    /// # #[cfg(feature = "default_dictionary")]
     /// petnames.retain(|s| s.starts_with("b"));
+    /// # #[cfg(feature = "default_dictionary")]
     /// # #[cfg(feature = "std_rng")]
     /// petnames.generate_one(2, ".");
     /// ```
@@ -113,9 +121,9 @@ impl<'a> Petnames<'a> {
     /// # Examples
     ///
     /// ```rust
-    /// # #[cfg(feature = "std_rng")]
+    /// # #[cfg(all(feature = "std_rng", feature = "default_dictionary"))]
     /// let mut rng = rand::thread_rng();
-    /// # #[cfg(feature = "std_rng")]
+    /// # #[cfg(all(feature = "std_rng", feature = "default_dictionary"))]
     /// petname::Petnames::default().generate(&mut rng, 7, ":");
     /// ```
     ///
@@ -151,13 +159,13 @@ impl<'a> Petnames<'a> {
     /// # Examples
     ///
     /// ```rust
-    /// # #[cfg(feature = "std_rng")]
+    /// # #[cfg(all(feature = "std_rng", feature = "default_dictionary"))]
     /// let mut rng = rand::thread_rng();
-    /// # #[cfg(feature = "std_rng")]
+    /// # #[cfg(all(feature = "std_rng", feature = "default_dictionary"))]
     /// let petnames = petname::Petnames::default();
-    /// # #[cfg(feature = "std_rng")]
+    /// # #[cfg(all(feature = "std_rng", feature = "default_dictionary"))]
     /// let mut iter = petnames.iter(&mut rng, 4, "_");
-    /// # #[cfg(feature = "std_rng")]
+    /// # #[cfg(all(feature = "std_rng", feature = "default_dictionary"))]
     /// println!("name: {}", iter.next().unwrap());
     /// ```
     ///
@@ -174,9 +182,10 @@ impl<'a> Petnames<'a> {
     }
 }
 
+#[cfg(feature = "default_dictionary")]
 impl<'a> Default for Petnames<'a> {
     fn default() -> Self {
-        Self::default()
+        Self::small()
     }
 }
 
@@ -254,24 +263,27 @@ where
 #[cfg(test)]
 mod tests {
 
-    #[cfg(feature = "std_rng")]
+    #[cfg(all(feature = "std_rng", feature = "default_dictionary"))]
     use super::petname;
     use super::Petnames;
     use rand::rngs::mock::StepRng;
 
     #[test]
+    #[cfg(feature = "default_dictionary")]
     fn default_petnames_has_adjectives() {
         let petnames = Petnames::default();
         assert_ne!(petnames.adjectives.len(), 0);
     }
 
     #[test]
+    #[cfg(feature = "default_dictionary")]
     fn default_petnames_has_adverbs() {
         let petnames = Petnames::default();
         assert_ne!(petnames.adverbs.len(), 0);
     }
 
     #[test]
+    #[cfg(feature = "default_dictionary")]
     fn default_petnames_has_names() {
         let petnames = Petnames::default();
         assert_ne!(petnames.names.len(), 0);
@@ -286,6 +298,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "default_dictionary")]
     fn default_petnames_has_non_zero_cardinality() {
         let petnames = Petnames::default();
         // This test will need to be adjusted when word lists change.
@@ -310,13 +323,13 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "std_rng")]
+    #[cfg(all(feature = "std_rng", feature = "default_dictionary"))]
     fn petname_renders_desired_number_of_words() {
         assert_eq!(petname(7, "-").split('-').count(), 7);
     }
 
     #[test]
-    #[cfg(feature = "std_rng")]
+    #[cfg(all(feature = "std_rng", feature = "default_dictionary"))]
     fn petname_renders_with_desired_separator() {
         assert_eq!(petname(7, "@").split('@').count(), 7);
     }
