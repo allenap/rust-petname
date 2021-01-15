@@ -24,7 +24,8 @@ doc = false
 required-features = ["clap", "std_rng", "default_dictionary"]
 
 [features]
-default = ["std_rng", "default_dictionary"]
+# We include features that must be used for the binary regardless of if they are used (like clap).
+default = ["clap", "std_rng", "default_dictionary"]
 # Allows generating petnames with thread rng.
 std_rng = ["rand/std", "rand/std_rng"]
 # Allows the default dictionary to be used.
