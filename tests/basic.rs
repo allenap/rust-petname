@@ -28,8 +28,8 @@ fn default_petnames_has_names() {
 
 #[test]
 fn retain_applies_given_predicate() {
-    let petnames_expected = Petnames::init("bob", "bob", "bob jane");
-    let mut petnames = Petnames::init("alice bob carol", "alice bob", "bob carol jane");
+    let petnames_expected = Petnames::new("bob", "bob", "bob jane");
+    let mut petnames = Petnames::new("alice bob carol", "alice bob", "bob carol jane");
     petnames.retain(|word| word.len() < 5);
     assert_eq!(petnames_expected, petnames);
 }
@@ -71,7 +71,7 @@ fn petname_renders_with_desired_separator() {
 #[test]
 fn petnames_iter_has_cardinality() {
     let mut rng = StepRng::new(0, 1);
-    let petnames = Petnames::init("a b", "c d e", "f g h i");
+    let petnames = Petnames::new("a b", "c d e", "f g h i");
     let names = petnames.iter(&mut rng, 3, ".");
     assert_eq!(24u128, names.cardinality());
 }
@@ -79,7 +79,7 @@ fn petnames_iter_has_cardinality() {
 #[test]
 fn petnames_iter_yields_names() {
     let mut rng = StepRng::new(0, 1);
-    let petnames = Petnames::init("foo", "bar", "baz");
+    let petnames = Petnames::new("foo", "bar", "baz");
     let names = petnames.iter(&mut rng, 3, ".");
     // Definintely an Iterator...
     let mut iter: Box<dyn Iterator<Item = _>> = Box::new(names);
@@ -89,7 +89,7 @@ fn petnames_iter_yields_names() {
 #[test]
 fn petnames_iter_non_repeating_yields_unique_names() {
     let mut rng = StepRng::new(0, 1);
-    let petnames = Petnames::init("a1 a2", "b1 b2 b3", "c1 c2");
+    let petnames = Petnames::new("a1 a2", "b1 b2 b3", "c1 c2");
     let names: Vec<String> = petnames.iter_non_repeating(&mut rng, 3, ".").collect();
     assert_eq!(
         vec![
@@ -103,7 +103,7 @@ fn petnames_iter_non_repeating_yields_unique_names() {
 #[test]
 fn petnames_iter_non_repeating_yields_nothing_when_any_word_list_is_empty() {
     let mut rng = StepRng::new(0, 1);
-    let petnames = Petnames::init("a1 a2", "", "c1 c2");
+    let petnames = Petnames::new("a1 a2", "", "c1 c2");
     let names: Vec<String> = petnames.iter_non_repeating(&mut rng, 3, ".").collect();
     assert_eq!(Vec::<String>::new(), names);
 }
@@ -111,7 +111,7 @@ fn petnames_iter_non_repeating_yields_nothing_when_any_word_list_is_empty() {
 #[test]
 fn petnames_iter_non_repeating_yields_nothing_when_no_word_lists_are_given() {
     let mut rng = StepRng::new(0, 1);
-    let petnames = Petnames::init("a1 a2", "b1 b2", "c1 c2");
+    let petnames = Petnames::new("a1 a2", "b1 b2", "c1 c2");
     let names: Vec<String> = petnames.iter_non_repeating(&mut rng, 0, ".").collect();
     assert_eq!(Vec::<String>::new(), names);
 }

@@ -71,7 +71,7 @@ use rand::seq::SliceRandom;
 #[cfg(feature = "default-rng")]
 #[cfg(feature = "default-words")]
 pub fn petname(words: u8, separator: &str) -> String {
-    Petnames::new().generate_one(words, separator)
+    Petnames::default().generate_one(words, separator)
 }
 
 /// A word list.
@@ -98,12 +98,6 @@ mod words {
 }
 
 impl<'a> Petnames<'a> {
-    /// Constructs a new `Petnames` from the default (small) word lists.
-    #[cfg(feature = "default-words")]
-    pub fn new() -> Self {
-        Self::default()
-    }
-
     /// Constructs a new `Petnames` from the small word lists.
     #[cfg(feature = "default-words")]
     pub fn small() -> Self {
@@ -137,7 +131,7 @@ impl<'a> Petnames<'a> {
     /// Constructs a new `Petnames` from the given word lists.
     ///
     /// The words are extracted from the given strings by splitting on whitespace.
-    pub fn init(adjectives: &'a str, adverbs: &'a str, names: &'a str) -> Self {
+    pub fn new(adjectives: &'a str, adverbs: &'a str, names: &'a str) -> Self {
         Self {
             adjectives: Cow::Owned(adjectives.split_whitespace().collect()),
             adverbs: Cow::Owned(adverbs.split_whitespace().collect()),
@@ -291,6 +285,7 @@ impl<'a> Petnames<'a> {
 
 #[cfg(feature = "default-words")]
 impl<'a> Default for Petnames<'a> {
+    /// Constructs a new `Petnames` from the default (small) word lists.
     fn default() -> Self {
         Self::small()
     }
