@@ -1,10 +1,21 @@
+#![no_std]
+
+extern crate alloc;
+
+use alloc::{
+    string::{String, ToString},
+    vec::Vec,
+};
+
 use itertools::Itertools;
 use rand::seq::SliceRandom;
 
 /// Convenience function to generate a new petname from default word lists.
 #[allow(dead_code)]
+#[cfg(feature = "std_rng")]
+#[cfg(feature = "default_dictionary")]
 pub fn petname(words: u8, separator: &str) -> String {
-    Petnames::default().generate_one(words, separator)
+    Petnames::new().generate_one(words, separator)
 }
 
 /// A word list.
@@ -27,11 +38,13 @@ pub struct Petnames<'a> {
 
 impl<'a> Petnames<'a> {
     /// Constructs a new `Petnames` from the default (small) word lists.
-    pub fn default() -> Self {
-        Self::small()
+    #[cfg(feature = "default_dictionary")]
+    pub fn new() -> Self {
+        Self::default()
     }
 
     /// Constructs a new `Petnames` from the small word lists.
+    #[cfg(feature = "default_dictionary")]
     pub fn small() -> Self {
         Self::init(
             include_str!("../words/small/adjectives.txt"),
@@ -41,6 +54,7 @@ impl<'a> Petnames<'a> {
     }
 
     /// Constructs a new `Petnames` from the medium word lists.
+    #[cfg(feature = "default_dictionary")]
     pub fn medium() -> Self {
         Self::init(
             include_str!("../words/medium/adjectives.txt"),
@@ -50,6 +64,7 @@ impl<'a> Petnames<'a> {
     }
 
     /// Constructs a new `Petnames` from the large word lists.
+    #[cfg(feature = "default_dictionary")]
     pub fn large() -> Self {
         Self::init(
             include_str!("../words/large/adjectives.txt"),
@@ -74,8 +89,12 @@ impl<'a> Petnames<'a> {
     /// # Examples
     ///
     /// ```rust
+    /// # #[cfg(feature = "default_dictionary")]
     /// let mut petnames = petname::Petnames::default();
+    /// # #[cfg(feature = "default_dictionary")]
     /// petnames.retain(|s| s.starts_with("b"));
+    /// # #[cfg(feature = "default_dictionary")]
+    /// # #[cfg(feature = "std_rng")]
     /// petnames.generate_one(2, ".");
     /// ```
     ///
@@ -111,7 +130,9 @@ impl<'a> Petnames<'a> {
     /// # Examples
     ///
     /// ```rust
+    /// # #[cfg(all(feature = "std_rng", feature = "default_dictionary"))]
     /// let mut rng = rand::thread_rng();
+    /// # #[cfg(all(feature = "std_rng", feature = "default_dictionary"))]
     /// petname::Petnames::default().generate(&mut rng, 7, ":");
     /// ```
     ///
@@ -137,6 +158,7 @@ impl<'a> Petnames<'a> {
     /// This is like `generate` but uses `rand::thread_rng` as the random
     /// source. For efficiency use `generate` when creating multiple names, or
     /// when you want to use a custom source of randomness.
+    #[cfg(feature = "std_rng")]
     pub fn generate_one(&self, words: u8, separator: &str) -> String {
         self.generate(&mut rand::thread_rng(), words, separator)
     }
@@ -146,9 +168,13 @@ impl<'a> Petnames<'a> {
     /// # Examples
     ///
     /// ```rust
+    /// # #[cfg(all(feature = "std_rng", feature = "default_dictionary"))]
     /// let mut rng = rand::thread_rng();
+    /// # #[cfg(all(feature = "std_rng", feature = "default_dictionary"))]
     /// let petnames = petname::Petnames::default();
+    /// # #[cfg(all(feature = "std_rng", feature = "default_dictionary"))]
     /// let mut iter = petnames.iter(&mut rng, 4, "_");
+    /// # #[cfg(all(feature = "std_rng", feature = "default_dictionary"))]
     /// println!("name: {}", iter.next().unwrap());
     /// ```
     ///
@@ -165,9 +191,10 @@ impl<'a> Petnames<'a> {
     }
 }
 
+#[cfg(feature = "default_dictionary")]
 impl<'a> Default for Petnames<'a> {
     fn default() -> Self {
-        Self::default()
+        Self::small()
     }
 }
 
@@ -239,90 +266,5 @@ where
             self.petnames
                 .generate(self.rng, self.words, &self.separator),
         )
-    }
-}
-
-#[cfg(test)]
-mod tests {
-
-    use super::{petname, Petnames};
-    use rand::rngs::mock::StepRng;
-
-    #[test]
-    fn default_petnames_has_adjectives() {
-        let petnames = Petnames::default();
-        assert_ne!(petnames.adjectives.len(), 0);
-    }
-
-    #[test]
-    fn default_petnames_has_adverbs() {
-        let petnames = Petnames::default();
-        assert_ne!(petnames.adverbs.len(), 0);
-    }
-
-    #[test]
-    fn default_petnames_has_names() {
-        let petnames = Petnames::default();
-        assert_ne!(petnames.names.len(), 0);
-    }
-
-    #[test]
-    fn retain_applies_given_predicate() {
-        let petnames_expected = Petnames::init("bob", "bob", "bob jane");
-        let mut petnames = Petnames::init("alice bob carol", "alice bob", "bob carol jane");
-        petnames.retain(|word| word.len() < 5);
-        assert_eq!(petnames_expected, petnames);
-    }
-
-    #[test]
-    fn default_petnames_has_non_zero_cardinality() {
-        let petnames = Petnames::default();
-        // This test will need to be adjusted when word lists change.
-        assert_eq!(0, petnames.cardinality(0));
-        assert_eq!(456, petnames.cardinality(1));
-        assert_eq!(204744, petnames.cardinality(2));
-        assert_eq!(53438184, petnames.cardinality(3));
-        assert_eq!(13947366024, petnames.cardinality(4));
-    }
-
-    #[test]
-    fn generate_uses_adverb_adjective_name() {
-        let petnames = Petnames {
-            adjectives: vec!["adjective"],
-            adverbs: vec!["adverb"],
-            names: vec!["name"],
-        };
-        assert_eq!(
-            petnames.generate(&mut StepRng::new(0, 1), 3, "-"),
-            "adverb-adjective-name"
-        );
-    }
-
-    #[test]
-    fn petname_renders_desired_number_of_words() {
-        assert_eq!(petname(7, "-").split("-").count(), 7);
-    }
-
-    #[test]
-    fn petname_renders_with_desired_separator() {
-        assert_eq!(petname(7, "@").split("@").count(), 7);
-    }
-
-    #[test]
-    fn petnames_iter_has_cardinality() {
-        let mut rng = StepRng::new(0, 1);
-        let petnames = Petnames::init("a b", "c d e", "f g h i");
-        let names = petnames.iter(&mut rng, 3, ".");
-        assert_eq!(24u128, names.cardinality());
-    }
-
-    #[test]
-    fn petnames_iter_yields_names() {
-        let mut rng = StepRng::new(0, 1);
-        let petnames = Petnames::init("foo", "bar", "baz");
-        let names = petnames.iter(&mut rng, 3, ".");
-        // Definintely an Iterator...
-        let mut iter: Box<dyn Iterator<Item = _>> = Box::new(names);
-        assert_eq!(Some("bar.foo.baz".to_string()), iter.next());
     }
 }

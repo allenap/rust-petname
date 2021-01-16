@@ -1,8 +1,7 @@
 #[macro_use]
 extern crate clap;
 
-mod lib;
-use lib::Petnames;
+use petname::Petnames;
 
 use std::collections::HashSet;
 use std::fmt;

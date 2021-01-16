@@ -7,7 +7,8 @@ description = "Generate human readable random names. Usable as a library and fro
 readme = "README.md"
 repository = "https://github.com/allenap/rust-petname"
 license = "Apache-2.0"
-categories = ["command-line-utilities"]
+categories = ["command-line-utilities", "no-std"]
+keywords = ["pet", "name", "rand", "random", "generator"]
 
 [badges]
 travis-ci = { repository = "allenap/rust-petname", branch = "master" }
@@ -20,8 +21,17 @@ path = "src/lib.rs"
 name = "petname"
 path = "src/main.rs"
 doc = false
+required-features = ["clap", "std_rng", "default_dictionary"]
+
+[features]
+# We include features that must be used for the binary regardless of if they are used (like clap).
+default = ["clap", "std_rng", "default_dictionary"]
+# Allows generating petnames with thread rng.
+std_rng = ["rand/std", "rand/std_rng"]
+# Allows the default dictionary to be used.
+default_dictionary = []
 
 [dependencies]
-clap = "^2.33.0"
-itertools = "^0.9.0"
-rand = "^0.8.0"
+clap = { version = "^2.33.0", default-features = false, optional = true }
+itertools = { version = "^0.9.0", default-features = false }
+rand = { version = "^0.8.0", default-features = false }
