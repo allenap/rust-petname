@@ -1,26 +1,26 @@
 use std::borrow::Cow;
 
-#[cfg(all(feature = "std_rng", feature = "default_dictionary"))]
+#[cfg(all(feature = "default-rng", feature = "default-words"))]
 use petname::petname;
 use petname::Petnames;
 use rand::rngs::mock::StepRng;
 
 #[test]
-#[cfg(feature = "default_dictionary")]
+#[cfg(feature = "default-words")]
 fn default_petnames_has_adjectives() {
     let petnames = Petnames::default();
     assert_ne!(petnames.adjectives.len(), 0);
 }
 
 #[test]
-#[cfg(feature = "default_dictionary")]
+#[cfg(feature = "default-words")]
 fn default_petnames_has_adverbs() {
     let petnames = Petnames::default();
     assert_ne!(petnames.adverbs.len(), 0);
 }
 
 #[test]
-#[cfg(feature = "default_dictionary")]
+#[cfg(feature = "default-words")]
 fn default_petnames_has_names() {
     let petnames = Petnames::default();
     assert_ne!(petnames.names.len(), 0);
@@ -35,7 +35,7 @@ fn retain_applies_given_predicate() {
 }
 
 #[test]
-#[cfg(feature = "default_dictionary")]
+#[cfg(feature = "default-words")]
 fn default_petnames_has_non_zero_cardinality() {
     let petnames = Petnames::default();
     // This test will need to be adjusted when word lists change.
@@ -57,13 +57,13 @@ fn generate_uses_adverb_adjective_name() {
 }
 
 #[test]
-#[cfg(all(feature = "std_rng", feature = "default_dictionary"))]
+#[cfg(all(feature = "default-rng", feature = "default-words"))]
 fn petname_renders_desired_number_of_words() {
     assert_eq!(petname(7, "-").split('-').count(), 7);
 }
 
 #[test]
-#[cfg(all(feature = "std_rng", feature = "default_dictionary"))]
+#[cfg(all(feature = "default-rng", feature = "default-words"))]
 fn petname_renders_with_desired_separator() {
     assert_eq!(petname(7, "@").split('@').count(), 7);
 }

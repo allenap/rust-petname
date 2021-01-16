@@ -18,15 +18,16 @@ path = "src/lib.rs"
 doc = false
 name = "petname"
 path = "src/main.rs"
-required-features = ["clap", "std_rng", "default_dictionary"]
+required-features = ["clap", "default-rng", "default-words"]
 
 [features]
-# We include features that must be used for the binary regardless of if they are used (like clap).
-default = ["clap", "std_rng", "default_dictionary"]
+# We include features that must be used for the binary regardless of if they are
+# used (like clap).
+default = ["clap", "default-rng", "default-words"]
 # Allows generating petnames with thread rng.
-std_rng = ["rand/std", "rand/std_rng"]
-# Allows the default dictionary to be used.
-default_dictionary = []
+default-rng = ["rand/std", "rand/std_rng"]
+# Allows the default word lists to be used.
+default-words = []
 
 [dependencies]
 clap = { version = "^3.1.0", features = ["cargo", "derive"], optional = true }

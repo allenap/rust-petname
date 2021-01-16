@@ -145,8 +145,10 @@ $ petname --words=3 --stream | grep 'love.*\bsalmon$'
 There are a few features that can be selected – or, more correctly,
 _deselected_, since all features are enabled by default:
 
-- `std_rng` enables `std` and `std_rng` in [rand][].
-- `default_dictionary` enables the default word lists.
+- `default-rng` enables `std` and `std_rng` in [rand][]. A couple of convenience
+  functions depend on this for a default RNG.
+- `default-words` enables the default word lists. Deselecting this will reduce
+  the size of compiled artifacts.
 - `clap` enables the [clap][] command-line argument parser.
 
 All of these are required to build the command-line utility.
