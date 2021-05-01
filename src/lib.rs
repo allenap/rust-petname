@@ -146,11 +146,13 @@ impl<'a> Petnames<'a> {
     where
         RNG: rand::Rng,
     {
-        Lists(self, words)
-            .filter_map(|list| list.choose(rng))
-            .cloned()
-            .intersperse(separator)
-            .collect::<String>()
+        itertools::Itertools::intersperse(
+            Lists(self, words)
+                .filter_map(|list| list.choose(rng))
+                .cloned(),
+            separator,
+        )
+        .collect::<String>()
     }
 
     /// Generate a single new petname.
