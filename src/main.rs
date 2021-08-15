@@ -133,6 +133,7 @@ fn app<'a, 'b>() -> clap::App<'a, 'b> {
         .arg(
             Arg::with_name("alliterate-with")
                 .long("alliterate-with")
+                .short("A")
                 .value_name("LETTER")
                 .help("Generate names where each word begins with the given letter")
                 .takes_value(true)
