@@ -131,6 +131,14 @@ fn app<'a, 'b>() -> clap::App<'a, 'b> {
                 .takes_value(false),
         )
         .arg(
+            Arg::with_name("alliterate-with")
+                .long("alliterate-with")
+                .value_name("LETTER")
+                .help("Generate names where each word begins with the given letter")
+                .takes_value(true)
+                .validator(can_be_parsed::<char>),
+        )
+        .arg(
             // For compatibility with upstream.
             Arg::with_name("ubuntu")
                 .short("u")
@@ -147,10 +155,13 @@ fn run(matches: clap::ArgMatches) -> Result<(), Error> {
     let opt_complexity = matches.value_of("complexity").unwrap();
     let opt_count = matches.value_of("count").unwrap();
     let opt_letters = matches.value_of("letters").unwrap();
-    let opt_alliterate = matches.is_present("alliterate") || matches.is_present("ubuntu");
+    let opt_alliterate = matches.is_present("alliterate")
+        || matches.is_present("ubuntu")
+        || matches.is_present("alliterate-with");
 
     // Optional arguments without defaults.
     let opt_directory = matches.value_of("directory");
+    let opt_alliterate_char = matches.value_of("alliterate-with");
 
     // Parse numbers. Validated so unwrapping is okay.
     let opt_words: u8 = opt_words.parse().unwrap();
@@ -191,22 +202,37 @@ fn run(matches: clap::ArgMatches) -> Result<(), Error> {
     // We're going to need a source of randomness.
     let mut rng = rand::thread_rng();
 
-    // If requested, choose a random letter then discard all words that do not
-    // begin with that letter.
+    // Handle alliteration, either by eliminating a specified
+    // character, or using a random one.
     if opt_alliterate {
-        // We choose the first letter from the intersection of the first letters
-        // of each word list in `petnames`.
+        // We choose the first letter from the intersection of the
+        // first letters of each word list in `petnames`.
         let firsts =
             common_first_letters(&petnames.adjectives, &[&petnames.adverbs, &petnames.names]);
-        // Choose the first letter at random; fails if there are no letters.
-        match firsts.iter().choose(&mut rng) {
-            Some(c) => petnames.retain(|s| s.starts_with(*c)),
-            None => {
+        // if a specific character was requested for alliteration,
+        // attempt to use it.
+        if let Some(c) = opt_alliterate_char {
+            // alliteration character is validated to not be empty
+            let ch = c.chars().next().unwrap();
+            if firsts.contains(&ch) {
+                petnames.retain(|s| s.starts_with(c));
+            } else {
                 return Err(Error::Alliteration(
-                    "word lists have no initial letters in common".to_string(),
-                ))
+                    "no petnames begin with the choosen alliteration character".to_string(),
+                ));
             }
-        };
+        } else {
+            // Otherwise choose the first letter at random; fails if
+            // there are no letters.
+            match firsts.iter().choose(&mut rng) {
+                Some(c) => petnames.retain(|s| s.starts_with(*c)),
+                None => {
+                    return Err(Error::Alliteration(
+                        "word lists have no initial letters in common".to_string(),
+                    ))
+                }
+            };
+        }
     }
 
     // Get an iterator for the names we want to print out.
