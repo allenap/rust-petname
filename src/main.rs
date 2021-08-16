@@ -162,7 +162,9 @@ fn run(matches: clap::ArgMatches) -> Result<(), Error> {
 
     // Optional arguments without defaults.
     let opt_directory = matches.value_of("directory");
-    let opt_alliterate_char = matches.value_of("alliterate-with");
+    let opt_alliterate_char = matches
+        .value_of("alliterate-with")
+        .and_then(|s| s.parse::<char>().ok());
 
     // Parse numbers. Validated so unwrapping is okay.
     let opt_words: u8 = opt_words.parse().unwrap();
