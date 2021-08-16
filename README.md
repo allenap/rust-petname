@@ -48,7 +48,7 @@ should behave the same.
 
 ```
 $ petname --help
-rust-petname 1.1.0
+rust-petname 1.1.1
 Gavin Panella <gavinpanella@gmail.com>
 Generate human readable random names.
 
@@ -62,12 +62,13 @@ FLAGS:
     -V, --version       Prints version information
 
 OPTIONS:
-    -c, --complexity <COM>     Use small words (0), medium words (1), or large words (2) [default: 0]
-        --count <COUNT>        Generate multiple names; pass 0 to produce infinite names! [default: 1]
-    -d, --dir <DIR>            Directory containing adjectives.txt, adverbs.txt, names.txt
-    -l, --letters <LETTERS>    Maxiumum number of letters in each word; 0 for unlimited [default: 0]
-    -s, --separator <SEP>      Separator between words [default: -]
-    -w, --words <WORDS>        Number of words in name [default: 2]
+    -A, --alliterate-with <LETTER>    Generate names where each word begins with the given letter
+    -c, --complexity <COM>            Use small words (0), medium words (1), or large words (2) [default: 0]
+        --count <COUNT>               Generate multiple names; pass 0 to produce infinite names! [default: 1]
+    -d, --dir <DIR>                   Directory containing adjectives.txt, adverbs.txt, names.txt
+    -l, --letters <LETTERS>           Maxiumum number of letters in each word; 0 for unlimited [default: 0]
+    -s, --separator <SEP>             Separator between words [default: -]
+    -w, --words <WORDS>               Number of words in name [default: 2]
 
 Based on Dustin Kirkland's petname project <https://github.com/dustinkirkland/petname>.
 
