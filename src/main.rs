@@ -215,9 +215,7 @@ fn run(matches: clap::ArgMatches) -> Result<(), Error> {
         // if a specific character was requested for alliteration,
         // attempt to use it.
         if let Some(c) = opt_alliterate_char {
-            // alliteration character is validated to not be empty
-            let ch = c.chars().next().unwrap();
-            if firsts.contains(&ch) {
+            if firsts.contains(&c) {
                 petnames.retain(|s| s.starts_with(c));
             } else {
                 return Err(Error::Alliteration(
