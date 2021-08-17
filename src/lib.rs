@@ -236,6 +236,30 @@ impl<'a> Petnames<'a> {
             separator: separator.to_string(),
         }
     }
+
+    /// Iterator yielding unique – i.e. non-repeating – petnames.
+    pub fn iter_unique<RNG>(&'a self, rng: &'a mut RNG, words: u8, separator: &str) -> NamesUnique
+    where
+        RNG: rand::Rng,
+    {
+        let mut list_copies: Vec<Words> = Vec::with_capacity(words as usize);
+
+        for list in Lists(self, words) {
+            let mut list_copy: Vec<&str> = list.iter().map(|s| *s).collect();
+            list_copy.shuffle(rng);
+            list_copies.push(list_copy);
+        }
+
+        let mut iters: Vec<alloc::vec::IntoIter<&'a str>> = Vec::with_capacity(words as usize);
+        for list_copy in list_copies.drain(..) {
+            iters.push(list_copy.into_iter())
+        }
+
+        NamesUnique {
+            iters: iters,
+            separator: separator.to_string(),
+        }
+    }
 }
 
 #[cfg(feature = "default_dictionary")]
@@ -313,5 +337,30 @@ where
             self.petnames
                 .generate(self.rng, self.words, &self.separator),
         )
+    }
+}
+
+/// Iterator yielding unique petnames.
+pub struct NamesUnique<'a> {
+    iters: Vec<alloc::vec::IntoIter<&'a str>>,
+    separator: String,
+}
+
+impl<'a> Iterator for NamesUnique<'a> {
+    type Item = String;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let words_options: Vec<Option<&str>> =
+            self.iters.iter_mut().map(|iter| iter.next()).collect();
+        let words: Vec<&str> = words_options.iter().filter_map(|wo| *wo).collect();
+
+        if words_options.len() > words.len() {
+            None
+        } else {
+            Some(
+                itertools::Itertools::intersperse(words.iter().map(|s| *s), &self.separator)
+                    .collect::<String>(),
+            )
+        }
     }
 }
