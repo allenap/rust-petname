@@ -372,7 +372,11 @@ where
                         // This is the cycle end marker. We want to get another
                         // new word from this iterator, and advance the *next*
                         // iterator too.
-                        *word = iter.next();
+                        match iter.next() {
+                            None => return None,
+                            Some("") => return None,
+                            Some(s) => *word = Some(s),
+                        }
                         bump = true
                     }
                     Some(s) => {
