@@ -90,10 +90,16 @@ fn petnames_iter_yields_names() {
 #[test]
 fn petnames_iter_unique_yields_unique_names() {
     let mut rng = StepRng::new(0, 1);
-    let petnames = Petnames::init("a1 a2", "b1 b2", "c1 c2");
+    let petnames = Petnames::init("a1 a2", "b1 b2 b3", "c1 c2");
     let names = petnames.iter_unique(&mut rng, 3, ".");
     // Definintely an Iterator...
     let iter: Box<dyn Iterator<Item = _>> = Box::new(names);
     let names: Vec<String> = iter.collect();
-    assert_eq!(vec!["b2.a2.c2".to_string(), "b1.a1.c1".to_string()], names)
+    assert_eq!(
+        vec![
+            "b2.a2.c2", "b3.a2.c2", "b1.a2.c2", "b2.a1.c2", "b3.a1.c2", "b1.a1.c2", "b2.a2.c1",
+            "b3.a2.c1", "b1.a2.c1", "b2.a1.c1", "b3.a1.c1", "b1.a1.c1"
+        ],
+        names
+    )
 }

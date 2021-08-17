@@ -260,7 +260,6 @@ impl<'a> Petnames<'a> {
                     (list.into_iter().chain(core::iter::once("")).cycle(), None)
                 })
                 .collect(),
-            cardinality: self.cardinality(words),
             separator: separator.to_string(),
         }
     }
@@ -350,7 +349,6 @@ where
     ITERATOR: Iterator<Item = &'a str>,
 {
     iters: Vec<(ITERATOR, Option<&'a str>)>,
-    cardinality: u128,
     separator: String,
 }
 
@@ -361,31 +359,43 @@ where
     type Item = String;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.cardinality > 0 {
-            self.cardinality = self.cardinality - 1;
-
-            let mut bump = true;
-            for (iter, word) in self.iters.iter_mut() {
-                if bump || word.is_none() {
-                    *word = iter.next();
-                }
-                if *word == Some("") {
-                    *word = iter.next();
-                    bump = true;
-                } else {
-                    bump = false;
+        let mut bump = true; // Request advance of next iterator.
+        for (iter, word) in self.iters.iter_mut() {
+            if bump || word.is_none() {
+                match iter.next() {
+                    None => {
+                        // This shouldn't happen because we expect the iterators
+                        // to cycle. However, if it does, we're definitely done.
+                        return None;
+                    }
+                    Some("") => {
+                        // This is the cycle end marker. We want to get another
+                        // new word from this iterator, and advance the *next*
+                        // iterator too.
+                        *word = iter.next();
+                        bump = true
+                    }
+                    Some(s) => {
+                        // We have a new word from this iterator, so we do not
+                        // yet need to advance the next iterator.
+                        *word = Some(s);
+                        bump = false
+                    }
                 }
             }
-
+        }
+        if bump {
+            // We reached the end of the last iterator, hence we're done.
+            None
+        } else {
+            // We can construct a word!
             Some(
                 itertools::Itertools::intersperse(
-                    self.iters.iter_mut().filter_map(|(_, w)| *w),
+                    self.iters.iter().filter_map(|(_, w)| *w),
                     &self.separator,
                 )
                 .collect(),
             )
-        } else {
-            None
         }
     }
 }
