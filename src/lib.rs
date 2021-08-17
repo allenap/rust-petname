@@ -243,10 +243,7 @@ impl<'a> Petnames<'a> {
         rng: &'a mut RNG,
         words: u8,
         separator: &str,
-    ) -> NamesUnique<
-        'a,
-        core::iter::Cycle<core::iter::Chain<alloc::vec::IntoIter<&'a str>, core::iter::Once<&str>>>,
-    >
+    ) -> NamesUnique<'a, core::iter::Cycle<alloc::vec::IntoIter<&'a str>>>
     where
         RNG: rand::Rng,
     {
@@ -254,10 +251,9 @@ impl<'a> Petnames<'a> {
             iters: Lists(self, words)
                 .cloned()
                 .map(|mut list| {
-                    list.shuffle(rng);
-                    // The empty string is the cycle marker, i.e. at this point
-                    // the next iterator needs to be advanced.
-                    (list.into_iter().chain(core::iter::once("")).cycle(), None)
+                    list.shuffle(rng); // Could be expensive.
+                    list.push(""); // Cycle marker.
+                    (list.into_iter().cycle(), None)
                 })
                 .collect(),
             separator: separator.to_string(),
