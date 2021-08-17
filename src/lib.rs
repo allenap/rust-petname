@@ -238,25 +238,29 @@ impl<'a> Petnames<'a> {
     }
 
     /// Iterator yielding unique – i.e. non-repeating – petnames.
-    pub fn iter_unique<RNG>(&'a self, rng: &'a mut RNG, words: u8, separator: &str) -> NamesUnique
+    pub fn iter_unique<RNG>(
+        &'a self,
+        rng: &'a mut RNG,
+        words: u8,
+        separator: &str,
+    ) -> NamesUnique<
+        'a,
+        core::iter::Cycle<core::iter::Chain<alloc::vec::IntoIter<&'a str>, core::iter::Once<&str>>>,
+    >
     where
         RNG: rand::Rng,
     {
-        let mut list_copies: Vec<Words> = Vec::with_capacity(words as usize);
-
-        for list in Lists(self, words) {
-            let mut list_copy: Vec<&str> = list.iter().map(|s| *s).collect();
-            list_copy.shuffle(rng);
-            list_copies.push(list_copy);
-        }
-
-        let mut iters: Vec<alloc::vec::IntoIter<&'a str>> = Vec::with_capacity(words as usize);
-        for list_copy in list_copies.drain(..) {
-            iters.push(list_copy.into_iter())
-        }
-
         NamesUnique {
-            iters: iters,
+            iters: Lists(self, words)
+                .cloned()
+                .map(|mut list| {
+                    list.shuffle(rng);
+                    // The empty string is the cycle marker, i.e. at this point
+                    // the next iterator needs to be advanced.
+                    (list.into_iter().chain(core::iter::once("")).cycle(), None)
+                })
+                .collect(),
+            cardinality: self.cardinality(words),
             separator: separator.to_string(),
         }
     }
@@ -341,26 +345,47 @@ where
 }
 
 /// Iterator yielding unique petnames.
-pub struct NamesUnique<'a> {
-    iters: Vec<alloc::vec::IntoIter<&'a str>>,
+pub struct NamesUnique<'a, ITERATOR>
+where
+    ITERATOR: Iterator<Item = &'a str>,
+{
+    iters: Vec<(ITERATOR, Option<&'a str>)>,
+    cardinality: u128,
     separator: String,
 }
 
-impl<'a> Iterator for NamesUnique<'a> {
+impl<'a, ITERATOR> Iterator for NamesUnique<'a, ITERATOR>
+where
+    ITERATOR: Iterator<Item = &'a str>,
+{
     type Item = String;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let words_options: Vec<Option<&str>> =
-            self.iters.iter_mut().map(|iter| iter.next()).collect();
-        let words: Vec<&str> = words_options.iter().filter_map(|wo| *wo).collect();
+        if self.cardinality > 0 {
+            self.cardinality = self.cardinality - 1;
 
-        if words_options.len() > words.len() {
-            None
-        } else {
+            let mut bump = true;
+            for (iter, word) in self.iters.iter_mut() {
+                if bump || word.is_none() {
+                    *word = iter.next();
+                }
+                if *word == Some("") {
+                    *word = iter.next();
+                    bump = true;
+                } else {
+                    bump = false;
+                }
+            }
+
             Some(
-                itertools::Itertools::intersperse(words.iter().map(|s| *s), &self.separator)
-                    .collect::<String>(),
+                itertools::Itertools::intersperse(
+                    self.iters.iter_mut().filter_map(|(_, w)| *w),
+                    &self.separator,
+                )
+                .collect(),
             )
+        } else {
+            None
         }
     }
 }
