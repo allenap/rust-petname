@@ -109,9 +109,19 @@ fn app<'a, 'b>() -> clap::App<'a, 'b> {
                 .long("count")
                 .value_name("COUNT")
                 .default_value("1")
-                .help("Generate multiple names; pass 0 to produce infinite names!")
+                .help(concat!(
+                    "Generate multiple names; pass 0 to produce infinite ",
+                    "names (--count=0 is deprecated; use --stream instead)"
+                ))
                 .takes_value(true)
                 .validator(can_be_parsed::<usize>),
+        )
+        .arg(
+            Arg::with_name("stream")
+                .long("stream")
+                .help("Stream names continuously")
+                .conflicts_with("count")
+                .takes_value(false),
         )
         .arg(
             Arg::with_name("letters")
@@ -156,6 +166,9 @@ fn run(matches: clap::ArgMatches) -> Result<(), Error> {
     let opt_complexity = matches.value_of("complexity").unwrap();
     let opt_count = matches.value_of("count").unwrap();
     let opt_letters = matches.value_of("letters").unwrap();
+
+    // Flags.
+    let opt_stream = matches.is_present("stream");
     let opt_alliterate = matches.is_present("alliterate")
         || matches.is_present("ubuntu")
         || matches.is_present("alliterate-with");
@@ -243,8 +256,17 @@ fn run(matches: clap::ArgMatches) -> Result<(), Error> {
     let stdout = io::stdout();
     let mut writer = io::BufWriter::new(stdout.lock());
 
-    // Stream if count is 0.
+    // Warn that --count=0 is deprecated.
     if opt_count == 0 {
+        eprintln!(concat!(
+            "Warning: specifying --count=0 to continuously produce petnames is ",
+            "deprecated and its behaviour will change in a future version; ",
+            "specify --stream instead.",
+        ));
+    }
+
+    // Stream if count is 0. TODO: Only stream when --stream is specified.
+    if opt_stream || opt_count == 0 {
         for name in names {
             writeln!(writer, "{}", name).map_err(suppress_disconnect)?;
         }
