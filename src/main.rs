@@ -180,7 +180,7 @@ fn run(matches: clap::ArgMatches) -> Result<(), Error> {
     // Select the appropriate word list.
     let mut petnames = match words {
         Words::Custom(ref adjectives, ref adverbs, ref names) => {
-            Petnames::init(&adjectives, &adverbs, &names)
+            Petnames::init(adjectives, adverbs, names)
         }
         Words::Builtin => match opt_complexity {
             "0" => Petnames::small(),
