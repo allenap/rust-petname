@@ -8,6 +8,16 @@ word lists and command-line UX here are taken from there. Check it out! Dustin
 also maintains libraries for [Python 2 & 3][petname-py], and
 [Golang][petname-go].
 
+Notable features:
+
+- Choose from 3 built-in word lists, or provide your own;
+- Alliterative names, like _viable-vulture_, _proper-pony_, ...;
+- Build names with 1-255 components (adjectives, adverbs, nouns);
+- Components can be unseparated or joined by and character or string;
+- Generate 1..n names, or stream names continuously.
+- **`no_std` support** (see [later section](#features--no_std-support));
+- Compile without built-in dictionaries to reduce library/binary size.
+
 [rust-lang]: https://www.rust-lang.org/
 [petname-intro]: http://blog.dustinkirkland.com/2015/01/introducing
 [petname]: https://github.com/dustinkirkland/petname
