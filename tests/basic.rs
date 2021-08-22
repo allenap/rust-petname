@@ -112,7 +112,7 @@ fn petnames_iter_non_repeating_yields_nothing_when_any_word_list_is_empty() {
     // Definintely an Iterator...
     let iter: Box<dyn Iterator<Item = _>> = Box::new(names);
     let names: Vec<String> = iter.collect();
-    assert!(names.is_empty())
+    assert_eq!(Vec::<String>::new(), names);
 }
 
 #[test]
@@ -123,5 +123,5 @@ fn petnames_iter_non_repeating_yields_nothing_when_no_word_lists_are_given() {
     // Definintely an Iterator...
     let iter: Box<dyn Iterator<Item = _>> = Box::new(names);
     let names: Vec<String> = iter.collect();
-    assert!(names.is_empty())
+    assert_eq!(Vec::<String>::new(), names);
 }

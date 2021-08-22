@@ -257,7 +257,7 @@ impl<'a> Petnames<'a> {
         rng: &'a mut RNG,
         words: u8,
         separator: &str,
-    ) -> NamesProduct<'a, core::iter::Cycle<alloc::vec::IntoIter<&'a str>>>
+    ) -> NamesProduct<'a, core::iter::Cycle<alloc::vec::IntoIter<Option<&'a str>>>>
     where
         RNG: rand::Rng,
     {
@@ -349,22 +349,23 @@ where
 /// This can be used to ensure that only unique names are produced.
 pub struct NamesProduct<'a, ITERATOR>
 where
-    ITERATOR: Iterator<Item = &'a str>,
+    ITERATOR: Iterator<Item = Option<&'a str>>,
 {
-    iters: Vec<(ITERATOR, Option<ITERATOR::Item>)>,
+    iters: Vec<(ITERATOR, Option<&'a str>)>,
     separator: String,
 }
 
-impl<'a> NamesProduct<'a, core::iter::Cycle<alloc::vec::IntoIter<&'a str>>> {
+impl<'a> NamesProduct<'a, core::iter::Cycle<alloc::vec::IntoIter<Option<&'a str>>>> {
     /// Cycles through the product of the `lists`, joining with `separator`. The
     /// leftmost list will cycle most rapidly.
     pub fn new(lists: &[Words<'a>], separator: &str) -> Self {
         NamesProduct {
             iters: lists
                 .iter()
-                .cloned()
-                .map(|mut list| {
-                    list.push(""); // Cycle marker.
+                .map(|words| {
+                    let mut list: Vec<Option<&'a str>> = Vec::with_capacity(words.len() + 1);
+                    list.extend(words.iter().map(|word| Some(*word)));
+                    list.push(None); // Cycle marker.
                     (list.into_iter().cycle(), None)
                 })
                 .collect(),
@@ -382,10 +383,11 @@ impl<'a> NamesProduct<'a, core::iter::Cycle<alloc::vec::IntoIter<&'a str>>> {
         NamesProduct {
             iters: lists
                 .iter()
-                .cloned()
-                .map(|mut list| {
+                .map(|words| {
+                    let mut list: Vec<Option<&'a str>> = Vec::with_capacity(words.len() + 1);
+                    list.extend(words.iter().map(|word| Some(*word)));
                     list.shuffle(rng); // Could be expensive.
-                    list.push(""); // Cycle marker.
+                    list.push(None); // Cycle marker.
                     (list.into_iter().cycle(), None)
                 })
                 .collect(),
@@ -396,7 +398,7 @@ impl<'a> NamesProduct<'a, core::iter::Cycle<alloc::vec::IntoIter<&'a str>>> {
 
 impl<'a, ITERATOR> Iterator for NamesProduct<'a, ITERATOR>
 where
-    ITERATOR: Iterator<Item = &'a str>,
+    ITERATOR: Iterator<Item = Option<&'a str>>,
 {
     type Item = String;
 
@@ -410,21 +412,21 @@ where
                         // to cycle. However, if it does, we're definitely done.
                         return None;
                     }
-                    Some("") => {
+                    Some(None) => {
                         // This is the cycle end marker. We want to get another
                         // new word from this iterator, and advance the *next*
                         // iterator too.
                         match iter.next() {
                             None => return None,
-                            Some("") => return None,
-                            Some(s) => *word = Some(s),
+                            Some(None) => return None,
+                            Some(s) => *word = s,
                         }
                         bump = true
                     }
                     Some(s) => {
                         // We have a new word from this iterator, so we do not
                         // yet need to advance the next iterator.
-                        *word = Some(s);
+                        *word = s;
                         bump = false
                     }
                 }
