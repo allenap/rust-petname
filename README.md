@@ -137,63 +137,7 @@ an external filter to the names being generated:
 $ petname --words=3 --count=0 | grep 'love.*\bsalmon$'
 ```
 
-## Library
-
-There's a `petname::Petnames` struct:
-
-```rust,ignore
-pub struct Petnames<'a> {
-    pub adjectives: Vec<&'a str>,
-    pub adverbs: Vec<&'a str>,
-    pub names: Vec<&'a str>,
-}
-```
-
-You can populate this with your own word lists, but there's a convenient default
-which uses the word lists from upstream [petname][]. The other thing you need is
-a random number generator from [rand][]:
-
-```rust
-let mut rng = rand::thread_rng();
-let pname = petname::Petnames::default().generate(&mut rng, 7, ":");
-```
-
-Or, to use the default random number generator:
-
-```rust
-let pname = petname::Petnames::default().generate_one(7, ":");
-```
-
-There's a convenience function that'll do this for you:
-
-```rust
-let pname = petname::petname(7, ":");
-```
-
-It's probably best to use the `generate` method if you're building more than a
-handful of names...
-
-Or use `iter`:
-
-```rust
-let mut rng = rand::thread_rng();
-let petnames = petname::Petnames::default();
-let ten_thousand_names: Vec<String> =
-  petnames.iter(&mut rng, 3, "_").take(10000).collect();
-```
-
-You can modify the word lists to, for example, only use words beginning with the
-letter "b":
-
-```rust
-let mut petnames = petname::Petnames::default();
-petnames.retain(|s| s.starts_with("b"));
-petnames.generate_one(3, ".");
-```
-
-[rand]: https://crates.io/crates/rand
-
-### Features & `no_std` support
+## Features & `no_std` support
 
 There are a few features that can be selected – or, more correctly,
 _deselected_, since all features are enabled by default:

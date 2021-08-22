@@ -1,4 +1,49 @@
 #![no_std]
+//!
+//! You can populate [`Petnames`] with your own word lists, but the word lists
+//! from upstream [petname](https://github.com/dustinkirkland/petname) are
+//! included with the `default_dictionary` feature (enabled by default). See
+//! [`Petnames::small`], [`Petnames::medium`], and [`Petnames::large`] to select
+//! a particular built-in word list, or use the [`Default`] implementation.
+//!
+//! The other thing you need is a random number generator from [rand][]:
+//!
+//! ```rust
+//! let mut rng = rand::thread_rng();
+//! let pname = petname::Petnames::default().generate(&mut rng, 7, ":");
+//! ```
+//!
+//! It may be more convenient to use the default random number generator:
+//!
+//! ```rust
+//! let pname = petname::Petnames::default().generate_one(7, ":");
+//! ```
+//!
+//! There's a [convenience function][petname] that'll do all of this:
+//!
+//! ```rust
+//! let pname = petname::petname(7, ":");
+//! ```
+//!
+//! But the most flexible approach is to create an [`Iterator`] with
+//! [`iter`][`Petnames::iter`]:
+//!
+//! ```rust
+//! let mut rng = rand::thread_rng();
+//! let petnames = petname::Petnames::default();
+//! let ten_thousand_names: Vec<String> =
+//!   petnames.iter(&mut rng, 3, "_").take(10000).collect();
+//! ```
+//!
+//! You can modify the word lists to, for example, only use words beginning with
+//! the letter "b":
+//!
+//! ```rust
+//! let mut petnames = petname::Petnames::default();
+//! petnames.retain(|s| s.starts_with("b"));
+//! petnames.generate_one(3, ".");
+//! ```
+//!
 
 extern crate alloc;
 
