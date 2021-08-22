@@ -2,11 +2,20 @@
 
 Generate human readable random names.
 
-A [petname][petname-intro] library and command-line tool in [Rust][rust-lang].
-Dustin Kirkland's [petname][] project is the inspiration for this project. The
-word lists and command-line UX here are taken from there. Check it out! Dustin
-also maintains libraries for [Python 2 & 3][petname-py], and
-[Golang][petname-go].
+[Petnames][petname-intro] are useful when you need to name a large number of
+resources – like servers, services, perhaps bicycles for hire – and you want
+those names to be easy to recall and communicate unambiguously. For example,
+over a telephone compare saying "please restart remarkably-striking-cricket"
+with "please restart s01O97i4": the former is easier to say and less likely to
+be misunderstood. Avoiding sequential names adds confidence too: petnames have a
+greater lexical distance between them, so errors in transcription can be more
+readily detected.
+
+This crate is both a command-line tool and a [Rust][rust-lang] library. Dustin
+Kirkland's [petname][] project is the inspiration for this project. The word
+lists and the basic command-line UX here are taken from there. Check it out!
+Dustin maintains packages for [Python][petname-py], and [Golang][petname-go]
+too.
 
 Notable features:
 
