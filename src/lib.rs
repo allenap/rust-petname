@@ -344,7 +344,7 @@ pub struct NamesUnique<'a, ITERATOR>
 where
     ITERATOR: Iterator<Item = &'a str>,
 {
-    iters: Vec<(ITERATOR, Option<&'a str>)>,
+    iters: Vec<(ITERATOR, Option<ITERATOR::Item>)>,
     separator: String,
 }
 
