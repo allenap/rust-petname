@@ -88,10 +88,10 @@ fn petnames_iter_yields_names() {
 }
 
 #[test]
-fn petnames_iter_unique_yields_unique_names() {
+fn petnames_iter_non_repeating_yields_unique_names() {
     let mut rng = StepRng::new(0, 1);
     let petnames = Petnames::init("a1 a2", "b1 b2 b3", "c1 c2");
-    let names = petnames.iter_unique(&mut rng, 3, ".");
+    let names = petnames.iter_non_repeating(&mut rng, 3, ".");
     // Definintely an Iterator...
     let iter: Box<dyn Iterator<Item = _>> = Box::new(names);
     let names: Vec<String> = iter.collect();
@@ -105,10 +105,10 @@ fn petnames_iter_unique_yields_unique_names() {
 }
 
 #[test]
-fn petnames_iter_unique_yields_nothing_when_any_word_list_is_empty() {
+fn petnames_iter_non_repeating_yields_nothing_when_any_word_list_is_empty() {
     let mut rng = StepRng::new(0, 1);
     let petnames = Petnames::init("a1 a2", "", "c1 c2");
-    let names = petnames.iter_unique(&mut rng, 3, ".");
+    let names = petnames.iter_non_repeating(&mut rng, 3, ".");
     // Definintely an Iterator...
     let iter: Box<dyn Iterator<Item = _>> = Box::new(names);
     let names: Vec<String> = iter.collect();
@@ -116,10 +116,10 @@ fn petnames_iter_unique_yields_nothing_when_any_word_list_is_empty() {
 }
 
 #[test]
-fn petnames_iter_unique_yields_nothing_when_no_word_lists_are_given() {
+fn petnames_iter_non_repeating_yields_nothing_when_no_word_lists_are_given() {
     let mut rng = StepRng::new(0, 1);
     let petnames = Petnames::init("a1 a2", "b1 b2", "c1 c2");
-    let names = petnames.iter_unique(&mut rng, 0, ".");
+    let names = petnames.iter_non_repeating(&mut rng, 0, ".");
     // Definintely an Iterator...
     let iter: Box<dyn Iterator<Item = _>> = Box::new(names);
     let names: Vec<String> = iter.collect();

@@ -280,7 +280,7 @@ fn run(matches: clap::ArgMatches) -> Result<(), Error> {
     if opt_non_repeating {
         printer(
             &mut writer,
-            petnames.iter_unique(&mut rng, opt_words, &opt_separator),
+            petnames.iter_non_repeating(&mut rng, opt_words, &opt_separator),
             count,
         )
     } else {

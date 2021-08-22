@@ -247,12 +247,12 @@ impl<'a> Petnames<'a> {
     /// # #[cfg(all(feature = "std_rng", feature = "default_dictionary"))]
     /// let petnames = petname::Petnames::default();
     /// # #[cfg(all(feature = "std_rng", feature = "default_dictionary"))]
-    /// let mut iter = petnames.iter_unique(&mut rng, 4, "_");
+    /// let mut iter = petnames.iter_non_repeating(&mut rng, 4, "_");
     /// # #[cfg(all(feature = "std_rng", feature = "default_dictionary"))]
     /// println!("name: {}", iter.next().unwrap());
     /// ```
     ///
-    pub fn iter_unique<RNG>(
+    pub fn iter_non_repeating<RNG>(
         &'a self,
         rng: &'a mut RNG,
         words: u8,
