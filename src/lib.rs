@@ -238,6 +238,20 @@ impl<'a> Petnames<'a> {
     }
 
     /// Iterator yielding unique – i.e. non-repeating – petnames.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # #[cfg(all(feature = "std_rng", feature = "default_dictionary"))]
+    /// let mut rng = rand::thread_rng();
+    /// # #[cfg(all(feature = "std_rng", feature = "default_dictionary"))]
+    /// let petnames = petname::Petnames::default();
+    /// # #[cfg(all(feature = "std_rng", feature = "default_dictionary"))]
+    /// let mut iter = petnames.iter_unique(&mut rng, 4, "_");
+    /// # #[cfg(all(feature = "std_rng", feature = "default_dictionary"))]
+    /// println!("name: {}", iter.next().unwrap());
+    /// ```
+    ///
     pub fn iter_unique<RNG>(
         &'a self,
         rng: &'a mut RNG,
