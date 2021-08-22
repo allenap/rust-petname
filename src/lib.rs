@@ -348,6 +348,27 @@ where
     separator: String,
 }
 
+impl<'a> NamesUnique<'a, core::iter::Cycle<alloc::vec::IntoIter<&'a str>>> {
+    pub fn new<RNG>(lists: &[&'a Words<'a>], rng: &'a mut RNG, separator: &str) -> Self
+    where
+        RNG: rand::Rng,
+    {
+        Self {
+            iters: lists
+                .iter()
+                .cloned()
+                .cloned()
+                .map(|mut list| {
+                    list.shuffle(rng); // Could be expensive.
+                    list.push(""); // Cycle marker.
+                    (list.into_iter().cycle(), None)
+                })
+                .collect(),
+            separator: separator.to_string(),
+        }
+    }
+}
+
 impl<'a, ITERATOR> Iterator for NamesUnique<'a, ITERATOR>
 where
     ITERATOR: Iterator<Item = &'a str>,
