@@ -280,23 +280,19 @@ fn run(matches: clap::ArgMatches) -> Result<(), Error> {
     if opt_non_repeating {
         printer(
             &mut writer,
-            petnames.iter_non_repeating(&mut rng, opt_words, &opt_separator),
+            petnames.iter_non_repeating(&mut rng, opt_words, opt_separator),
             count,
         )
     } else {
         printer(
             &mut writer,
-            petnames.iter(&mut rng, opt_words, &opt_separator),
+            petnames.iter(&mut rng, opt_words, opt_separator),
             count,
         )
     }
 }
 
-fn printer<'a, OUT, NAMES>(
-    writer: &mut OUT,
-    names: NAMES,
-    count: Option<usize>,
-) -> Result<(), Error>
+fn printer<OUT, NAMES>(writer: &mut OUT, names: NAMES, count: Option<usize>) -> Result<(), Error>
 where
     OUT: io::Write,
     NAMES: Iterator<Item = String>,
