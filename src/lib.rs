@@ -243,21 +243,12 @@ impl<'a> Petnames<'a> {
         rng: &'a mut RNG,
         words: u8,
         separator: &str,
-    ) -> NamesUnique<'a, core::iter::Cycle<alloc::vec::IntoIter<&'a str>>>
+    ) -> NamesProduct<'a, core::iter::Cycle<alloc::vec::IntoIter<&'a str>>>
     where
         RNG: rand::Rng,
     {
-        NamesUnique {
-            iters: Lists(self, words)
-                .cloned()
-                .map(|mut list| {
-                    list.shuffle(rng); // Could be expensive.
-                    list.push(""); // Cycle marker.
-                    (list.into_iter().cycle(), None)
-                })
-                .collect(),
-            separator: separator.to_string(),
-        }
+        let lists: Vec<Words<'a>> = Lists(self, words).cloned().collect();
+        NamesProduct::new(&lists, rng, separator)
     }
 }
 
@@ -340,7 +331,7 @@ where
 }
 
 /// Iterator yielding unique petnames.
-pub struct NamesUnique<'a, ITERATOR>
+pub struct NamesProduct<'a, ITERATOR>
 where
     ITERATOR: Iterator<Item = &'a str>,
 {
@@ -348,15 +339,14 @@ where
     separator: String,
 }
 
-impl<'a> NamesUnique<'a, core::iter::Cycle<alloc::vec::IntoIter<&'a str>>> {
-    pub fn new<RNG>(lists: &[&'a Words<'a>], rng: &'a mut RNG, separator: &str) -> Self
+impl<'a> NamesProduct<'a, core::iter::Cycle<alloc::vec::IntoIter<&'a str>>> {
+    pub fn new<RNG>(lists: &[Words<'a>], rng: &'a mut RNG, separator: &str) -> Self
     where
         RNG: rand::Rng,
     {
-        Self {
+        NamesProduct {
             iters: lists
                 .iter()
-                .cloned()
                 .cloned()
                 .map(|mut list| {
                     list.shuffle(rng); // Could be expensive.
@@ -369,7 +359,7 @@ impl<'a> NamesUnique<'a, core::iter::Cycle<alloc::vec::IntoIter<&'a str>>> {
     }
 }
 
-impl<'a, ITERATOR> Iterator for NamesUnique<'a, ITERATOR>
+impl<'a, ITERATOR> Iterator for NamesProduct<'a, ITERATOR>
 where
     ITERATOR: Iterator<Item = &'a str>,
 {
