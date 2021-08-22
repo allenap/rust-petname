@@ -2,39 +2,36 @@
 
 Generate human readable random names.
 
-A [petname][petname-intro] library and command-line tool in [Rust][rust-lang].
-Dustin Kirkland's [petname][] project is the inspiration for this project. The
-word lists and command-line UX here are taken from there. Check it out! Dustin
-also maintains libraries for [Python 2 & 3][petname-py], and
-[Golang][petname-go].
+[Petnames][petname-intro] are useful when you need to name a large number of
+resources – like servers, services, perhaps bicycles for hire – and you want
+those names to be easy to recall and communicate unambiguously. For example,
+over a telephone compare saying "please restart remarkably-striking-cricket"
+with "please restart s01O97i4": the former is easier to say and less likely to
+be misunderstood. Avoiding sequential names adds confidence too: petnames have a
+greater lexical distance between them, so errors in transcription can be more
+readily detected.
+
+This crate is both a command-line tool and a [Rust][rust-lang] library. Dustin
+Kirkland's [petname][] project is the inspiration for this project. The word
+lists and the basic command-line UX here are taken from there. Check it out!
+Dustin maintains packages for [Python][petname-py], and [Golang][petname-go]
+too.
+
+Notable features:
+
+- Choose from 3 built-in word lists, or provide your own;
+- Alliterative names, like _viable-vulture_, _proper-pony_, ...;
+- Build names with 1-255 components (adjectives, adverbs, nouns);
+- Components can be unseparated or joined by and character or string;
+- Generate 1..n names, or stream names continuously.
+- **`no_std` support** (see [later section](#features--no_std-support));
+- Compile without built-in dictionaries to reduce library/binary size.
 
 [rust-lang]: https://www.rust-lang.org/
-[petname-intro]: http://blog.dustinkirkland.com/2015/01/introducing
+[petname-intro]: https://blog.dustinkirkland.com/2015/01/introducing-petname-libraries-for.html
 [petname]: https://github.com/dustinkirkland/petname
 [petname-py]: https://pypi.org/project/petname/
 [petname-go]: https://github.com/dustinkirkland/golang-petname
-
-## Features & `no_std` support
-
-There are a few features that can be selected – or, more correctly,
-_deselected_, since all features are enabled by default:
-
-- `std_rng` enables `std` and `std_rng` in [rand][].
-- `default_dictionary` enables the default word lists.
-- `clap` enables the [clap][] command-line argument parser.
-
-All of these are required to build the command-line utility.
-
-However, the library can be built without any default features, and it will work
-in a [`no_std`][no_std] environment, like [Wasm][]. You'll need to figure out a
-source of randomness, but [SmallRng::seed_from_u64][smallrng::seed_from_u64] may
-be a good starting point.
-
-[rand]: https://crates.io/crates/rand
-[clap]: https://crates.io/crates/clap
-[no_std]: https://doc.rust-lang.org/reference/crates-and-source-files.html#preludes-and-no_std
-[wasm]: https://webassembly.org/
-[smallrng::seed_from_u64]: https://docs.rs/rand/latest/rand/trait.SeedableRng.html#method.seed_from_u64
 
 ## Command-line utility
 
@@ -46,7 +43,7 @@ The `petname` binary from rust-petname is drop-in compatible with the original
 `petname`. It's more strict when validating arguments, but for most uses it
 should behave the same.
 
-```
+```shellsession
 $ petname --help
 rust-petname 1.1.1
 Gavin Panella <gavinpanella@gmail.com>
@@ -83,7 +80,7 @@ suitably_overdelicate_jamee
 
 This implementation is considerably faster than the upstream `petname`:
 
-```
+```shellsession
 $ time /usr/bin/petname
 fit-lark
 
@@ -102,7 +99,7 @@ sys     0m0.000s
 These timings are irrelevant if you only need to name a single thing, but if you
 need to generate 100s or 1000s of names then rust-petname is handy:
 
-```
+```shellsession
 $ time { for i in $(seq 1000); do /usr/bin/petname; done; } > /dev/null
 
 real    0m32.058s
@@ -124,7 +121,7 @@ ancestor and to rust-petname.
 Lastly, rust-petname has a `--count` option that speeds up generation of names
 considerably:
 
-```
+```shellsession
 $ time target/release/petname --count=10000000 > /dev/null
 
 real    0m1.327s
@@ -136,65 +133,31 @@ That's ~240,000 (two hundred and forty thousand) times faster, for about 7.5
 million petnames a second on this hardware. This is useful if you want to apply
 an external filter to the names being generated:
 
-```
+```shellsession
 $ petname --words=3 --count=0 | grep 'love.*\bsalmon$'
 ```
 
-## Library
+## Features & `no_std` support
 
-There's a `petname::Petnames` struct:
+There are a few features that can be selected – or, more correctly,
+_deselected_, since all features are enabled by default:
 
-```rust
-pub struct Petnames<'a> {
-    pub adjectives: Vec<&'a str>,
-    pub adverbs: Vec<&'a str>,
-    pub names: Vec<&'a str>,
-}
-```
+- `std_rng` enables `std` and `std_rng` in [rand][].
+- `default_dictionary` enables the default word lists.
+- `clap` enables the [clap][] command-line argument parser.
 
-You can populate this with your own word lists, but there's a convenient default
-which uses the word lists from upstream [petname][]. The other thing you need is
-a random number generator from [rand][]:
+All of these are required to build the command-line utility.
 
-```rust
-let mut rng = rand::thread_rng();
-let pname = petname::Petnames::default().generate(&mut rng, 7, ":");
-```
-
-Or, to use the default random number generator:
-
-```rust
-let pname = petname::Petnames::default().generate_one(7, ":");
-```
-
-There's a convenience function that'll do this for you:
-
-```rust
-let pname = petname::petname(7, ":")
-```
-
-It's probably best to use the `generate` method if you're building more than a
-handful of names...
-
-Or use `iter`:
-
-```
-let mut rng = rand::thread_rng();
-let petnames = petname::Petnames::default();
-let ten_thousand_names: Vec<String> =
-  petnames.iter(&mut rng, 3, "_").take(10000).collect();
-```
-
-You can modify the word lists to, for example, only use words beginning with the
-letter "b":
-
-```rust
-let mut petnames = petname::Petnames::default();
-petnames.retain(|s| s.starts_with("b"));
-petnames.generate_one(3, ".");
-```
+However, the library can be built without any default features, and it will work
+in a [`no_std`][no_std] environment, like [Wasm][]. You'll need to figure out a
+source of randomness, but [SmallRng::seed_from_u64][smallrng::seed_from_u64] may
+be a good starting point.
 
 [rand]: https://crates.io/crates/rand
+[clap]: https://crates.io/crates/clap
+[no_std]: https://doc.rust-lang.org/reference/crates-and-source-files.html#preludes-and-no_std
+[wasm]: https://webassembly.org/
+[smallrng::seed_from_u64]: https://docs.rs/rand/latest/rand/trait.SeedableRng.html#method.seed_from_u64
 
 ## Getting Started
 
