@@ -114,3 +114,14 @@ fn petnames_iter_unique_yields_nothing_when_any_word_list_is_empty() {
     let names: Vec<String> = iter.collect();
     assert!(names.is_empty())
 }
+
+#[test]
+fn petnames_iter_unique_yields_nothing_when_no_word_lists_are_given() {
+    let mut rng = StepRng::new(0, 1);
+    let petnames = Petnames::init("a1 a2", "b1 b2", "c1 c2");
+    let names = petnames.iter_unique(&mut rng, 0, ".");
+    // Definintely an Iterator...
+    let iter: Box<dyn Iterator<Item = _>> = Box::new(names);
+    let names: Vec<String> = iter.collect();
+    assert!(names.is_empty())
+}
