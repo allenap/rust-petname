@@ -14,28 +14,6 @@ also maintains libraries for [Python 2 & 3][petname-py], and
 [petname-py]: https://pypi.org/project/petname/
 [petname-go]: https://github.com/dustinkirkland/golang-petname
 
-## Features & `no_std` support
-
-There are a few features that can be selected – or, more correctly,
-_deselected_, since all features are enabled by default:
-
-- `std_rng` enables `std` and `std_rng` in [rand][].
-- `default_dictionary` enables the default word lists.
-- `clap` enables the [clap][] command-line argument parser.
-
-All of these are required to build the command-line utility.
-
-However, the library can be built without any default features, and it will work
-in a [`no_std`][no_std] environment, like [Wasm][]. You'll need to figure out a
-source of randomness, but [SmallRng::seed_from_u64][smallrng::seed_from_u64] may
-be a good starting point.
-
-[rand]: https://crates.io/crates/rand
-[clap]: https://crates.io/crates/clap
-[no_std]: https://doc.rust-lang.org/reference/crates-and-source-files.html#preludes-and-no_std
-[wasm]: https://webassembly.org/
-[smallrng::seed_from_u64]: https://docs.rs/rand/latest/rand/trait.SeedableRng.html#method.seed_from_u64
-
 ## Command-line utility
 
 If you have [installed Cargo][install-cargo], you can install rust-petname with
@@ -195,6 +173,28 @@ petnames.generate_one(3, ".");
 ```
 
 [rand]: https://crates.io/crates/rand
+
+### Features & `no_std` support
+
+There are a few features that can be selected – or, more correctly,
+_deselected_, since all features are enabled by default:
+
+- `std_rng` enables `std` and `std_rng` in [rand][].
+- `default_dictionary` enables the default word lists.
+- `clap` enables the [clap][] command-line argument parser.
+
+All of these are required to build the command-line utility.
+
+However, the library can be built without any default features, and it will work
+in a [`no_std`][no_std] environment, like [Wasm][]. You'll need to figure out a
+source of randomness, but [SmallRng::seed_from_u64][smallrng::seed_from_u64] may
+be a good starting point.
+
+[rand]: https://crates.io/crates/rand
+[clap]: https://crates.io/crates/clap
+[no_std]: https://doc.rust-lang.org/reference/crates-and-source-files.html#preludes-and-no_std
+[wasm]: https://webassembly.org/
+[smallrng::seed_from_u64]: https://docs.rs/rand/latest/rand/trait.SeedableRng.html#method.seed_from_u64
 
 ## Getting Started
 
