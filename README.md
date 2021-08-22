@@ -43,7 +43,7 @@ The `petname` binary from rust-petname is drop-in compatible with the original
 `petname`. It's more strict when validating arguments, but for most uses it
 should behave the same.
 
-```
+```shellsession
 $ petname --help
 rust-petname 1.1.1
 Gavin Panella <gavinpanella@gmail.com>
@@ -80,7 +80,7 @@ suitably_overdelicate_jamee
 
 This implementation is considerably faster than the upstream `petname`:
 
-```
+```shellsession
 $ time /usr/bin/petname
 fit-lark
 
@@ -99,7 +99,7 @@ sys     0m0.000s
 These timings are irrelevant if you only need to name a single thing, but if you
 need to generate 100s or 1000s of names then rust-petname is handy:
 
-```
+```shellsession
 $ time { for i in $(seq 1000); do /usr/bin/petname; done; } > /dev/null
 
 real    0m32.058s
@@ -121,7 +121,7 @@ ancestor and to rust-petname.
 Lastly, rust-petname has a `--count` option that speeds up generation of names
 considerably:
 
-```
+```shellsession
 $ time target/release/petname --count=10000000 > /dev/null
 
 real    0m1.327s
@@ -133,7 +133,7 @@ That's ~240,000 (two hundred and forty thousand) times faster, for about 7.5
 million petnames a second on this hardware. This is useful if you want to apply
 an external filter to the names being generated:
 
-```
+```shellsession
 $ petname --words=3 --count=0 | grep 'love.*\bsalmon$'
 ```
 
@@ -141,7 +141,7 @@ $ petname --words=3 --count=0 | grep 'love.*\bsalmon$'
 
 There's a `petname::Petnames` struct:
 
-```rust
+```rust,ignore
 pub struct Petnames<'a> {
     pub adjectives: Vec<&'a str>,
     pub adverbs: Vec<&'a str>,
@@ -167,7 +167,7 @@ let pname = petname::Petnames::default().generate_one(7, ":");
 There's a convenience function that'll do this for you:
 
 ```rust
-let pname = petname::petname(7, ":")
+let pname = petname::petname(7, ":");
 ```
 
 It's probably best to use the `generate` method if you're building more than a
@@ -175,7 +175,7 @@ handful of names...
 
 Or use `iter`:
 
-```
+```rust
 let mut rng = rand::thread_rng();
 let petnames = petname::Petnames::default();
 let ten_thousand_names: Vec<String> =
