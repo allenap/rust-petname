@@ -19,7 +19,7 @@ Notable features:
 - Compile without built-in dictionaries to reduce library/binary size.
 
 [rust-lang]: https://www.rust-lang.org/
-[petname-intro]: http://blog.dustinkirkland.com/2015/01/introducing
+[petname-intro]: https://blog.dustinkirkland.com/2015/01/introducing-petname-libraries-for.html
 [petname]: https://github.com/dustinkirkland/petname
 [petname-py]: https://pypi.org/project/petname/
 [petname-go]: https://github.com/dustinkirkland/golang-petname
