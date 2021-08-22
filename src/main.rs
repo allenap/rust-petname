@@ -120,17 +120,8 @@ fn run(cli: Cli) -> Result<(), Error> {
     let stdout = io::stdout();
     let mut writer = io::BufWriter::new(stdout.lock());
 
-    // Warn that --count=0 is deprecated.
-    if cli.count == 0 {
-        eprintln!(concat!(
-            "Warning: specifying --count=0 to continuously produce petnames is ",
-            "deprecated and its behaviour will change in a future version; ",
-            "specify --stream instead.",
-        ));
-    }
-
-    // Stream if count is 0. TODO: Only stream when --stream is specified.
-    let count = if cli.stream || cli.count == 0 { None } else { Some(cli.count) };
+    // Stream, or print a limited number of words?
+    let count = if cli.stream { None } else { Some(cli.count) };
 
     // Get an iterator for the names we want to print out.
     if cli.non_repeating {
