@@ -364,7 +364,8 @@ impl<'a> NamesProduct<'a, core::iter::Cycle<alloc::vec::IntoIter<Option<&'a str>
             iters: lists
                 .iter()
                 .map(|words| {
-                    let mut list: Vec<Option<&'a str>> = Vec::with_capacity(words.len() + 1);
+                    let mut list: Vec<Option<&'a str>> =
+                        Vec::with_capacity(words.len().saturating_add(1));
                     list.extend(words.iter().map(|word| Some(*word)));
                     list.push(None); // Cycle marker.
                     (list.into_iter().cycle(), None)
@@ -386,7 +387,8 @@ impl<'a> NamesProduct<'a, core::iter::Cycle<alloc::vec::IntoIter<Option<&'a str>
             iters: lists
                 .iter()
                 .map(|words| {
-                    let mut list: Vec<Option<&'a str>> = Vec::with_capacity(words.len() + 1);
+                    let mut list: Vec<Option<&'a str>> =
+                        Vec::with_capacity(words.len().saturating_add(1));
                     list.extend(words.iter().map(|word| Some(*word)));
                     list.shuffle(rng); // Could be expensive.
                     list.push(None); // Cycle marker.
