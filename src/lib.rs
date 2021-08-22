@@ -353,6 +353,7 @@ where
 {
     iters: Vec<(ITERATOR, Option<&'a str>)>,
     separator: String,
+    capacity: usize,
 }
 
 impl<'a> NamesProduct<'a, core::iter::Cycle<alloc::vec::IntoIter<Option<&'a str>>>> {
@@ -370,6 +371,7 @@ impl<'a> NamesProduct<'a, core::iter::Cycle<alloc::vec::IntoIter<Option<&'a str>
                 })
                 .collect(),
             separator: separator.to_string(),
+            capacity: Self::capacity(lists, separator),
         }
     }
 
@@ -392,7 +394,27 @@ impl<'a> NamesProduct<'a, core::iter::Cycle<alloc::vec::IntoIter<Option<&'a str>
                 })
                 .collect(),
             separator: separator.to_string(),
+            capacity: Self::capacity(lists, separator),
         }
+    }
+
+    fn capacity(lists: &[Words<'a>], separator: &str) -> usize {
+        (
+            // Sum of the length of the longest possible word in each word list.
+            lists
+                .iter()
+                .filter_map(|words| words.iter().map(|word| word.len()).max())
+                .fold(0usize, |sum, len| sum.saturating_add(len))
+            // The total length of all separators. Careful not to wrap usize.
+            + (separator.len().saturating_mul(lists.len().saturating_sub(1)))
+        )
+        // Things run _much_ quicker when the capacity is a power of 2. Memory
+        // alignment? If so it may be enough to align at, say, 8 bytes, but this
+        // works for now.
+        .checked_next_power_of_two()
+        // In case there are no lists, or they're all empty... or we have
+        // calculated that we need more than usize::MAX capacity.
+        .unwrap_or(0)
     }
 }
 
@@ -436,13 +458,14 @@ where
             // We reached the end of the last iterator, hence we're done.
             None
         } else {
-            // We can construct a word!
-            Some(
-                itertools::Itertools::intersperse(
-                    self.iters.iter().filter_map(|(_, w)| *w),
-                    &self.separator,
-                )
-                .collect(),
+            // We may be able to construct a word!
+            self.iters.iter().fold(
+                Some(String::with_capacity(self.capacity)),
+                |acc, (_, w)| match (acc, *w) {
+                    (Some(s), Some(w)) if s.is_empty() => Some(s + w),
+                    (Some(s), Some(w)) => Some(s + &self.separator + w),
+                    _ => None,
+                },
             )
         }
     }
