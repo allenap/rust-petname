@@ -19,12 +19,12 @@ too.
 
 Notable features:
 
-- Choose from 3 built-in word lists, or provide your own;
-- Alliterative names, like _viable-vulture_, _proper-pony_, ...;
-- Build names with 1-255 components (adjectives, adverbs, nouns);
-- Components can be unseparated or joined by and character or string;
+- Choose from 3 built-in word lists, or provide your own.
+- Alliterative names, like _viable-vulture_, _proper-pony_, ...
+- Build names with 1-255 components (adjectives, adverbs, nouns).
+- Name components can be unseparated, or joined by any character or string.
 - Generate 1..n names, or stream names continuously.
-- **`no_std` support** (see [later section](#features--no_std-support));
+- **`no_std` support** (see [later section](#features--no_std-support)).
 - Compile without built-in dictionaries to reduce library/binary size.
 
 [rust-lang]: https://www.rust-lang.org/
