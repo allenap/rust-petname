@@ -6,7 +6,7 @@ use petname::Petnames;
 use std::collections::HashSet;
 use std::fmt;
 use std::fs;
-use std::io::{self, Write};
+use std::io;
 use std::path;
 use std::process;
 use std::str::FromStr;
@@ -124,6 +124,12 @@ fn app<'a, 'b>() -> clap::App<'a, 'b> {
                 .takes_value(false),
         )
         .arg(
+            Arg::with_name("non-repeating")
+                .long("non-repeating")
+                .help("Do not generate the same name more than once")
+                .takes_value(false),
+        )
+        .arg(
             Arg::with_name("letters")
                 .short("l")
                 .long("letters")
@@ -169,6 +175,7 @@ fn run(matches: clap::ArgMatches) -> Result<(), Error> {
 
     // Flags.
     let opt_stream = matches.is_present("stream");
+    let opt_non_repeating = matches.is_present("non-repeating");
     let opt_alliterate = matches.is_present("alliterate")
         || matches.is_present("ubuntu")
         || matches.is_present("alliterate-with");
@@ -249,9 +256,6 @@ fn run(matches: clap::ArgMatches) -> Result<(), Error> {
         }
     }
 
-    // Get an iterator for the names we want to print out.
-    let names = petnames.iter(&mut rng, opt_words, opt_separator);
-
     // Manage stdout.
     let stdout = io::stdout();
     let mut writer = io::BufWriter::new(stdout.lock());
@@ -266,13 +270,43 @@ fn run(matches: clap::ArgMatches) -> Result<(), Error> {
     }
 
     // Stream if count is 0. TODO: Only stream when --stream is specified.
-    if opt_stream || opt_count == 0 {
-        for name in names {
-            writeln!(writer, "{}", name).map_err(suppress_disconnect)?;
-        }
+    let count = if opt_stream || opt_count == 0 {
+        None
     } else {
-        for name in names.take(opt_count) {
-            writeln!(writer, "{}", name)?;
+        Some(opt_count)
+    };
+
+    // Get an iterator for the names we want to print out.
+    if opt_non_repeating {
+        printer(
+            &mut writer,
+            petnames.iter_non_repeating(&mut rng, opt_words, opt_separator),
+            count,
+        )
+    } else {
+        printer(
+            &mut writer,
+            petnames.iter(&mut rng, opt_words, opt_separator),
+            count,
+        )
+    }
+}
+
+fn printer<OUT, NAMES>(writer: &mut OUT, names: NAMES, count: Option<usize>) -> Result<(), Error>
+where
+    OUT: io::Write,
+    NAMES: Iterator<Item = String>,
+{
+    match count {
+        None => {
+            for name in names {
+                writeln!(writer, "{}", name).map_err(suppress_disconnect)?;
+            }
+        }
+        Some(n) => {
+            for name in names.take(n) {
+                writeln!(writer, "{}", name)?;
+            }
         }
     }
 

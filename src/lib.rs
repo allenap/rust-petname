@@ -236,6 +236,34 @@ impl<'a> Petnames<'a> {
             separator: separator.to_string(),
         }
     }
+
+    /// Iterator yielding unique – i.e. non-repeating – petnames.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # #[cfg(all(feature = "std_rng", feature = "default_dictionary"))]
+    /// let mut rng = rand::thread_rng();
+    /// # #[cfg(all(feature = "std_rng", feature = "default_dictionary"))]
+    /// let petnames = petname::Petnames::default();
+    /// # #[cfg(all(feature = "std_rng", feature = "default_dictionary"))]
+    /// let mut iter = petnames.iter_non_repeating(&mut rng, 4, "_");
+    /// # #[cfg(all(feature = "std_rng", feature = "default_dictionary"))]
+    /// println!("name: {}", iter.next().unwrap());
+    /// ```
+    ///
+    pub fn iter_non_repeating<RNG>(
+        &'a self,
+        rng: &'a mut RNG,
+        words: u8,
+        separator: &str,
+    ) -> impl Iterator<Item = String> + 'a
+    where
+        RNG: rand::Rng,
+    {
+        let lists: Vec<Words<'a>> = Lists(self, words).cloned().collect();
+        NamesProduct::shuffled(&lists, rng, separator)
+    }
 }
 
 #[cfg(feature = "default_dictionary")]
@@ -313,5 +341,115 @@ where
             self.petnames
                 .generate(self.rng, self.words, &self.separator),
         )
+    }
+}
+
+/// Iterator yielding petnames from the product of given word lists.
+///
+/// This can be used to ensure that only unique names are produced.
+struct NamesProduct<'a, ITERATOR>
+where
+    ITERATOR: Iterator<Item = Option<&'a str>>,
+{
+    iters: Vec<(ITERATOR, Option<&'a str>)>,
+    separator: String,
+    capacity: usize,
+}
+
+impl<'a> NamesProduct<'a, core::iter::Cycle<alloc::vec::IntoIter<Option<&'a str>>>> {
+    /// Shuffles each of the given `lists` with `rng`, then cycles through the
+    /// product of the lists, joining with `separator`. The leftmost list will
+    /// cycle most rapidly.
+    fn shuffled<RNG>(lists: &[Words<'a>], rng: &'a mut RNG, separator: &str) -> Self
+    where
+        RNG: rand::Rng,
+    {
+        NamesProduct {
+            iters: lists
+                .iter()
+                .map(|words| {
+                    let mut list: Vec<Option<&'a str>> =
+                        Vec::with_capacity(words.len().saturating_add(1));
+                    list.extend(words.iter().map(|word| Some(*word)));
+                    list.shuffle(rng); // Could be expensive.
+                    list.push(None); // Cycle marker.
+                    (list.into_iter().cycle(), None)
+                })
+                .collect(),
+            separator: separator.to_string(),
+            capacity: Self::capacity(lists, separator),
+        }
+    }
+
+    fn capacity(lists: &[Words<'a>], separator: &str) -> usize {
+        (
+            // Sum of the length of the longest possible word in each word list.
+            lists
+                .iter()
+                .filter_map(|words| words.iter().map(|word| word.len()).max())
+                .fold(0usize, |sum, len| sum.saturating_add(len))
+            // The total length of all separators. Careful not to wrap usize.
+            + (separator.len().saturating_mul(lists.len().saturating_sub(1)))
+        )
+        // Things run _much_ quicker when the capacity is a power of 2. Memory
+        // alignment? If so it may be enough to align at, say, 8 bytes, but this
+        // works for now.
+        .checked_next_power_of_two()
+        // In case there are no lists, or they're all empty... or we have
+        // calculated that we need more than usize::MAX capacity.
+        .unwrap_or(0)
+    }
+}
+
+impl<'a, ITERATOR> Iterator for NamesProduct<'a, ITERATOR>
+where
+    ITERATOR: Iterator<Item = Option<&'a str>>,
+{
+    type Item = String;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let mut bump = true; // Request advance of next iterator.
+        for (iter, word) in self.iters.iter_mut() {
+            if bump || word.is_none() {
+                match iter.next() {
+                    None => {
+                        // This shouldn't happen because we expect the iterators
+                        // to cycle. However, if it does, we're definitely done.
+                        return None;
+                    }
+                    Some(None) => {
+                        // This is the cycle end marker. We want to get another
+                        // new word from this iterator, and advance the *next*
+                        // iterator too.
+                        match iter.next() {
+                            None => return None,
+                            Some(None) => return None,
+                            Some(s) => *word = s,
+                        }
+                        bump = true
+                    }
+                    Some(s) => {
+                        // We have a new word from this iterator, so we do not
+                        // yet need to advance the next iterator.
+                        *word = s;
+                        bump = false
+                    }
+                }
+            }
+        }
+        if bump {
+            // We reached the end of the last iterator, hence we're done.
+            None
+        } else {
+            // We may be able to construct a word!
+            self.iters.iter().fold(
+                Some(String::with_capacity(self.capacity)),
+                |acc, (_, w)| match (acc, *w) {
+                    (Some(s), Some(w)) if s.is_empty() => Some(s + w),
+                    (Some(s), Some(w)) => Some(s + &self.separator + w),
+                    _ => None,
+                },
+            )
+        }
     }
 }
