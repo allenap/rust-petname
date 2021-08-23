@@ -257,7 +257,7 @@ impl<'a> Petnames<'a> {
         rng: &'a mut RNG,
         words: u8,
         separator: &str,
-    ) -> NamesProduct<'a, core::iter::Cycle<alloc::vec::IntoIter<Option<&'a str>>>>
+    ) -> impl Iterator<Item = String> + 'a
     where
         RNG: rand::Rng,
     {
@@ -347,7 +347,7 @@ where
 /// Iterator yielding petnames from the product of given word lists.
 ///
 /// This can be used to ensure that only unique names are produced.
-pub struct NamesProduct<'a, ITERATOR>
+struct NamesProduct<'a, ITERATOR>
 where
     ITERATOR: Iterator<Item = Option<&'a str>>,
 {
@@ -357,29 +357,10 @@ where
 }
 
 impl<'a> NamesProduct<'a, core::iter::Cycle<alloc::vec::IntoIter<Option<&'a str>>>> {
-    /// Cycles through the product of the `lists`, joining with `separator`. The
-    /// leftmost list will cycle most rapidly.
-    pub fn new(lists: &[Words<'a>], separator: &str) -> Self {
-        NamesProduct {
-            iters: lists
-                .iter()
-                .map(|words| {
-                    let mut list: Vec<Option<&'a str>> =
-                        Vec::with_capacity(words.len().saturating_add(1));
-                    list.extend(words.iter().map(|word| Some(*word)));
-                    list.push(None); // Cycle marker.
-                    (list.into_iter().cycle(), None)
-                })
-                .collect(),
-            separator: separator.to_string(),
-            capacity: Self::capacity(lists, separator),
-        }
-    }
-
     /// Shuffles each of the given `lists` with `rng`, then cycles through the
     /// product of the lists, joining with `separator`. The leftmost list will
     /// cycle most rapidly.
-    pub fn shuffled<RNG>(lists: &[Words<'a>], rng: &'a mut RNG, separator: &str) -> Self
+    fn shuffled<RNG>(lists: &[Words<'a>], rng: &'a mut RNG, separator: &str) -> Self
     where
         RNG: rand::Rng,
     {
