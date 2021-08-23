@@ -404,6 +404,7 @@ where
     iters: Vec<(ITERATOR, Option<&'a str>)>,
     separator: String,
     capacity: usize,
+    size: Option<usize>,
 }
 
 impl<'a> NamesProduct<'a, core::iter::Cycle<alloc::vec::IntoIter<Option<&'a str>>>> {
@@ -427,6 +428,10 @@ impl<'a> NamesProduct<'a, core::iter::Cycle<alloc::vec::IntoIter<Option<&'a str>
                 .collect(),
             separator: separator.to_string(),
             capacity: Self::capacity(lists, separator),
+            size: match lists {
+                [] => Some(0),
+                ls => ls.iter().try_fold(1usize, |acc, list| acc.checked_mul(list.len())),
+            },
         }
     }
 
@@ -455,6 +460,10 @@ where
     ITERATOR: Iterator<Item = Option<&'a str>>,
 {
     type Item = String;
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (self.size.unwrap_or(0), self.size)
+    }
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut bump = true; // Request advance of next iterator.
@@ -490,7 +499,9 @@ where
             // We reached the end of the last iterator, hence we're done.
             None
         } else {
-            // We may be able to construct a word!
+            // Keep track of the number of names remaining.
+            self.size = self.size.map(|s| s.saturating_sub(1));
+            // We may be able to construct a name!
             self.iters.iter().try_fold(String::with_capacity(self.capacity), |acc, (_, w)| match (acc, *w) {
                 (s, Some(w)) if s.is_empty() => Some(s + w),
                 (s, Some(w)) => Some(s + &self.separator + w),

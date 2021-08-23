@@ -93,6 +93,39 @@ fn petnames_iter_non_repeating_yields_unique_names() {
 }
 
 #[test]
+fn petnames_iter_non_repeating_provides_size_hint() {
+    let mut rng = StepRng::new(0, 1);
+    let petnames = Petnames::new("a1 a2", "b1 b2 b3", "c1 c2");
+    let iter = petnames.iter_non_repeating(&mut rng, 3, ".");
+    assert_eq!((12, Some(12)), iter.size_hint());
+    assert_eq!((9, Some(9)), iter.skip(3).size_hint());
+}
+
+#[test]
+fn petnames_iter_non_repeating_provides_size_hint_that_saturates() {
+    let mut rng = StepRng::new(0, 1);
+    let petnames = Petnames::new("a1 a2", "b1 b2", "c1 c2");
+    let iter = petnames.iter_non_repeating(&mut rng, 3, ".");
+    assert_eq!((0, Some(0)), iter.skip(10).size_hint());
+}
+
+#[test]
+fn petnames_iter_non_repeating_provides_size_hint_that_is_zero_when_any_list_is_empty() {
+    let mut rng = StepRng::new(0, 1);
+    let petnames = Petnames::new("", "b1 b2", "c1 c2");
+    let iter = petnames.iter_non_repeating(&mut rng, 3, ".");
+    assert_eq!((0, Some(0)), iter.size_hint());
+}
+
+#[test]
+fn petnames_iter_non_repeating_provides_size_hint_that_is_zero_when_no_word_lists_are_given() {
+    let mut rng = StepRng::new(0, 1);
+    let petnames = Petnames::new("a1 a2", "b1 b2", "c1 c2");
+    let iter = petnames.iter_non_repeating(&mut rng, 0, ".");
+    assert_eq!((0, Some(0)), iter.size_hint());
+}
+
+#[test]
 fn petnames_iter_non_repeating_yields_nothing_when_any_word_list_is_empty() {
     let mut rng = StepRng::new(0, 1);
     let petnames = Petnames::new("a1 a2", "", "c1 c2");
