@@ -69,14 +69,6 @@ fn petname_renders_with_desired_separator() {
 }
 
 #[test]
-fn petnames_iter_has_cardinality() {
-    let mut rng = StepRng::new(0, 1);
-    let petnames = Petnames::new("a b", "c d e", "f g h i");
-    let names = petnames.iter(&mut rng, 3, ".");
-    assert_eq!(24u128, names.cardinality());
-}
-
-#[test]
 fn petnames_iter_yields_names() {
     let mut rng = StepRng::new(0, 1);
     let petnames = Petnames::new("foo", "bar", "baz");
