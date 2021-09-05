@@ -164,9 +164,9 @@ impl<'a> Petnames<'a> {
     /// This can saturate. If the total possible combinations of words exceeds
     /// `u128::MAX` then this will return `u128::MAX`.
     pub fn cardinality(&self, words: u8) -> u128 {
-        Lists(self, words)
+        Lists::new(self, words)
             .map(|list| list.len() as u128)
-            .fold1(u128::saturating_mul)
+            .reduce(u128::saturating_mul)
             .unwrap_or(0u128)
     }
 
@@ -191,8 +191,8 @@ impl<'a> Petnames<'a> {
     where
         RNG: rand::Rng,
     {
-        itertools::Itertools::intersperse(
-            Lists(self, words)
+        Itertools::intersperse(
+            Lists::new(self, words)
                 .filter_map(|list| list.choose(rng))
                 .cloned(),
             separator,
@@ -261,7 +261,7 @@ impl<'a> Petnames<'a> {
     where
         RNG: rand::Rng,
     {
-        let lists: Vec<Words<'a>> = Lists(self, words).cloned().collect();
+        let lists: Vec<Words<'a>> = Lists::new(self, words).cloned().collect();
         NamesProduct::shuffled(&lists, rng, separator)
     }
 }
@@ -279,32 +279,58 @@ impl<'a> Default for Petnames<'a> {
 /// constructing a petname of `n` words. For example, if you want 3 words in
 /// your petname, this will first yield the adverbs word list, then adjectives,
 /// then names.
-struct Lists<'a>(&'a Petnames<'a>, u8);
+enum Lists<'a> {
+    Adverb(&'a Petnames<'a>, u8),
+    Adjective(&'a Petnames<'a>),
+    Name(&'a Petnames<'a>),
+    Done,
+}
+
+impl<'a> Lists<'a> {
+    fn new(names: &'a Petnames<'a>, words: u8) -> Self {
+        match words {
+            0 => Self::Done,
+            1 => Self::Name(names),
+            2 => Self::Adjective(names),
+            n => Self::Adverb(names, n - 3),
+        }
+    }
+
+    fn advance(&mut self) {
+        *self = match self {
+            Self::Adverb(names, 0) => Self::Adjective(names),
+            Self::Adverb(names, remaining) => Self::Adverb(names, *remaining - 1),
+            Self::Adjective(names) => Self::Name(names),
+            Self::Name(_) | Self::Done => Self::Done,
+        }
+    }
+}
 
 impl<'a> Iterator for Lists<'a> {
     type Item = &'a Words<'a>;
 
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        (0, Some(self.1 as usize))
+    fn next(&mut self) -> Option<Self::Item> {
+        let result = match self {
+            Self::Adverb(names, _) => Some(&names.adverbs),
+            Self::Adjective(names) => Some(&names.adjectives),
+            Self::Name(names) => Some(&names.names),
+            Self::Done => None,
+        };
+
+        self.advance();
+
+        result
     }
 
-    fn next(&mut self) -> Option<Self::Item> {
-        let Self(petnames, ref mut word) = self;
-        match word {
-            0 => None,
-            1 => {
-                *word -= 1;
-                Some(&petnames.names)
-            }
-            2 => {
-                *word -= 1;
-                Some(&petnames.adjectives)
-            }
-            _ => {
-                *word -= 1;
-                Some(&petnames.adverbs)
-            }
-        }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let upper = match self {
+            Self::Adverb(_, n) => (n + 3) as usize,
+            Self::Adjective(_) => 2,
+            Self::Name(_) => 1,
+            Self::Done => 0,
+        };
+
+        (0, Some(upper))
     }
 }
 
@@ -409,47 +435,42 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut bump = true; // Request advance of next iterator.
-        for (iter, word) in self.iters.iter_mut() {
-            if bump || word.is_none() {
-                match iter.next() {
-                    None => {
-                        // This shouldn't happen because we expect the iterators
-                        // to cycle. However, if it does, we're definitely done.
-                        return None;
-                    }
-                    Some(None) => {
-                        // This is the cycle end marker. We want to get another
-                        // new word from this iterator, and advance the *next*
-                        // iterator too.
-                        match iter.next() {
-                            None => return None,
-                            Some(None) => return None,
-                            Some(s) => *word = s,
-                        }
-                        bump = true
-                    }
-                    Some(s) => {
-                        // We have a new word from this iterator, so we do not
-                        // yet need to advance the next iterator.
-                        *word = s;
-                        bump = false
-                    }
+        for (iter, word) in &mut self.iters {
+            if !bump && word.is_some() {
+                continue;
+            }
+
+            match iter.next()? {
+                None => {
+                    // This is the cycle end marker. We want to get another
+                    // new word from this iterator, and advance the *next*
+                    // iterator too.
+                    let new_word = iter.next().flatten()?;
+                    *word = Some(new_word);
+                    bump = true
+                }
+                Some(s) => {
+                    // We have a new word from this iterator, so we do not
+                    // yet need to advance the next iterator.
+                    *word = Some(s);
+                    bump = false
                 }
             }
         }
+
         if bump {
             // We reached the end of the last iterator, hence we're done.
-            None
-        } else {
-            // We may be able to construct a word!
-            self.iters.iter().fold(
-                Some(String::with_capacity(self.capacity)),
-                |acc, (_, w)| match (acc, *w) {
-                    (Some(s), Some(w)) if s.is_empty() => Some(s + w),
-                    (Some(s), Some(w)) => Some(s + &self.separator + w),
-                    _ => None,
-                },
-            )
+            return None;
         }
+
+        // We may be able to construct a word!
+        self.iters.iter().fold(
+            Some(String::with_capacity(self.capacity)),
+            |acc, (_, w)| match (acc, *w) {
+                (Some(s), Some(w)) if s.is_empty() => Some(s + w),
+                (Some(s), Some(w)) => Some(s + &self.separator + w),
+                _ => None,
+            },
+        )
     }
 }
