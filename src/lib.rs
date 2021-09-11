@@ -279,7 +279,8 @@ impl<'a> Default for Petnames<'a> {
 /// constructing a petname of `n` words. For example, if you want 3 words in
 /// your petname, this will first yield the adverbs word list, then adjectives,
 /// then names.
-enum Lists<'a> {
+#[derive(Debug, PartialEq)]
+pub(crate) enum Lists<'a> {
     Adverb(&'a Petnames<'a>, u8),
     Adjective(&'a Petnames<'a>),
     Name(&'a Petnames<'a>),
@@ -323,14 +324,14 @@ impl<'a> Iterator for Lists<'a> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let upper = match self {
+        let remains = match self {
             Self::Adverb(_, n) => (n + 3) as usize,
             Self::Adjective(_) => 2,
             Self::Name(_) => 1,
             Self::Done => 0,
         };
 
-        (0, Some(upper))
+        (remains, Some(remains))
     }
 }
 
@@ -477,5 +478,41 @@ where
                 },
             )
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use alloc::vec;
+
+    #[test]
+    fn lists_sequences_adverbs_adjectives_then_names() {
+        let petnames = super::Petnames::init("adjective", "adverb", "name");
+        let mut lists = super::Lists::new(&petnames, 4);
+        assert_eq!(super::Lists::Adverb(&petnames, 1), lists);
+        assert_eq!(Some(&vec!["adverb"]), lists.next());
+        assert_eq!(super::Lists::Adverb(&petnames, 0), lists);
+        assert_eq!(Some(&vec!["adverb"]), lists.next());
+        assert_eq!(super::Lists::Adjective(&petnames), lists);
+        assert_eq!(Some(&vec!["adjective"]), lists.next());
+        assert_eq!(super::Lists::Name(&petnames), lists);
+        assert_eq!(Some(&vec!["name"]), lists.next());
+        assert_eq!(super::Lists::Done, lists);
+        assert_eq!(None, lists.next());
+    }
+
+    #[test]
+    fn lists_size_hint() {
+        let petnames = super::Petnames::init("adjective", "adverb", "name");
+        let mut lists = super::Lists::new(&petnames, 3);
+        assert_eq!((3, Some(3)), lists.size_hint());
+        assert!(lists.next().is_some());
+        assert_eq!((2, Some(2)), lists.size_hint());
+        assert!(lists.next().is_some());
+        assert_eq!((1, Some(1)), lists.size_hint());
+        assert!(lists.next().is_some());
+        assert_eq!((0, Some(0)), lists.size_hint());
+        assert_eq!(None, lists.next());
+        assert_eq!((0, Some(0)), lists.size_hint());
     }
 }
