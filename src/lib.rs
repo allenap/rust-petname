@@ -280,7 +280,7 @@ impl<'a> Default for Petnames<'a> {
 /// your petname, this will first yield the adverbs word list, then adjectives,
 /// then names.
 #[derive(Debug, PartialEq)]
-pub(crate) enum Lists<'a> {
+enum Lists<'a> {
     Adverb(&'a Petnames<'a>, u8),
     Adjective(&'a Petnames<'a>),
     Name(&'a Petnames<'a>),
