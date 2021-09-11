@@ -9,19 +9,23 @@
 //! The other thing you need is a random number generator from [rand][]:
 //!
 //! ```rust
+//! # #[cfg(feature = "std_rng")]
 //! let mut rng = rand::thread_rng();
+//! # #[cfg(all(feature = "std_rng", feature = "default_dictionary"))]
 //! let pname = petname::Petnames::default().generate(&mut rng, 7, ":");
 //! ```
 //!
 //! It may be more convenient to use the default random number generator:
 //!
 //! ```rust
+//! # #[cfg(all(feature = "std_rng", feature = "default_dictionary"))]
 //! let pname = petname::Petnames::default().generate_one(7, ":");
 //! ```
 //!
 //! There's a [convenience function][petname] that'll do all of this:
 //!
 //! ```rust
+//! # #[cfg(all(feature = "std_rng", feature = "default_dictionary"))]
 //! let pname = petname::petname(7, ":");
 //! ```
 //!
@@ -29,8 +33,11 @@
 //! [`iter`][`Petnames::iter`]:
 //!
 //! ```rust
+//! # #[cfg(feature = "std_rng")]
 //! let mut rng = rand::thread_rng();
+//! # #[cfg(feature = "default_dictionary")]
 //! let petnames = petname::Petnames::default();
+//! # #[cfg(all(feature = "std_rng", feature = "default_dictionary"))]
 //! let ten_thousand_names: Vec<String> =
 //!   petnames.iter(&mut rng, 3, "_").take(10000).collect();
 //! ```
@@ -39,8 +46,11 @@
 //! the letter "b":
 //!
 //! ```rust
+//! # #[cfg(feature = "default_dictionary")]
 //! let mut petnames = petname::Petnames::default();
+//! # #[cfg(feature = "default_dictionary")]
 //! petnames.retain(|s| s.starts_with("b"));
+//! # #[cfg(all(feature = "std_rng", feature = "default_dictionary"))]
 //! petnames.generate_one(3, ".");
 //! ```
 //!
