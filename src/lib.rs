@@ -164,9 +164,9 @@ impl<'a> Petnames<'a> {
     /// This can saturate. If the total possible combinations of words exceeds
     /// `u128::MAX` then this will return `u128::MAX`.
     pub fn cardinality(&self, words: u8) -> u128 {
-        Lists(self, words)
+        Lists::new(self, words)
             .map(|list| list.len() as u128)
-            .fold1(u128::saturating_mul)
+            .reduce(u128::saturating_mul)
             .unwrap_or(0u128)
     }
 
@@ -191,8 +191,8 @@ impl<'a> Petnames<'a> {
     where
         RNG: rand::Rng,
     {
-        itertools::Itertools::intersperse(
-            Lists(self, words)
+        Itertools::intersperse(
+            Lists::new(self, words)
                 .filter_map(|list| list.choose(rng))
                 .cloned(),
             separator,
@@ -261,7 +261,7 @@ impl<'a> Petnames<'a> {
     where
         RNG: rand::Rng,
     {
-        let lists: Vec<Words<'a>> = Lists(self, words).cloned().collect();
+        let lists: Vec<Words<'a>> = Lists::new(self, words).cloned().collect();
         NamesProduct::shuffled(&lists, rng, separator)
     }
 }
@@ -279,32 +279,59 @@ impl<'a> Default for Petnames<'a> {
 /// constructing a petname of `n` words. For example, if you want 3 words in
 /// your petname, this will first yield the adverbs word list, then adjectives,
 /// then names.
-struct Lists<'a>(&'a Petnames<'a>, u8);
+#[derive(Debug, PartialEq)]
+enum Lists<'a> {
+    Adverb(&'a Petnames<'a>, u8),
+    Adjective(&'a Petnames<'a>),
+    Name(&'a Petnames<'a>),
+    Done,
+}
+
+impl<'a> Lists<'a> {
+    fn new(names: &'a Petnames<'a>, words: u8) -> Self {
+        match words {
+            0 => Self::Done,
+            1 => Self::Name(names),
+            2 => Self::Adjective(names),
+            n => Self::Adverb(names, n - 3),
+        }
+    }
+
+    fn advance(&mut self) {
+        *self = match self {
+            Self::Adverb(names, 0) => Self::Adjective(names),
+            Self::Adverb(names, remaining) => Self::Adverb(names, *remaining - 1),
+            Self::Adjective(names) => Self::Name(names),
+            Self::Name(_) | Self::Done => Self::Done,
+        }
+    }
+}
 
 impl<'a> Iterator for Lists<'a> {
     type Item = &'a Words<'a>;
 
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        (0, Some(self.1 as usize))
+    fn next(&mut self) -> Option<Self::Item> {
+        let result = match self {
+            Self::Adverb(names, _) => Some(&names.adverbs),
+            Self::Adjective(names) => Some(&names.adjectives),
+            Self::Name(names) => Some(&names.names),
+            Self::Done => None,
+        };
+
+        self.advance();
+
+        result
     }
 
-    fn next(&mut self) -> Option<Self::Item> {
-        let Self(petnames, ref mut word) = self;
-        match word {
-            0 => None,
-            1 => {
-                *word -= 1;
-                Some(&petnames.names)
-            }
-            2 => {
-                *word -= 1;
-                Some(&petnames.adjectives)
-            }
-            _ => {
-                *word -= 1;
-                Some(&petnames.adverbs)
-            }
-        }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let remains = match self {
+            Self::Adverb(_, n) => (n + 3) as usize,
+            Self::Adjective(_) => 2,
+            Self::Name(_) => 1,
+            Self::Done => 0,
+        };
+
+        (remains, Some(remains))
     }
 }
 
@@ -451,5 +478,41 @@ where
                 },
             )
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use alloc::vec;
+
+    #[test]
+    fn lists_sequences_adverbs_adjectives_then_names() {
+        let petnames = super::Petnames::init("adjective", "adverb", "name");
+        let mut lists = super::Lists::new(&petnames, 4);
+        assert_eq!(super::Lists::Adverb(&petnames, 1), lists);
+        assert_eq!(Some(&vec!["adverb"]), lists.next());
+        assert_eq!(super::Lists::Adverb(&petnames, 0), lists);
+        assert_eq!(Some(&vec!["adverb"]), lists.next());
+        assert_eq!(super::Lists::Adjective(&petnames), lists);
+        assert_eq!(Some(&vec!["adjective"]), lists.next());
+        assert_eq!(super::Lists::Name(&petnames), lists);
+        assert_eq!(Some(&vec!["name"]), lists.next());
+        assert_eq!(super::Lists::Done, lists);
+        assert_eq!(None, lists.next());
+    }
+
+    #[test]
+    fn lists_size_hint() {
+        let petnames = super::Petnames::init("adjective", "adverb", "name");
+        let mut lists = super::Lists::new(&petnames, 3);
+        assert_eq!((3, Some(3)), lists.size_hint());
+        assert!(lists.next().is_some());
+        assert_eq!((2, Some(2)), lists.size_hint());
+        assert!(lists.next().is_some());
+        assert_eq!((1, Some(1)), lists.size_hint());
+        assert!(lists.next().is_some());
+        assert_eq!((0, Some(0)), lists.size_hint());
+        assert_eq!(None, lists.next());
+        assert_eq!((0, Some(0)), lists.size_hint());
     }
 }
