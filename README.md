@@ -134,7 +134,7 @@ million petnames a second on this hardware. This is useful if you want to apply
 an external filter to the names being generated:
 
 ```shellsession
-$ petname --words=3 --count=0 | grep 'love.*\bsalmon$'
+$ petname --words=3 --stream | grep 'love.*\bsalmon$'
 ```
 
 ## Features & `no_std` support
