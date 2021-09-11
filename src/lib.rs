@@ -435,42 +435,47 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut bump = true; // Request advance of next iterator.
-        for (iter, word) in &mut self.iters {
-            if !bump && word.is_some() {
-                continue;
-            }
-
-            match iter.next()? {
-                None => {
-                    // This is the cycle end marker. We want to get another
-                    // new word from this iterator, and advance the *next*
-                    // iterator too.
-                    let new_word = iter.next().flatten()?;
-                    *word = Some(new_word);
-                    bump = true
-                }
-                Some(s) => {
-                    // We have a new word from this iterator, so we do not
-                    // yet need to advance the next iterator.
-                    *word = Some(s);
-                    bump = false
+        for (iter, word) in self.iters.iter_mut() {
+            if bump || word.is_none() {
+                match iter.next() {
+                    None => {
+                        // This shouldn't happen because we expect the iterators
+                        // to cycle. However, if it does, we're definitely done.
+                        return None;
+                    }
+                    Some(None) => {
+                        // This is the cycle end marker. We want to get another
+                        // new word from this iterator, and advance the *next*
+                        // iterator too.
+                        match iter.next() {
+                            None => return None,
+                            Some(None) => return None,
+                            Some(s) => *word = s,
+                        }
+                        bump = true
+                    }
+                    Some(s) => {
+                        // We have a new word from this iterator, so we do not
+                        // yet need to advance the next iterator.
+                        *word = s;
+                        bump = false
+                    }
                 }
             }
         }
-
         if bump {
             // We reached the end of the last iterator, hence we're done.
-            return None;
+            None
+        } else {
+            // We may be able to construct a word!
+            self.iters.iter().fold(
+                Some(String::with_capacity(self.capacity)),
+                |acc, (_, w)| match (acc, *w) {
+                    (Some(s), Some(w)) if s.is_empty() => Some(s + w),
+                    (Some(s), Some(w)) => Some(s + &self.separator + w),
+                    _ => None,
+                },
+            )
         }
-
-        // We may be able to construct a word!
-        self.iters.iter().fold(
-            Some(String::with_capacity(self.capacity)),
-            |acc, (_, w)| match (acc, *w) {
-                (Some(s), Some(w)) if s.is_empty() => Some(s + w),
-                (Some(s), Some(w)) => Some(s + &self.separator + w),
-                _ => None,
-            },
-        )
     }
 }
