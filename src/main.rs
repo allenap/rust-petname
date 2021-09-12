@@ -1,6 +1,6 @@
-#[macro_use]
-extern crate clap;
+mod cli;
 
+use cli::Cli;
 use petname::Petnames;
 
 use std::collections::HashSet;
@@ -9,23 +9,19 @@ use std::fs;
 use std::io;
 use std::path;
 use std::process;
-use std::str::FromStr;
 
-use clap::Arg;
 use rand::seq::IteratorRandom;
+use structopt::StructOpt;
 
 fn main() {
-    let matches = app().get_matches();
-    match run(matches) {
-        Err(Error::Disconnected) => {
+    let cli = Cli::from_args();
+    match run(cli) {
+        Ok(()) | Err(Error::Disconnected) => {
             process::exit(0);
         }
         Err(e) => {
             eprintln!("Error: {}", e);
             process::exit(1);
-        }
-        Ok(()) => {
-            process::exit(0);
         }
     }
 }
@@ -56,143 +52,9 @@ impl From<io::Error> for Error {
     }
 }
 
-fn app<'a, 'b>() -> clap::App<'a, 'b> {
-    clap::App::new("rust-petname")
-        .version(crate_version!())
-        .author(crate_authors!())
-        .about("Generate human readable random names.")
-        .after_help(concat!(
-            "Based on Dustin Kirkland's petname project ",
-            "<https://github.com/dustinkirkland/petname>."
-        ))
-        .arg(
-            Arg::with_name("words")
-                .short("w")
-                .long("words")
-                .value_name("WORDS")
-                .default_value("2")
-                .help("Number of words in name")
-                .takes_value(true)
-                .validator(can_be_parsed::<u8>),
-        )
-        .arg(
-            Arg::with_name("separator")
-                .short("s")
-                .long("separator")
-                .value_name("SEP")
-                .default_value("-")
-                .help("Separator between words")
-                .takes_value(true),
-        )
-        .arg(
-            Arg::with_name("complexity")
-                .short("c")
-                .long("complexity")
-                .value_name("COM")
-                .possible_values(&["0", "1", "2"])
-                .hide_possible_values(true)
-                .default_value("0")
-                .help("Use small words (0), medium words (1), or large words (2)")
-                .takes_value(true),
-        )
-        .arg(
-            Arg::with_name("directory")
-                .short("d")
-                .long("dir")
-                .value_name("DIR")
-                .help("Directory containing adjectives.txt, adverbs.txt, names.txt")
-                .conflicts_with("complexity")
-                .takes_value(true),
-        )
-        .arg(
-            Arg::with_name("count")
-                .long("count")
-                .value_name("COUNT")
-                .default_value("1")
-                .help(concat!(
-                    "Generate multiple names; pass 0 to produce infinite ",
-                    "names (--count=0 is deprecated; use --stream instead)"
-                ))
-                .takes_value(true)
-                .validator(can_be_parsed::<usize>),
-        )
-        .arg(
-            Arg::with_name("stream")
-                .long("stream")
-                .help("Stream names continuously")
-                .conflicts_with("count")
-                .takes_value(false),
-        )
-        .arg(
-            Arg::with_name("non-repeating")
-                .long("non-repeating")
-                .help("Do not generate the same name more than once")
-                .takes_value(false),
-        )
-        .arg(
-            Arg::with_name("letters")
-                .short("l")
-                .long("letters")
-                .value_name("LETTERS")
-                .default_value("0")
-                .help("Maxiumum number of letters in each word; 0 for unlimited")
-                .takes_value(true)
-                .validator(can_be_parsed::<usize>),
-        )
-        .arg(
-            Arg::with_name("alliterate")
-                .short("a")
-                .long("alliterate")
-                .help("Generate names where each word begins with the same letter")
-                .takes_value(false),
-        )
-        .arg(
-            Arg::with_name("alliterate-with")
-                .long("alliterate-with")
-                .short("A")
-                .value_name("LETTER")
-                .help("Generate names where each word begins with the given letter")
-                .takes_value(true)
-                .validator(can_be_parsed::<char>),
-        )
-        .arg(
-            // For compatibility with upstream.
-            Arg::with_name("ubuntu")
-                .short("u")
-                .long("ubuntu")
-                .help("Alias; see --alliterate")
-                .takes_value(false),
-        )
-}
-
-fn run(matches: clap::ArgMatches) -> Result<(), Error> {
-    // Unwrapping is safe because these options have defaults.
-    let opt_separator = matches.value_of("separator").unwrap();
-    let opt_words = matches.value_of("words").unwrap();
-    let opt_complexity = matches.value_of("complexity").unwrap();
-    let opt_count = matches.value_of("count").unwrap();
-    let opt_letters = matches.value_of("letters").unwrap();
-
-    // Flags.
-    let opt_stream = matches.is_present("stream");
-    let opt_non_repeating = matches.is_present("non-repeating");
-    let opt_alliterate = matches.is_present("alliterate")
-        || matches.is_present("ubuntu")
-        || matches.is_present("alliterate-with");
-
-    // Optional arguments without defaults.
-    let opt_directory = matches.value_of("directory");
-    let opt_alliterate_char = matches
-        .value_of("alliterate-with")
-        .and_then(|s| s.parse::<char>().ok());
-
-    // Parse numbers. Validated so unwrapping is okay.
-    let opt_words: u8 = opt_words.parse().unwrap();
-    let opt_count: usize = opt_count.parse().unwrap();
-    let opt_letters: usize = opt_letters.parse().unwrap();
-
+fn run(cli: Cli) -> Result<(), Error> {
     // Load custom word lists, if specified.
-    let words = match opt_directory {
+    let words = match cli.directory {
         Some(dirname) => Words::load(dirname)?,
         None => Words::Builtin,
     };
@@ -202,21 +64,22 @@ fn run(matches: clap::ArgMatches) -> Result<(), Error> {
         Words::Custom(ref adjectives, ref adverbs, ref names) => {
             Petnames::init(adjectives, adverbs, names)
         }
-        Words::Builtin => match opt_complexity {
-            "0" => Petnames::small(),
-            "1" => Petnames::medium(),
-            "2" => Petnames::large(),
+        Words::Builtin => match cli.complexity {
+            0 => Petnames::small(),
+            1 => Petnames::medium(),
+            2 => Petnames::large(),
             _ => Petnames::small(),
         },
     };
 
     // If requested, limit the number of letters.
-    if opt_letters != 0 {
-        petnames.retain(|s| s.len() <= opt_letters);
+    let letters = cli.letters;
+    if letters != 0 {
+        petnames.retain(|s| s.len() <= letters);
     }
 
     // Check cardinality.
-    if petnames.cardinality(opt_words) == 0 {
+    if petnames.cardinality(cli.words) == 0 {
         return Err(Error::Cardinality(
             "no petnames to choose from; try relaxing constraints".to_string(),
         ));
@@ -227,14 +90,15 @@ fn run(matches: clap::ArgMatches) -> Result<(), Error> {
 
     // Handle alliteration, either by eliminating a specified
     // character, or using a random one.
-    if opt_alliterate {
+    let alliterate = cli.alliterate || cli.ubuntu || cli.alliterate_with.is_some();
+    if alliterate {
         // We choose the first letter from the intersection of the
         // first letters of each word list in `petnames`.
         let firsts =
             common_first_letters(&petnames.adjectives, &[&petnames.adverbs, &petnames.names]);
         // if a specific character was requested for alliteration,
         // attempt to use it.
-        if let Some(c) = opt_alliterate_char {
+        if let Some(c) = cli.alliterate_with {
             if firsts.contains(&c) {
                 petnames.retain(|s| s.starts_with(c));
             } else {
@@ -261,7 +125,7 @@ fn run(matches: clap::ArgMatches) -> Result<(), Error> {
     let mut writer = io::BufWriter::new(stdout.lock());
 
     // Warn that --count=0 is deprecated.
-    if opt_count == 0 {
+    if cli.count == 0 {
         eprintln!(concat!(
             "Warning: specifying --count=0 to continuously produce petnames is ",
             "deprecated and its behaviour will change in a future version; ",
@@ -270,23 +134,23 @@ fn run(matches: clap::ArgMatches) -> Result<(), Error> {
     }
 
     // Stream if count is 0. TODO: Only stream when --stream is specified.
-    let count = if opt_stream || opt_count == 0 {
+    let count = if cli.stream || cli.count == 0 {
         None
     } else {
-        Some(opt_count)
+        Some(cli.count)
     };
 
     // Get an iterator for the names we want to print out.
-    if opt_non_repeating {
+    if cli.non_repeating {
         printer(
             &mut writer,
-            petnames.iter_non_repeating(&mut rng, opt_words, opt_separator),
+            petnames.iter_non_repeating(&mut rng, cli.words, &cli.separator),
             count,
         )
     } else {
         printer(
             &mut writer,
-            petnames.iter(&mut rng, opt_words, opt_separator),
+            petnames.iter(&mut rng, cli.words, &cli.separator),
             count,
         )
     }
@@ -311,17 +175,6 @@ where
     }
 
     Ok(())
-}
-
-fn can_be_parsed<INTO>(value: String) -> Result<(), String>
-where
-    INTO: FromStr,
-    <INTO as FromStr>::Err: std::fmt::Display,
-{
-    match value.parse::<INTO>() {
-        Err(e) => Err(format!("{}", e)),
-        Ok(_) => Ok(()),
-    }
 }
 
 fn common_first_letters(init: &[&str], more: &[&[&str]]) -> HashSet<char> {
