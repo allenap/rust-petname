@@ -26,15 +26,17 @@ required-features = ["clap", "std_rng", "default_dictionary"]
 [features]
 # We include features that must be used for the binary regardless of if they are used (like clap).
 default = ["clap", "std_rng", "default_dictionary"]
+# Alias for backward compatibility.
+clap = ["structopt"]
 # Allows generating petnames with thread rng.
 std_rng = ["rand/std", "rand/std_rng"]
 # Allows the default dictionary to be used.
 default_dictionary = []
 
 [dependencies]
-clap = { version = "^2.33.0", default-features = false, optional = true }
 itertools = { version = "^0.10.0", default-features = false }
 rand = { version = "^0.8.0", default-features = false }
+structopt = { version =  "^0.3.23", default-features = false, optional = true }
 
 [package.metadata.docs.rs]
 # Limit docs.rs builds to a single tier one target, because they're identical on
