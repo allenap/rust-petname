@@ -45,7 +45,7 @@ should behave the same.
 
 ```shellsession
 $ petname --help
-rust-petname 1.1.1
+rust-petname 1.1.2
 Gavin Panella <gavinpanella@gmail.com>
 Generate human readable random names.
 
@@ -53,17 +53,20 @@ USAGE:
     petname [FLAGS] [OPTIONS]
 
 FLAGS:
-    -a, --alliterate    Generate names where each word begins with the same letter
-    -h, --help          Prints help information
-    -u, --ubuntu        Alias; see --alliterate
-    -V, --version       Prints version information
+    -a, --alliterate       Generate names where each word begins with the same letter
+    -h, --help             Prints help information
+        --non-repeating    Do not generate the same name more than once
+        --stream           Stream names continuously
+    -u, --ubuntu           Alias; see --alliterate
+    -V, --version          Prints version information
 
 OPTIONS:
     -A, --alliterate-with <LETTER>    Generate names where each word begins with the given letter
     -c, --complexity <COM>            Use small words (0), medium words (1), or large words (2) [default: 0]
-        --count <COUNT>               Generate multiple names; pass 0 to produce infinite names! [default: 1]
+        --count <COUNT>               Generate multiple names; pass 0 to produce infinite names (--count=0 is
+                                      deprecated; use --stream instead) [default: 1]
     -d, --dir <DIR>                   Directory containing adjectives.txt, adverbs.txt, names.txt
-    -l, --letters <LETTERS>           Maxiumum number of letters in each word; 0 for unlimited [default: 0]
+    -l, --letters <LETTERS>           Maximum number of letters in each word; 0 for unlimited [default: 0]
     -s, --separator <SEP>             Separator between words [default: -]
     -w, --words <WORDS>               Number of words in name [default: 2]
 
