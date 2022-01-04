@@ -11,10 +11,10 @@ use std::path;
 use std::process;
 
 use rand::seq::IteratorRandom;
-use structopt::StructOpt;
+use clap::Parser;
 
 fn main() {
-    let cli = Cli::from_args();
+    let cli = Cli::parse();
     match run(cli) {
         Ok(()) | Err(Error::Disconnected) => {
             process::exit(0);
