@@ -1,26 +1,26 @@
 [package]
-name = "petname"
-version = "1.1.2"
 authors = ["Gavin Panella <gavinpanella@gmail.com>"]
-edition = "2021"
+categories = ["command-line-utilities", "no-std"]
 description = "Generate human readable random names. Usable as a library and from the command-line."
+edition = "2021"
+keywords = ["pet", "name", "rand", "random", "generator"]
+license = "Apache-2.0"
+name = "petname"
 readme = "README.md"
 repository = "https://github.com/allenap/rust-petname"
-license = "Apache-2.0"
-categories = ["command-line-utilities", "no-std"]
-keywords = ["pet", "name", "rand", "random", "generator"]
+version = "1.1.2"
 
 [badges]
-travis-ci = { repository = "allenap/rust-petname", branch = "master" }
+travis-ci = {repository = "allenap/rust-petname", branch = "master"}
 
 [lib]
 name = "petname"
 path = "src/lib.rs"
 
 [[bin]]
+doc = false
 name = "petname"
 path = "src/main.rs"
-doc = false
 required-features = ["clap", "std_rng", "default_dictionary"]
 
 [features]
@@ -32,9 +32,9 @@ std_rng = ["rand/std", "rand/std_rng"]
 default_dictionary = []
 
 [dependencies]
-clap = { version = "^3.1.0", features = ["derive"], optional = true }
-itertools = { version = "^0.10.3", default-features = false }
-rand = { version = "^0.8.5", default-features = false }
+clap = {version = "^3.1.0", features = ["derive"], optional = true}
+itertools = {version = "^0.10.3", default-features = false}
+rand = {version = "^0.8.5", default-features = false}
 
 [package.metadata.docs.rs]
 # Limit docs.rs builds to a single tier one target, because they're identical on
