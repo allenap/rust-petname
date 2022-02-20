@@ -10,8 +10,8 @@ use std::io;
 use std::path;
 use std::process;
 
-use rand::seq::IteratorRandom;
 use clap::Parser;
+use rand::seq::IteratorRandom;
 
 fn main() {
     let cli = Cli::parse();
