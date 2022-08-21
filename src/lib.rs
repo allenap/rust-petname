@@ -84,7 +84,7 @@ pub type Words<'a> = Vec<&'a str>;
 ///   * 1 adjective when `n >= 2`, otherwise 0 adjectives.
 ///   * 1 name / noun when `n >= 1`, otherwise 0 names.
 ///
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Petnames<'a> {
     pub adjectives: Words<'a>,
     pub adverbs: Words<'a>,
