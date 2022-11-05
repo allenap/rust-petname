@@ -134,11 +134,7 @@ fn run(cli: Cli) -> Result<(), Error> {
     }
 
     // Stream if count is 0. TODO: Only stream when --stream is specified.
-    let count = if cli.stream || cli.count == 0 {
-        None
-    } else {
-        Some(cli.count)
-    };
+    let count = if cli.stream || cli.count == 0 { None } else { Some(cli.count) };
 
     // Get an iterator for the names we want to print out.
     if cli.non_repeating {
@@ -148,11 +144,7 @@ fn run(cli: Cli) -> Result<(), Error> {
             count,
         )
     } else {
-        printer(
-            &mut writer,
-            petnames.iter(&mut rng, cli.words, &cli.separator),
-            count,
-        )
+        printer(&mut writer, petnames.iter(&mut rng, cli.words, &cli.separator), count)
     }
 }
 

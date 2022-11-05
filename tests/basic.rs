@@ -51,10 +51,7 @@ fn generate_uses_adverb_adjective_name() {
         adverbs: vec!["adverb"],
         names: vec!["name"],
     };
-    assert_eq!(
-        petnames.generate(&mut StepRng::new(0, 1), 3, "-"),
-        "adverb-adjective-name"
-    );
+    assert_eq!(petnames.generate(&mut StepRng::new(0, 1), 3, "-"), "adverb-adjective-name");
 }
 
 #[test]

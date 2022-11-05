@@ -207,9 +207,7 @@ impl<'a> Petnames<'a> {
         RNG: rand::Rng,
     {
         Itertools::intersperse(
-            Lists::new(self, words)
-                .filter_map(|list| list.choose(rng))
-                .cloned(),
+            Lists::new(self, words).filter_map(|list| list.choose(rng)).cloned(),
             separator,
         )
         .collect::<String>()
@@ -244,12 +242,7 @@ impl<'a> Petnames<'a> {
     where
         RNG: rand::Rng,
     {
-        Names {
-            petnames: self,
-            rng,
-            words,
-            separator: separator.to_string(),
-        }
+        Names { petnames: self, rng, words, separator: separator.to_string() }
     }
 
     /// Iterator yielding unique – i.e. non-repeating – petnames.
@@ -379,10 +372,7 @@ where
     type Item = String;
 
     fn next(&mut self) -> Option<Self::Item> {
-        Some(
-            self.petnames
-                .generate(self.rng, self.words, &self.separator),
-        )
+        Some(self.petnames.generate(self.rng, self.words, &self.separator))
     }
 }
 
