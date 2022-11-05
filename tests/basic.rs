@@ -47,9 +47,9 @@ fn default_petnames_has_non_zero_cardinality() {
 #[test]
 fn generate_uses_adverb_adjective_name() {
     let petnames = Petnames {
-        adjectives: vec!["adjective"],
-        adverbs: vec!["adverb"],
-        names: vec!["name"],
+        adjectives: vec!["adjective"].into_boxed_slice(),
+        adverbs: vec!["adverb"].into_boxed_slice(),
+        names: vec!["name"].into_boxed_slice(),
     };
     assert_eq!(petnames.generate(&mut StepRng::new(0, 1), 3, "-"), "adverb-adjective-name");
 }

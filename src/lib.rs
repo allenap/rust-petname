@@ -58,6 +58,7 @@
 extern crate alloc;
 
 use alloc::{
+    boxed::Box,
     string::{String, ToString},
     vec::Vec,
 };
@@ -74,7 +75,7 @@ pub fn petname(words: u8, separator: &str) -> String {
 }
 
 /// A word list.
-pub type Words<'a> = Vec<&'a str>;
+pub type Words<'a> = Box<[&'a str]>;
 
 /// Word lists and the logic to combine them into _petnames_.
 ///
@@ -138,9 +139,9 @@ impl<'a> Petnames<'a> {
     /// The words are extracted from the given strings by splitting on whitespace.
     pub fn init(adjectives: &'a str, adverbs: &'a str, names: &'a str) -> Self {
         Self {
-            adjectives: adjectives.split_whitespace().collect(),
-            adverbs: adverbs.split_whitespace().collect(),
-            names: names.split_whitespace().collect(),
+            adjectives: adjectives.split_whitespace().collect::<Vec<_>>().into_boxed_slice(),
+            adverbs: adverbs.split_whitespace().collect::<Vec<_>>().into_boxed_slice(),
+            names: names.split_whitespace().collect::<Vec<_>>().into_boxed_slice(),
         }
     }
 
@@ -165,9 +166,27 @@ impl<'a> Petnames<'a> {
     where
         F: FnMut(&str) -> bool,
     {
-        self.adjectives.retain(|word| predicate(word));
-        self.adverbs.retain(|word| predicate(word));
-        self.names.retain(|word| predicate(word));
+        self.adjectives = self
+            .adjectives
+            .iter()
+            .cloned()
+            .filter(|word| predicate(word))
+            .collect::<Vec<_>>()
+            .into_boxed_slice();
+        self.adverbs = self
+            .adverbs
+            .iter()
+            .cloned()
+            .filter(|word| predicate(word))
+            .collect::<Vec<_>>()
+            .into_boxed_slice();
+        self.names = self
+            .names
+            .iter()
+            .cloned()
+            .filter(|word| predicate(word))
+            .collect::<Vec<_>>()
+            .into_boxed_slice();
     }
 
     /// Calculate the cardinality of this `Petnames`.
@@ -488,27 +507,36 @@ where
 
 #[cfg(test)]
 mod tests {
+    use super::Box;
     use alloc::vec;
 
     #[test]
     fn lists_sequences_adverbs_adjectives_then_names() {
-        let petnames = super::Petnames::init("adjective", "adverb", "name");
+        let petnames = super::Petnames {
+            adjectives: Box::new(["adjective"]),
+            adverbs: Box::new(["adverb"]),
+            names: Box::new(["name"]),
+        };
         let mut lists = super::Lists::new(&petnames, 4);
         assert_eq!(super::Lists::Adverb(&petnames, 1), lists);
-        assert_eq!(Some(&vec!["adverb"]), lists.next());
+        assert_eq!(Some(&vec!["adverb"].into_boxed_slice()), lists.next());
         assert_eq!(super::Lists::Adverb(&petnames, 0), lists);
-        assert_eq!(Some(&vec!["adverb"]), lists.next());
+        assert_eq!(Some(&vec!["adverb"].into_boxed_slice()), lists.next());
         assert_eq!(super::Lists::Adjective(&petnames), lists);
-        assert_eq!(Some(&vec!["adjective"]), lists.next());
+        assert_eq!(Some(&vec!["adjective"].into_boxed_slice()), lists.next());
         assert_eq!(super::Lists::Name(&petnames), lists);
-        assert_eq!(Some(&vec!["name"]), lists.next());
+        assert_eq!(Some(&vec!["name"].into_boxed_slice()), lists.next());
         assert_eq!(super::Lists::Done, lists);
         assert_eq!(None, lists.next());
     }
 
     #[test]
     fn lists_size_hint() {
-        let petnames = super::Petnames::init("adjective", "adverb", "name");
+        let petnames = super::Petnames {
+            adjectives: Box::new(["adjective"]),
+            adverbs: Box::new(["adverb"]),
+            names: Box::new(["name"]),
+        };
         let mut lists = super::Lists::new(&petnames, 3);
         assert_eq!((3, Some(3)), lists.size_hint());
         assert!(lists.next().is_some());
