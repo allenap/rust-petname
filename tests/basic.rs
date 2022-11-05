@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 #[cfg(all(feature = "std_rng", feature = "default_dictionary"))]
 use petname::petname;
 use petname::Petnames;
@@ -47,9 +49,9 @@ fn default_petnames_has_non_zero_cardinality() {
 #[test]
 fn generate_uses_adverb_adjective_name() {
     let petnames = Petnames {
-        adjectives: vec!["adjective"].into_boxed_slice(),
-        adverbs: vec!["adverb"].into_boxed_slice(),
-        names: vec!["name"].into_boxed_slice(),
+        adjectives: Cow::Owned(vec!["adjective"]),
+        adverbs: Cow::Owned(vec!["adverb"]),
+        names: Cow::Owned(vec!["name"]),
     };
     assert_eq!(petnames.generate(&mut StepRng::new(0, 1), 3, "-"), "adverb-adjective-name");
 }
