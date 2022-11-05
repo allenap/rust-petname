@@ -98,7 +98,7 @@ fn run(cli: Cli) -> Result<(), Error> {
                 petnames.retain(|s| s.starts_with(c));
             } else {
                 return Err(Error::Alliteration(
-                    "no petnames begin with the choosen alliteration character".to_string(),
+                    "no petnames begin with the chosen alliteration character".to_string(),
                 ));
             }
         } else {
