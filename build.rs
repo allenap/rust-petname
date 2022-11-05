@@ -18,11 +18,7 @@ fn main() {
             println!("cargo:rerun-if-changed={list_path}");
             let list_raw = fs::read_to_string(list_path).unwrap();
             let list = list_raw.split_whitespace().collect::<Vec<_>>();
-            lines.push(format!(
-                "  pub static {}: [&str; {}] = [",
-                list_name.to_uppercase(),
-                list.len()
-            ));
+            lines.push(format!("  pub static {}: [&str; {}] = [", list_name.to_uppercase(), list.len()));
             lines.extend(list.iter().map(|word| format!("    \"{word}\",")));
             lines.push("  ];".to_string());
         }

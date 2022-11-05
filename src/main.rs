@@ -61,9 +61,7 @@ fn run(cli: Cli) -> Result<(), Error> {
 
     // Select the appropriate word list.
     let mut petnames = match words {
-        Words::Custom(ref adjectives, ref adverbs, ref names) => {
-            Petnames::init(adjectives, adverbs, names)
-        }
+        Words::Custom(ref adjectives, ref adverbs, ref names) => Petnames::init(adjectives, adverbs, names),
         Words::Builtin => match cli.complexity {
             0 => Petnames::small(),
             1 => Petnames::medium(),
@@ -80,9 +78,7 @@ fn run(cli: Cli) -> Result<(), Error> {
 
     // Check cardinality.
     if petnames.cardinality(cli.words) == 0 {
-        return Err(Error::Cardinality(
-            "no petnames to choose from; try relaxing constraints".to_string(),
-        ));
+        return Err(Error::Cardinality("no petnames to choose from; try relaxing constraints".to_string()));
     }
 
     // We're going to need a source of randomness.
@@ -94,8 +90,7 @@ fn run(cli: Cli) -> Result<(), Error> {
     if alliterate {
         // We choose the first letter from the intersection of the
         // first letters of each word list in `petnames`.
-        let firsts =
-            common_first_letters(&petnames.adjectives, &[&petnames.adverbs, &petnames.names]);
+        let firsts = common_first_letters(&petnames.adjectives, &[&petnames.adverbs, &petnames.names]);
         // if a specific character was requested for alliteration,
         // attempt to use it.
         if let Some(c) = cli.alliterate_with {
@@ -138,11 +133,7 @@ fn run(cli: Cli) -> Result<(), Error> {
 
     // Get an iterator for the names we want to print out.
     if cli.non_repeating {
-        printer(
-            &mut writer,
-            petnames.iter_non_repeating(&mut rng, cli.words, &cli.separator),
-            count,
-        )
+        printer(&mut writer, petnames.iter_non_repeating(&mut rng, cli.words, &cli.separator), count)
     } else {
         printer(&mut writer, petnames.iter(&mut rng, cli.words, &cli.separator), count)
     }

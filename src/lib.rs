@@ -198,10 +198,7 @@ impl<'a> Petnames<'a> {
     /// This can saturate. If the total possible combinations of words exceeds
     /// `u128::MAX` then this will return `u128::MAX`.
     pub fn cardinality(&self, words: u8) -> u128 {
-        Lists::new(self, words)
-            .map(|list| list.len() as u128)
-            .reduce(u128::saturating_mul)
-            .unwrap_or(0u128)
+        Lists::new(self, words).map(|list| list.len() as u128).reduce(u128::saturating_mul).unwrap_or(0u128)
     }
 
     /// Generate a new petname.
@@ -419,8 +416,7 @@ impl<'a> NamesProduct<'a, core::iter::Cycle<alloc::vec::IntoIter<Option<&'a str>
             iters: lists
                 .iter()
                 .map(|words| {
-                    let mut list: Vec<Option<&'a str>> =
-                        Vec::with_capacity(words.len().saturating_add(1));
+                    let mut list: Vec<Option<&'a str>> = Vec::with_capacity(words.len().saturating_add(1));
                     list.extend(words.iter().map(|word| Some(*word)));
                     list.shuffle(rng); // Could be expensive.
                     list.push(None); // Cycle marker.
@@ -493,14 +489,13 @@ where
             None
         } else {
             // We may be able to construct a word!
-            self.iters.iter().fold(
-                Some(String::with_capacity(self.capacity)),
-                |acc, (_, w)| match (acc, *w) {
+            self.iters.iter().fold(Some(String::with_capacity(self.capacity)), |acc, (_, w)| {
+                match (acc, *w) {
                     (Some(s), Some(w)) if s.is_empty() => Some(s + w),
                     (Some(s), Some(w)) => Some(s + &self.separator + w),
                     _ => None,
-                },
-            )
+                }
+            })
         }
     }
 }
