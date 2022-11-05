@@ -91,6 +91,11 @@ pub struct Petnames<'a> {
     pub names: Words<'a>,
 }
 
+#[cfg(feature = "default_dictionary")]
+mod words {
+    include!(concat!(env!("OUT_DIR"), "/words.rs"));
+}
+
 impl<'a> Petnames<'a> {
     /// Constructs a new `Petnames` from the default (small) word lists.
     #[cfg(feature = "default_dictionary")]
@@ -101,31 +106,31 @@ impl<'a> Petnames<'a> {
     /// Constructs a new `Petnames` from the small word lists.
     #[cfg(feature = "default_dictionary")]
     pub fn small() -> Self {
-        Self::init(
-            include_str!("../words/small/adjectives.txt"),
-            include_str!("../words/small/adverbs.txt"),
-            include_str!("../words/small/names.txt"),
-        )
+        Self {
+            adjectives: words::small::ADJECTIVES.into(),
+            adverbs: words::small::ADVERBS.into(),
+            names: words::small::NAMES.into(),
+        }
     }
 
     /// Constructs a new `Petnames` from the medium word lists.
     #[cfg(feature = "default_dictionary")]
     pub fn medium() -> Self {
-        Self::init(
-            include_str!("../words/medium/adjectives.txt"),
-            include_str!("../words/medium/adverbs.txt"),
-            include_str!("../words/medium/names.txt"),
-        )
+        Self {
+            adjectives: words::medium::ADJECTIVES.into(),
+            adverbs: words::medium::ADVERBS.into(),
+            names: words::medium::NAMES.into(),
+        }
     }
 
     /// Constructs a new `Petnames` from the large word lists.
     #[cfg(feature = "default_dictionary")]
     pub fn large() -> Self {
-        Self::init(
-            include_str!("../words/large/adjectives.txt"),
-            include_str!("../words/large/adverbs.txt"),
-            include_str!("../words/large/names.txt"),
-        )
+        Self {
+            adjectives: words::large::ADJECTIVES.into(),
+            adverbs: words::large::ADVERBS.into(),
+            names: words::large::NAMES.into(),
+        }
     }
 
     /// Constructs a new `Petnames` from the given word lists.
