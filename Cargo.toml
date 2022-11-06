@@ -37,3 +37,11 @@ rand = {version = "^0.8.5", default-features = false}
 # Limit docs.rs builds to a single tier one target, because they're identical on
 # all. https://blog.rust-lang.org/2020/03/15/docs-rs-opt-into-fewer-targets.html
 targets = ["x86_64-unknown-linux-gnu"]
+
+# Follow some of the advice from https://github.com/johnthagen/min-sized-rust on
+# how to minimise the compiled (release build) binary size. At the time of
+# writing this reduces the binary from ~6MiB to ~2MiB.
+[profile.release]
+lto = true
+opt-level = "z"
+strip = true
