@@ -10,9 +10,6 @@ readme = "README.md"
 repository = "https://github.com/allenap/rust-petname"
 version = "1.1.2"
 
-[badges]
-travis-ci = {repository = "allenap/rust-petname", branch = "master"}
-
 [lib]
 name = "petname"
 path = "src/lib.rs"
