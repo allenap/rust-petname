@@ -139,9 +139,9 @@ impl<'a> Petnames<'a> {
     /// The words are extracted from the given strings by splitting on whitespace.
     pub fn init(adjectives: &'a str, adverbs: &'a str, names: &'a str) -> Self {
         Self {
-            adjectives: Cow::Owned(adjectives.split_whitespace().collect::<Vec<_>>()),
-            adverbs: Cow::Owned(adverbs.split_whitespace().collect::<Vec<_>>()),
-            names: Cow::Owned(names.split_whitespace().collect::<Vec<_>>()),
+            adjectives: Cow::Owned(adjectives.split_whitespace().collect()),
+            adverbs: Cow::Owned(adverbs.split_whitespace().collect()),
+            names: Cow::Owned(names.split_whitespace().collect()),
         }
     }
 
