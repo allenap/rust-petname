@@ -58,6 +58,7 @@
 extern crate alloc;
 
 use alloc::{
+    borrow::Cow,
     string::{String, ToString},
     vec::Vec,
 };
@@ -74,7 +75,7 @@ pub fn petname(words: u8, separator: &str) -> String {
 }
 
 /// A word list.
-pub type Words<'a> = Vec<&'a str>;
+pub type Words<'a> = Cow<'a, [&'a str]>;
 
 /// Word lists and the logic to combine them into _petnames_.
 ///
@@ -91,6 +92,11 @@ pub struct Petnames<'a> {
     pub names: Words<'a>,
 }
 
+#[cfg(feature = "default_dictionary")]
+mod words {
+    include!(concat!(env!("OUT_DIR"), "/words.rs"));
+}
+
 impl<'a> Petnames<'a> {
     /// Constructs a new `Petnames` from the default (small) word lists.
     #[cfg(feature = "default_dictionary")]
@@ -101,31 +107,31 @@ impl<'a> Petnames<'a> {
     /// Constructs a new `Petnames` from the small word lists.
     #[cfg(feature = "default_dictionary")]
     pub fn small() -> Self {
-        Self::init(
-            include_str!("../words/small/adjectives.txt"),
-            include_str!("../words/small/adverbs.txt"),
-            include_str!("../words/small/names.txt"),
-        )
+        Self {
+            adjectives: Cow::from(&words::small::ADJECTIVES[..]),
+            adverbs: Cow::from(&words::small::ADVERBS[..]),
+            names: Cow::from(&words::small::NAMES[..]),
+        }
     }
 
     /// Constructs a new `Petnames` from the medium word lists.
     #[cfg(feature = "default_dictionary")]
     pub fn medium() -> Self {
-        Self::init(
-            include_str!("../words/medium/adjectives.txt"),
-            include_str!("../words/medium/adverbs.txt"),
-            include_str!("../words/medium/names.txt"),
-        )
+        Self {
+            adjectives: Cow::from(&words::medium::ADJECTIVES[..]),
+            adverbs: Cow::from(&words::medium::ADVERBS[..]),
+            names: Cow::from(&words::medium::NAMES[..]),
+        }
     }
 
     /// Constructs a new `Petnames` from the large word lists.
     #[cfg(feature = "default_dictionary")]
     pub fn large() -> Self {
-        Self::init(
-            include_str!("../words/large/adjectives.txt"),
-            include_str!("../words/large/adverbs.txt"),
-            include_str!("../words/large/names.txt"),
-        )
+        Self {
+            adjectives: Cow::from(&words::large::ADJECTIVES[..]),
+            adverbs: Cow::from(&words::large::ADVERBS[..]),
+            names: Cow::from(&words::large::NAMES[..]),
+        }
     }
 
     /// Constructs a new `Petnames` from the given word lists.
@@ -133,9 +139,9 @@ impl<'a> Petnames<'a> {
     /// The words are extracted from the given strings by splitting on whitespace.
     pub fn init(adjectives: &'a str, adverbs: &'a str, names: &'a str) -> Self {
         Self {
-            adjectives: adjectives.split_whitespace().collect(),
-            adverbs: adverbs.split_whitespace().collect(),
-            names: names.split_whitespace().collect(),
+            adjectives: Cow::Owned(adjectives.split_whitespace().collect::<Vec<_>>()),
+            adverbs: Cow::Owned(adverbs.split_whitespace().collect::<Vec<_>>()),
+            names: Cow::Owned(names.split_whitespace().collect::<Vec<_>>()),
         }
     }
 
@@ -160,9 +166,9 @@ impl<'a> Petnames<'a> {
     where
         F: FnMut(&str) -> bool,
     {
-        self.adjectives.retain(|word| predicate(word));
-        self.adverbs.retain(|word| predicate(word));
-        self.names.retain(|word| predicate(word));
+        self.adjectives.to_mut().retain(|word| predicate(word));
+        self.adverbs.to_mut().retain(|word| predicate(word));
+        self.names.to_mut().retain(|word| predicate(word));
     }
 
     /// Calculate the cardinality of this `Petnames`.
@@ -174,8 +180,12 @@ impl<'a> Petnames<'a> {
     /// This can saturate. If the total possible combinations of words exceeds
     /// `u128::MAX` then this will return `u128::MAX`.
     pub fn cardinality(&self, words: u8) -> u128 {
-        Lists::new(self, words)
-            .map(|list| list.len() as u128)
+        Lists::new(words)
+            .map(|list| match list {
+                List::Adverb => self.adverbs.len() as u128,
+                List::Adjective => self.adjectives.len() as u128,
+                List::Name => self.names.len() as u128,
+            })
             .reduce(u128::saturating_mul)
             .unwrap_or(0u128)
     }
@@ -202,9 +212,11 @@ impl<'a> Petnames<'a> {
         RNG: rand::Rng,
     {
         Itertools::intersperse(
-            Lists::new(self, words)
-                .filter_map(|list| list.choose(rng))
-                .cloned(),
+            Lists::new(words).filter_map(|list| match list {
+                List::Adverb => self.adverbs.choose(rng).copied(),
+                List::Adjective => self.adjectives.choose(rng).copied(),
+                List::Name => self.names.choose(rng).copied(),
+            }),
             separator,
         )
         .collect::<String>()
@@ -235,16 +247,11 @@ impl<'a> Petnames<'a> {
     /// println!("name: {}", iter.next().unwrap());
     /// ```
     ///
-    pub fn iter<RNG>(&self, rng: &'a mut RNG, words: u8, separator: &str) -> Names<RNG>
+    pub fn iter<RNG>(&'a self, rng: &'a mut RNG, words: u8, separator: &str) -> Names<'a, RNG>
     where
         RNG: rand::Rng,
     {
-        Names {
-            petnames: self,
-            rng,
-            words,
-            separator: separator.to_string(),
-        }
+        Names { petnames: self, rng, words, separator: separator.to_string() }
     }
 
     /// Iterator yielding unique – i.e. non-repeating – petnames.
@@ -271,7 +278,13 @@ impl<'a> Petnames<'a> {
     where
         RNG: rand::Rng,
     {
-        let lists: Vec<Words<'a>> = Lists::new(self, words).cloned().collect();
+        let lists: Vec<&'a Words<'a>> = Lists::new(words)
+            .map(|list| match list {
+                List::Adverb => &self.adverbs,
+                List::Adjective => &self.adjectives,
+                List::Name => &self.names,
+            })
+            .collect();
         NamesProduct::shuffled(&lists, rng, separator)
     }
 }
@@ -283,61 +296,68 @@ impl<'a> Default for Petnames<'a> {
     }
 }
 
-/// Iterator over a `Petnames`' word lists.
-///
-/// This yields the appropriate lists from which to select a word when
-/// constructing a petname of `n` words. For example, if you want 3 words in
-/// your petname, this will first yield the adverbs word list, then adjectives,
-/// then names.
+/// Enum representing which word list to use.
 #[derive(Debug, PartialEq)]
-enum Lists<'a> {
-    Adverb(&'a Petnames<'a>, u8),
-    Adjective(&'a Petnames<'a>),
-    Name(&'a Petnames<'a>),
+enum List {
+    Adverb,
+    Adjective,
+    Name,
+}
+
+/// Iterator, yielding which word list to use next.
+///
+/// This yields the appropriate list – [adverbs][List::Adverb],
+/// [adjectives][List::Adjective]s, [names][List::Name] –  from which to select
+/// a word when constructing a petname of `n` words. For example, if you want 4
+/// words in your petname, this will first yield [List::Adverb], then
+/// [List::Adverb] again, then [List::Adjective], and lastly [List::Name].
+#[derive(Debug, PartialEq)]
+enum Lists {
+    Adverb(u8),
+    Adjective,
+    Name,
     Done,
 }
 
-impl<'a> Lists<'a> {
-    fn new(names: &'a Petnames<'a>, words: u8) -> Self {
+impl Lists {
+    fn new(words: u8) -> Self {
         match words {
             0 => Self::Done,
-            1 => Self::Name(names),
-            2 => Self::Adjective(names),
-            n => Self::Adverb(names, n - 3),
+            1 => Self::Name,
+            2 => Self::Adjective,
+            n => Self::Adverb(n - 3),
         }
     }
 
     fn advance(&mut self) {
         *self = match self {
-            Self::Adverb(names, 0) => Self::Adjective(names),
-            Self::Adverb(names, remaining) => Self::Adverb(names, *remaining - 1),
-            Self::Adjective(names) => Self::Name(names),
-            Self::Name(_) | Self::Done => Self::Done,
+            Self::Adverb(0) => Self::Adjective,
+            Self::Adverb(remaining) => Self::Adverb(*remaining - 1),
+            Self::Adjective => Self::Name,
+            Self::Name | Self::Done => Self::Done,
         }
     }
 }
 
-impl<'a> Iterator for Lists<'a> {
-    type Item = &'a Words<'a>;
+impl Iterator for Lists {
+    type Item = List;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let result = match self {
-            Self::Adverb(names, _) => Some(&names.adverbs),
-            Self::Adjective(names) => Some(&names.adjectives),
-            Self::Name(names) => Some(&names.names),
+        let list = match self {
+            Self::Adjective => Some(List::Adjective),
+            Self::Adverb(_) => Some(List::Adverb),
+            Self::Name => Some(List::Name),
             Self::Done => None,
         };
-
         self.advance();
-
-        result
+        list
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
         let remains = match self {
-            Self::Adverb(_, n) => (n + 3) as usize,
-            Self::Adjective(_) => 2,
-            Self::Name(_) => 1,
+            Self::Adverb(n) => (n + 3) as usize,
+            Self::Adjective => 2,
+            Self::Name => 1,
             Self::Done => 0,
         };
 
@@ -374,10 +394,7 @@ where
     type Item = String;
 
     fn next(&mut self) -> Option<Self::Item> {
-        Some(
-            self.petnames
-                .generate(self.rng, self.words, &self.separator),
-        )
+        Some(self.petnames.generate(self.rng, self.words, &self.separator))
     }
 }
 
@@ -397,7 +414,7 @@ impl<'a> NamesProduct<'a, core::iter::Cycle<alloc::vec::IntoIter<Option<&'a str>
     /// Shuffles each of the given `lists` with `rng`, then cycles through the
     /// product of the lists, joining with `separator`. The leftmost list will
     /// cycle most rapidly.
-    fn shuffled<RNG>(lists: &[Words<'a>], rng: &'a mut RNG, separator: &str) -> Self
+    fn shuffled<RNG>(lists: &[&'a Words<'a>], rng: &'a mut RNG, separator: &str) -> Self
     where
         RNG: rand::Rng,
     {
@@ -405,8 +422,7 @@ impl<'a> NamesProduct<'a, core::iter::Cycle<alloc::vec::IntoIter<Option<&'a str>
             iters: lists
                 .iter()
                 .map(|words| {
-                    let mut list: Vec<Option<&'a str>> =
-                        Vec::with_capacity(words.len().saturating_add(1));
+                    let mut list: Vec<Option<&'a str>> = Vec::with_capacity(words.len().saturating_add(1));
                     list.extend(words.iter().map(|word| Some(*word)));
                     list.shuffle(rng); // Could be expensive.
                     list.push(None); // Cycle marker.
@@ -418,7 +434,7 @@ impl<'a> NamesProduct<'a, core::iter::Cycle<alloc::vec::IntoIter<Option<&'a str>
         }
     }
 
-    fn capacity(lists: &[Words<'a>], separator: &str) -> usize {
+    fn capacity(lists: &[&'a Words<'a>], separator: &str) -> usize {
         (
             // Sum of the length of the longest possible word in each word list.
             lists
@@ -479,42 +495,37 @@ where
             None
         } else {
             // We may be able to construct a word!
-            self.iters.iter().fold(
-                Some(String::with_capacity(self.capacity)),
-                |acc, (_, w)| match (acc, *w) {
+            self.iters.iter().fold(Some(String::with_capacity(self.capacity)), |acc, (_, w)| {
+                match (acc, *w) {
                     (Some(s), Some(w)) if s.is_empty() => Some(s + w),
                     (Some(s), Some(w)) => Some(s + &self.separator + w),
                     _ => None,
-                },
-            )
+                }
+            })
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use alloc::vec;
-
     #[test]
     fn lists_sequences_adverbs_adjectives_then_names() {
-        let petnames = super::Petnames::init("adjective", "adverb", "name");
-        let mut lists = super::Lists::new(&petnames, 4);
-        assert_eq!(super::Lists::Adverb(&petnames, 1), lists);
-        assert_eq!(Some(&vec!["adverb"]), lists.next());
-        assert_eq!(super::Lists::Adverb(&petnames, 0), lists);
-        assert_eq!(Some(&vec!["adverb"]), lists.next());
-        assert_eq!(super::Lists::Adjective(&petnames), lists);
-        assert_eq!(Some(&vec!["adjective"]), lists.next());
-        assert_eq!(super::Lists::Name(&petnames), lists);
-        assert_eq!(Some(&vec!["name"]), lists.next());
+        let mut lists = super::Lists::new(4);
+        assert_eq!(super::Lists::Adverb(1), lists);
+        assert_eq!(Some(super::List::Adverb), lists.next());
+        assert_eq!(super::Lists::Adverb(0), lists);
+        assert_eq!(Some(super::List::Adverb), lists.next());
+        assert_eq!(super::Lists::Adjective, lists);
+        assert_eq!(Some(super::List::Adjective), lists.next());
+        assert_eq!(super::Lists::Name, lists);
+        assert_eq!(Some(super::List::Name), lists.next());
         assert_eq!(super::Lists::Done, lists);
         assert_eq!(None, lists.next());
     }
 
     #[test]
     fn lists_size_hint() {
-        let petnames = super::Petnames::init("adjective", "adverb", "name");
-        let mut lists = super::Lists::new(&petnames, 3);
+        let mut lists = super::Lists::new(3);
         assert_eq!((3, Some(3)), lists.size_hint());
         assert!(lists.next().is_some());
         assert_eq!((2, Some(2)), lists.size_hint());

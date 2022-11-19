@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 #[cfg(all(feature = "std_rng", feature = "default_dictionary"))]
 use petname::petname;
 use petname::Petnames;
@@ -47,14 +49,11 @@ fn default_petnames_has_non_zero_cardinality() {
 #[test]
 fn generate_uses_adverb_adjective_name() {
     let petnames = Petnames {
-        adjectives: vec!["adjective"],
-        adverbs: vec!["adverb"],
-        names: vec!["name"],
+        adjectives: Cow::Owned(vec!["adjective"]),
+        adverbs: Cow::Owned(vec!["adverb"]),
+        names: Cow::Owned(vec!["name"]),
     };
-    assert_eq!(
-        petnames.generate(&mut StepRng::new(0, 1), 3, "-"),
-        "adverb-adjective-name"
-    );
+    assert_eq!(petnames.generate(&mut StepRng::new(0, 1), 3, "-"), "adverb-adjective-name");
 }
 
 #[test]
@@ -94,8 +93,8 @@ fn petnames_iter_non_repeating_yields_unique_names() {
     let names: Vec<String> = petnames.iter_non_repeating(&mut rng, 3, ".").collect();
     assert_eq!(
         vec![
-            "b2.a2.c2", "b3.a2.c2", "b1.a2.c2", "b2.a1.c2", "b3.a1.c2", "b1.a1.c2", "b2.a2.c1",
-            "b3.a2.c1", "b1.a2.c1", "b2.a1.c1", "b3.a1.c1", "b1.a1.c1"
+            "b2.a2.c2", "b3.a2.c2", "b1.a2.c2", "b2.a1.c2", "b3.a1.c2", "b1.a1.c2", "b2.a2.c1", "b3.a2.c1",
+            "b1.a2.c1", "b2.a1.c1", "b3.a1.c1", "b1.a1.c1"
         ],
         names
     )
