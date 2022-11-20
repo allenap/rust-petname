@@ -1,11 +1,13 @@
 use std::path::PathBuf;
 
+use clap::crate_version;
 use clap::Parser;
 
 /// Generate human readable random names.
 #[derive(Parser)]
 #[clap(
     name = "rust-petname",
+    version = crate_version!(),
     author,
     after_help = "Based on Dustin Kirkland's petname project <https://github.com/dustinkirkland/petname>."
 )]
