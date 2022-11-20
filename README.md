@@ -45,7 +45,7 @@ should behave the same.
 
 ```shellsession
 $ petname --help
-rust-petname
+rust-petname 1.1.3
 Gavin Panella <gavinpanella@gmail.com>
 Generate human readable random names
 
@@ -67,6 +67,7 @@ OPTIONS:
     -s, --separator <SEP>             Separator between words [default: -]
         --stream                      Stream names continuously
     -u, --ubuntu                      Alias; see --alliterate
+    -V, --version                     Print version information
     -w, --words <WORDS>               Number of words in name [default: 2]
 
 Based on Dustin Kirkland's petname project <https://github.com/dustinkirkland/petname>.
