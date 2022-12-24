@@ -25,6 +25,6 @@ fn main() {
         lines.push("}".to_string());
     }
 
-    fs::write(&dest_path, lines.join("\n")).unwrap();
+    fs::write(dest_path, lines.join("\n")).unwrap();
     println!("cargo:rerun-if-changed=build.rs");
 }
