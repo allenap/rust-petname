@@ -1,0 +1,17 @@
+#
+# Ignore commits in `git blame`. Newer commits first (but this doesn't matter
+# much). Include the first line of the commit message as a comment.
+# https://docs.github.com/en/repositories/working-with-files/using-files/viewing-a-file#ignore-commits-in-the-blame-view
+#
+
+# Increase rustfmt's `max_width` to 110 (from default of 100).
+ff84ae082dea468b2673a3940b0f1730134a35e8
+# Reformat (`cargo fmt` & whatever VS Code does).
+2e049b4bce0caa8da3f19cbc509b92c7a6993f05
+# Format source.
+9cbadbcea4e252442198aa0e00858f93c9af3eba
+409fec08dcd8496f34f80e5689ceefae1a1332bc
+# Format code with rustfmt 1.0.3-stable (d6829d62 2019-02-14).
+a8f9693243d5acc00d6409aacca98de916e1327b
+
+# End.

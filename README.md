@@ -174,6 +174,7 @@ Alternatively, to hack the source:
 - [Install Cargo][install-cargo],
 - Clone this repository,
 - Build it: `cargo build`.
+- Optionally, hide noise when using `git blame`: `git config blame.ignoreRevsFile .git-blame-ignore-revs`.
 
 [install-cargo]: https://crates.io/install
 
