@@ -57,4 +57,8 @@ pub struct Cli {
     /// Alias; see --alliterate
     #[clap(short, long)]
     pub ubuntu: bool,
+
+    /// Seed the rng with this value
+    #[clap(short = 'S', long, value_name = "SEED")]
+    pub seed: Option<u64>,
 }
