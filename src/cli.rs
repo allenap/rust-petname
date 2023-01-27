@@ -58,7 +58,13 @@ pub struct Cli {
     #[clap(short, long)]
     pub ubuntu: bool,
 
-    /// Seed the rng with this value
-    #[clap(short = 'S', long, value_name = "SEED")]
+    /// Seed the RNG with this value (unsigned 64-bit integer in base-10)
+    ///
+    /// This makes the names chosen deterministic and repeatable: with the same
+    /// seed, the same names will be emitted. Note that which name or names are
+    /// emitted is not guaranteed across versions of rust-petname because the
+    /// underlying random number generator in use explicitly does not make that
+    /// guarantee.
+    #[clap(long, value_name = "SEED")]
     pub seed: Option<u64>,
 }
