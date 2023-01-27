@@ -83,7 +83,7 @@ fn run(cli: Cli) -> Result<(), Error> {
 
     // We're going to need a source of randomness.
     let mut rng =
-        cli.seed.map(rand::rngs::StdRng::seed_from_u64).unwrap_or_else(|| rand::rngs::StdRng::from_entropy());
+        cli.seed.map(rand::rngs::StdRng::seed_from_u64).unwrap_or_else(rand::rngs::StdRng::from_entropy);
 
     // Handle alliteration, either by eliminating a specified
     // character, or using a random one.
