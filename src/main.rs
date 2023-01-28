@@ -20,7 +20,7 @@ fn main() {
             process::exit(0);
         }
         Err(e) => {
-            eprintln!("Error: {}", e);
+            eprintln!("Error: {e}");
             process::exit(1);
         }
     }
@@ -37,10 +37,10 @@ enum Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
-            Error::Io(ref e) => write!(f, "{}", e),
-            Error::FileIo(ref path, ref e) => write!(f, "{}: {}", e, path.display()),
-            Error::Cardinality(ref message) => write!(f, "cardinality is zero: {}", message),
-            Error::Alliteration(ref message) => write!(f, "cannot alliterate: {}", message),
+            Error::Io(ref e) => write!(f, "{e}"),
+            Error::FileIo(ref path, ref e) => write!(f, "{e}: {}", path.display()),
+            Error::Cardinality(ref message) => write!(f, "cardinality is zero: {message}"),
+            Error::Alliteration(ref message) => write!(f, "cannot alliterate: {message}"),
             Error::Disconnected => write!(f, "caller disconnected / stopped reading"),
         }
     }
@@ -148,12 +148,12 @@ where
     match count {
         None => {
             for name in names {
-                writeln!(writer, "{}", name).map_err(suppress_disconnect)?;
+                writeln!(writer, "{name}").map_err(suppress_disconnect)?;
             }
         }
         Some(n) => {
             for name in names.take(n) {
-                writeln!(writer, "{}", name)?;
+                writeln!(writer, "{name}")?;
             }
         }
     }
