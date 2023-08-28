@@ -495,12 +495,10 @@ where
             None
         } else {
             // We may be able to construct a word!
-            self.iters.iter().fold(Some(String::with_capacity(self.capacity)), |acc, (_, w)| {
-                match (acc, *w) {
-                    (Some(s), Some(w)) if s.is_empty() => Some(s + w),
-                    (Some(s), Some(w)) => Some(s + &self.separator + w),
-                    _ => None,
-                }
+            self.iters.iter().try_fold(String::with_capacity(self.capacity), |acc, (_, w)| match (acc, *w) {
+                (s, Some(w)) if s.is_empty() => Some(s + w),
+                (s, Some(w)) => Some(s + &self.separator + w),
+                _ => None,
             })
         }
     }
