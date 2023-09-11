@@ -61,12 +61,11 @@ fn run(cli: Cli) -> Result<(), Error> {
 
     // Select the appropriate word list.
     let mut petnames = match words {
-        Words::Custom(ref adjectives, ref adverbs, ref names) => Petnames::init(adjectives, adverbs, names),
-        Words::Builtin => match cli.complexity {
-            0 => Petnames::small(),
-            1 => Petnames::medium(),
-            2 => Petnames::large(),
-            _ => Petnames::small(),
+        Words::Custom(ref adjectives, ref adverbs, ref nouns) => Petnames::new(adjectives, adverbs, nouns),
+        Words::Builtin => match cli.lists {
+            cli::WordList::Small => Petnames::small(),
+            cli::WordList::Medium => Petnames::medium(),
+            cli::WordList::Large => Petnames::large(),
         },
     };
 
@@ -91,7 +90,7 @@ fn run(cli: Cli) -> Result<(), Error> {
     if alliterate {
         // We choose the first letter from the intersection of the
         // first letters of each word list in `petnames`.
-        let firsts = common_first_letters(&petnames.adjectives, &[&petnames.adverbs, &petnames.names]);
+        let firsts = common_first_letters(&petnames.adjectives, &[&petnames.adverbs, &petnames.nouns]);
         // if a specific character was requested for alliteration,
         // attempt to use it.
         if let Some(c) = cli.alliterate_with {
@@ -120,17 +119,8 @@ fn run(cli: Cli) -> Result<(), Error> {
     let stdout = io::stdout();
     let mut writer = io::BufWriter::new(stdout.lock());
 
-    // Warn that --count=0 is deprecated.
-    if cli.count == 0 {
-        eprintln!(concat!(
-            "Warning: specifying --count=0 to continuously produce petnames is ",
-            "deprecated and its behaviour will change in a future version; ",
-            "specify --stream instead.",
-        ));
-    }
-
-    // Stream if count is 0. TODO: Only stream when --stream is specified.
-    let count = if cli.stream || cli.count == 0 { None } else { Some(cli.count) };
+    // Stream, or print a limited number of words?
+    let count = if cli.stream { None } else { Some(cli.count) };
 
     // Get an iterator for the names we want to print out.
     if cli.non_repeating {
@@ -179,14 +169,14 @@ enum Words {
 
 impl Words {
     // Load word lists from the given directory. This function expects to find three
-    // files in that directory: `adjectives.txt`, `adverbs.txt`, and `names.txt`.
+    // files in that directory: `adjectives.txt`, `adverbs.txt`, and `nouns.txt`.
     // Each should be valid UTF-8, and contain words separated by whitespace.
     fn load<T: AsRef<path::Path>>(dirname: T) -> Result<Self, Error> {
         let dirname = dirname.as_ref();
         Ok(Self::Custom(
             read_file_to_string(dirname.join("adjectives.txt"))?,
             read_file_to_string(dirname.join("adverbs.txt"))?,
-            read_file_to_string(dirname.join("names.txt"))?,
+            read_file_to_string(dirname.join("nouns.txt"))?,
         ))
     }
 }

@@ -44,39 +44,34 @@ The `petname` binary from rust-petname is drop-in compatible with the original
 should behave the same.
 
 ```shellsession
-$ petname --help
-rust-petname 1.1.3
-Gavin Panella <gavinpanella@gmail.com>
+$ petname -h
 Generate human readable random names
 
-USAGE:
-    petname [OPTIONS]
+Usage: petname [OPTIONS]
 
-OPTIONS:
-    -a, --alliterate                  Generate names where each word begins with the same letter
-    -A, --alliterate-with <LETTER>    Generate names where each word begins with the given letter
-    -c, --complexity <COM>            Use small words (0), medium words (1), or large words (2)
-                                      [default: 0]
-        --count <COUNT>               Generate multiple names; pass 0 to produce infinite names
-                                      (--count=0 is deprecated; use --stream instead) [default: 1]
-    -d, --dir <DIR>                   Directory containing adjectives.txt, adverbs.txt, names.txt
-    -h, --help                        Print help information
-    -l, --letters <LETTERS>           Maximum number of letters in each word; 0 for unlimited
-                                      [default: 0]
-        --non-repeating               Do not generate the same name more than once
-    -s, --separator <SEP>             Separator between words [default: -]
-        --stream                      Stream names continuously
-    -u, --ubuntu                      Alias; see --alliterate
-    -V, --version                     Print version information
-    -w, --words <WORDS>               Number of words in name [default: 2]
+Options:
+  -w, --words <WORDS>             Number of words in name [default: 2]
+  -s, --separator <SEP>           Separator between words [default: -]
+      --lists <LIST>              Use the built-in word lists with small, medium, or large words [default: small] [possible values: small, medium, large]
+  -d, --dir <DIR>                 Use custom word lists by specifying a directory containing `adjectives.txt`, `adverbs.txt`, and `nouns.txt`
+      --count <COUNT>             Generate multiple names; or use --stream to generate continuously [default: 1]
+      --stream                    Stream names continuously
+      --non-repeating             Do not generate the same name more than once
+  -l, --letters <LETTERS>         Maximum number of letters in each word; 0 for unlimited [default: 0]
+  -a, --alliterate                Generate names where each word begins with the same letter
+  -A, --alliterate-with <LETTER>  Generate names where each word begins with the given letter
+  -u, --ubuntu                    Alias; see --alliterate
+      --seed <SEED>               Seed the RNG with this value (unsigned 64-bit integer in base-10)
+  -h, --help                      Print help (see more with '--help')
+  -V, --version                   Print version
 
 Based on Dustin Kirkland's petname project <https://github.com/dustinkirkland/petname>.
 
 $ petname
-untaunting-paxton
+unified-platypus
 
 $ petname -s _ -w 3
-suitably_overdelicate_jamee
+lovely_notable_rooster
 ```
 
 ### Performance
@@ -140,19 +135,29 @@ an external filter to the names being generated:
 $ petname --words=3 --stream | grep 'love.*\bsalmon$'
 ```
 
+## Library
+
+You can use of rust-petname in your own Rust projects with `cargo add petname`.
+
 ## Features & `no_std` support
 
 There are a few features that can be selected – or, more correctly,
 _deselected_, since all features are enabled by default:
 
-- `std_rng` enables `std` and `std_rng` in [rand][].
-- `default_dictionary` enables the default word lists.
-- `clap` enables the [clap][] command-line argument parser.
+- `default-rng` enables `std` and `std_rng` in [rand][]. A couple of convenience
+  functions depend on this for a default RNG.
+- `default-words` enables the default word lists. Deselecting this will reduce
+  the size of compiled artifacts.
+- `clap` enables the [clap][] command-line argument parser, which is needed to
+  build the `petname` binary.
+  - **NOTE** that `clap` is **not** necessary for the library at all, and you
+    can deselect it, but it is presently a default feature since otherwise it's
+    inconvenient to build the binary. This will probably change in the future.
 
 All of these are required to build the command-line utility.
 
-However, the library can be built without any default features, and it will work
-in a [`no_std`][no_std] environment, like [Wasm][]. You'll need to figure out a
+The library can be built without any default features, and it will work in a
+[`no_std`][no_std] environment, like [Wasm][]. You'll need to figure out a
 source of randomness, but [SmallRng::seed_from_u64][smallrng::seed_from_u64] may
 be a good starting point.
 
@@ -162,14 +167,40 @@ be a good starting point.
 [wasm]: https://webassembly.org/
 [smallrng::seed_from_u64]: https://docs.rs/rand/latest/rand/trait.SeedableRng.html#method.seed_from_u64
 
-## Getting Started
+## Upgrading from 1.x
 
-To install the command-line tool:
+Version 2.0 brought several breaking changes to both the API and the
+command-line too. Below are the most important:
 
-- [Install Cargo][install-cargo],
-- Install this crate: `cargo install petname`.
+### Command-line
 
-Alternatively, to hack the source:
+- The `--complexity <COMPLEXITY>` option has been replaced by `--lists <LISTS>`.
+- When using custom word lists with `--dir <DIR>`, nouns are now found in a file
+  named appropriately `DIR/nouns.txt`. Previously this was `names.txt` but this
+  was confusing; the term "names" is overloaded enough already.
+- The option `--count 0` is no longer a synonym for `--stream`. Use `--stream`
+  instead. It's not an error to pass `--count 0`, but it will result in zero
+  names being generated.
+
+### Library
+
+- Feature flags have been renamed:
+  - `std_rng` is now `default-rng`,
+  - `default_dictionary` is now `default-words`.
+- The `names` field on the `Petnames` struct has been renamed to `nouns`.
+  Previously the complexity was given as a number – 0, 1, or 2 – but now the
+  word lists to use are given as a string: small, medium, or large.
+- `Petnames::new()` is now `Petnames::default()`.
+- `Petnames::new(…)` now accepts word lists as strings.
+- `Names` is no longer public. This served as the iterator struct returned by
+  `Petnames::iter(…)`, but this now hides the implementation details by
+  returning `impl Iterator<Item = String>` instead. This also means that
+  `Names::cardinality(&self)` is no longer available; use
+  `Petnames::cardinality(&self, words: u8)` instead.
+
+## Developing & Contributing
+
+To hack the source:
 
 - [Install Cargo][install-cargo],
 - Clone this repository,
@@ -178,11 +209,11 @@ Alternatively, to hack the source:
 
 [install-cargo]: https://crates.io/install
 
-## Running the tests
+### Running the tests
 
 After installing the source (see above) run tests with: `cargo test`.
 
-## Making a release
+### Making a release
 
 1. Bump version in [`Cargo.toml`](Cargo.toml).
 2. Paste updated `--help` output into [`README.md`](README.md) (this file; see
