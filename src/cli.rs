@@ -20,11 +20,12 @@ pub struct Cli {
     pub separator: String,
 
     /// Use the built-in word lists with small, medium, or large words
-    #[arg(short, long, value_name = "SIZE", default_value_t = Complexity::Small)]
-    pub complexity: Complexity,
+    #[arg(long, value_name = "LIST", default_value_t = WordList::Small)]
+    pub lists: WordList,
 
-    /// Directory containing adjectives.txt, adverbs.txt, nouns.txt
-    #[arg(short, long = "dir", value_name = "DIR", conflicts_with = "complexity")]
+    /// Use custom word lists by specifying a directory containing
+    /// `adjectives.txt`, `adverbs.txt`, and `nouns.txt`
+    #[arg(short, long = "dir", value_name = "DIR", conflicts_with = "lists")]
     pub directory: Option<PathBuf>,
 
     /// Generate multiple names; or use --stream to generate continuously
@@ -68,13 +69,13 @@ pub struct Cli {
 }
 
 #[derive(Clone, ValueEnum)]
-pub enum Complexity {
+pub enum WordList {
     Small,
     Medium,
     Large,
 }
 
-impl std::fmt::Display for Complexity {
+impl std::fmt::Display for WordList {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Small => write!(f, "small"),

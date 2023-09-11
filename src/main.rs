@@ -62,10 +62,10 @@ fn run(cli: Cli) -> Result<(), Error> {
     // Select the appropriate word list.
     let mut petnames = match words {
         Words::Custom(ref adjectives, ref adverbs, ref nouns) => Petnames::new(adjectives, adverbs, nouns),
-        Words::Builtin => match cli.complexity {
-            cli::Complexity::Small => Petnames::small(),
-            cli::Complexity::Medium => Petnames::medium(),
-            cli::Complexity::Large => Petnames::large(),
+        Words::Builtin => match cli.lists {
+            cli::WordList::Small => Petnames::small(),
+            cli::WordList::Medium => Petnames::medium(),
+            cli::WordList::Large => Petnames::large(),
         },
     };
 
