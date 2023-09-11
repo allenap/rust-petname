@@ -29,6 +29,9 @@ default-rng = ["rand/std", "rand/std_rng"]
 # Allows the default word lists to be used.
 default-words = []
 
+[build-dependencies]
+anyhow = "^1.0.75"
+
 [dependencies]
 clap = { version = "^3.1.0", features = ["cargo", "derive"], optional = true }
 itertools = { version = "^0.10.3", default-features = false }
