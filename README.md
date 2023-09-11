@@ -135,7 +135,11 @@ an external filter to the names being generated:
 $ petname --words=3 --stream | grep 'love.*\bsalmon$'
 ```
 
-## Features & `no_std` support
+## Library
+
+You can use of rust-petname in your own Rust projects with `cargo add petname`.
+
+### Features & `no_std` support
 
 There are a few features that can be selected – or, more correctly,
 _deselected_, since all features are enabled by default:
@@ -159,14 +163,40 @@ be a good starting point.
 [wasm]: https://webassembly.org/
 [smallrng::seed_from_u64]: https://docs.rs/rand/latest/rand/trait.SeedableRng.html#method.seed_from_u64
 
-## Getting Started
+## Upgrading from 1.x
 
-To install the command-line tool:
+Version 2.0 brought several breaking changes to both the API and the
+command-line too. Below are the most important:
 
-- [Install Cargo][install-cargo],
-- Install this crate: `cargo install petname`.
+### Command-line
 
-Alternatively, to hack the source:
+- The `--complexity <COMPLEXITY>` option has been replaced by `--lists <LISTS>`.
+- When using custom word lists with `--dir <DIR>`, nouns are now found in a file
+  named appropriately `DIR/nouns.txt`. Previously this was `names.txt` but this
+  was confusing; the term "names" is overloaded enough already.
+- The option `--count 0` is no longer a synonym for `--stream`. Use `--stream`
+  instead. It's not an error to pass `--count 0`, but it will result in zero
+  names being generated.
+
+### Library
+
+- Feature flags have been renamed:
+  - `std_rng` is now `default-rng`,
+  - `default_dictionary` is now `default-words`.
+- The `names` field on the `Petnames` struct has been renamed to `nouns`.
+  Previously the complexity was given as a number – 0, 1, or 2 – but now the
+  word lists to use are given as a string: small, medium, or large.
+- `Petnames::new()` is now `Petnames::default()`.
+- `Petnames::new(…)` now accepts word lists as strings.
+- `Names` is no longer public. This served as the iterator struct returned by
+  `Petnames::iter(…)`, but this now hides the implementation details by
+  returning `impl Iterator<Item = String>` instead. This also means that
+  `Names::cardinality(&self)` is no longer available; use
+  `Petnames::cardinality(&self, words: u8)` instead.
+
+## Developing & Contributing
+
+To hack the source:
 
 - [Install Cargo][install-cargo],
 - Clone this repository,
@@ -175,11 +205,11 @@ Alternatively, to hack the source:
 
 [install-cargo]: https://crates.io/install
 
-## Running the tests
+### Running the tests
 
 After installing the source (see above) run tests with: `cargo test`.
 
-## Making a release
+### Making a release
 
 1. Bump version in [`Cargo.toml`](Cargo.toml).
 2. Paste updated `--help` output into [`README.md`](README.md) (this file; see
