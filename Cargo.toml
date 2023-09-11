@@ -21,9 +21,7 @@ path = "src/main.rs"
 required-features = ["clap", "default-rng", "default-words"]
 
 [features]
-# We include features that must be used for the binary regardless of if they are
-# used (like clap).
-default = ["clap", "default-rng", "default-words"]
+default = ["default-rng", "default-words"]
 # Allows generating petnames with thread rng.
 default-rng = ["rand/std", "rand/std_rng"]
 # Allows the default word lists to be used.
