@@ -59,7 +59,7 @@ OPTIONS:
                                       [default: 0]
         --count <COUNT>               Generate multiple names; pass 0 to produce infinite names
                                       (--count=0 is deprecated; use --stream instead) [default: 1]
-    -d, --dir <DIR>                   Directory containing adjectives.txt, adverbs.txt, names.txt
+    -d, --dir <DIR>                   Directory containing adjectives.txt, adverbs.txt, nouns.txt
     -h, --help                        Print help information
     -l, --letters <LETTERS>           Maximum number of letters in each word; 0 for unlimited
                                       [default: 0]

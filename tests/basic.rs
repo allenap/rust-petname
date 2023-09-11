@@ -23,7 +23,7 @@ fn default_petnames_has_adverbs() {
 #[cfg(feature = "default-words")]
 fn default_petnames_has_names() {
     let petnames = Petnames::default();
-    assert_ne!(petnames.names.len(), 0);
+    assert_ne!(petnames.nouns.len(), 0);
 }
 
 #[test]
@@ -51,9 +51,9 @@ fn generate_uses_adverb_adjective_name() {
     let petnames = Petnames {
         adjectives: Cow::Owned(vec!["adjective"]),
         adverbs: Cow::Owned(vec!["adverb"]),
-        names: Cow::Owned(vec!["name"]),
+        nouns: Cow::Owned(vec!["noun"]),
     };
-    assert_eq!(petnames.generate(&mut StepRng::new(0, 1), 3, "-"), "adverb-adjective-name");
+    assert_eq!(petnames.generate(&mut StepRng::new(0, 1), 3, "-"), "adverb-adjective-noun");
 }
 
 #[test]

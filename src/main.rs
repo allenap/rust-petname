@@ -61,7 +61,7 @@ fn run(cli: Cli) -> Result<(), Error> {
 
     // Select the appropriate word list.
     let mut petnames = match words {
-        Words::Custom(ref adjectives, ref adverbs, ref names) => Petnames::new(adjectives, adverbs, names),
+        Words::Custom(ref adjectives, ref adverbs, ref nouns) => Petnames::new(adjectives, adverbs, nouns),
         Words::Builtin => match cli.complexity {
             0 => Petnames::small(),
             1 => Petnames::medium(),
@@ -91,7 +91,7 @@ fn run(cli: Cli) -> Result<(), Error> {
     if alliterate {
         // We choose the first letter from the intersection of the
         // first letters of each word list in `petnames`.
-        let firsts = common_first_letters(&petnames.adjectives, &[&petnames.adverbs, &petnames.names]);
+        let firsts = common_first_letters(&petnames.adjectives, &[&petnames.adverbs, &petnames.nouns]);
         // if a specific character was requested for alliteration,
         // attempt to use it.
         if let Some(c) = cli.alliterate_with {
@@ -170,14 +170,14 @@ enum Words {
 
 impl Words {
     // Load word lists from the given directory. This function expects to find three
-    // files in that directory: `adjectives.txt`, `adverbs.txt`, and `names.txt`.
+    // files in that directory: `adjectives.txt`, `adverbs.txt`, and `nouns.txt`.
     // Each should be valid UTF-8, and contain words separated by whitespace.
     fn load<T: AsRef<path::Path>>(dirname: T) -> Result<Self, Error> {
         let dirname = dirname.as_ref();
         Ok(Self::Custom(
             read_file_to_string(dirname.join("adjectives.txt"))?,
             read_file_to_string(dirname.join("adverbs.txt"))?,
-            read_file_to_string(dirname.join("names.txt"))?,
+            read_file_to_string(dirname.join("nouns.txt"))?,
         ))
     }
 }

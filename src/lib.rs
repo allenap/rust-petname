@@ -83,13 +83,13 @@ pub type Words<'a> = Cow<'a, [&'a str]>;
 ///
 ///   * `n - 2` adverbs when `n >= 2`, otherwise 0 adverbs.
 ///   * 1 adjective when `n >= 2`, otherwise 0 adjectives.
-///   * 1 name / noun when `n >= 1`, otherwise 0 names.
+///   * 1 noun when `n >= 1`, otherwise 0 nouns.
 ///
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Petnames<'a> {
     pub adjectives: Words<'a>,
     pub adverbs: Words<'a>,
-    pub names: Words<'a>,
+    pub nouns: Words<'a>,
 }
 
 #[cfg(feature = "default-words")]
@@ -104,7 +104,7 @@ impl<'a> Petnames<'a> {
         Self {
             adjectives: Cow::from(&words::small::ADJECTIVES[..]),
             adverbs: Cow::from(&words::small::ADVERBS[..]),
-            names: Cow::from(&words::small::NAMES[..]),
+            nouns: Cow::from(&words::small::NOUNS[..]),
         }
     }
 
@@ -114,7 +114,7 @@ impl<'a> Petnames<'a> {
         Self {
             adjectives: Cow::from(&words::medium::ADJECTIVES[..]),
             adverbs: Cow::from(&words::medium::ADVERBS[..]),
-            names: Cow::from(&words::medium::NAMES[..]),
+            nouns: Cow::from(&words::medium::NOUNS[..]),
         }
     }
 
@@ -124,18 +124,18 @@ impl<'a> Petnames<'a> {
         Self {
             adjectives: Cow::from(&words::large::ADJECTIVES[..]),
             adverbs: Cow::from(&words::large::ADVERBS[..]),
-            names: Cow::from(&words::large::NAMES[..]),
+            nouns: Cow::from(&words::large::NOUNS[..]),
         }
     }
 
     /// Constructs a new `Petnames` from the given word lists.
     ///
     /// The words are extracted from the given strings by splitting on whitespace.
-    pub fn new(adjectives: &'a str, adverbs: &'a str, names: &'a str) -> Self {
+    pub fn new(adjectives: &'a str, adverbs: &'a str, nouns: &'a str) -> Self {
         Self {
             adjectives: Cow::Owned(adjectives.split_whitespace().collect()),
             adverbs: Cow::Owned(adverbs.split_whitespace().collect()),
-            names: Cow::Owned(names.split_whitespace().collect()),
+            nouns: Cow::Owned(nouns.split_whitespace().collect()),
         }
     }
 
@@ -154,7 +154,7 @@ impl<'a> Petnames<'a> {
     /// ```
     ///
     /// This is merely a convenience wrapper that applies the same predicate to
-    /// the adjectives, adverbs, and names lists.
+    /// the adjectives, adverbs, and nouns lists.
     ///
     pub fn retain<F>(&mut self, mut predicate: F)
     where
@@ -162,7 +162,7 @@ impl<'a> Petnames<'a> {
     {
         self.adjectives.to_mut().retain(|word| predicate(word));
         self.adverbs.to_mut().retain(|word| predicate(word));
-        self.names.to_mut().retain(|word| predicate(word));
+        self.nouns.to_mut().retain(|word| predicate(word));
     }
 
     /// Calculate the cardinality of this `Petnames`.
@@ -178,7 +178,7 @@ impl<'a> Petnames<'a> {
             .map(|list| match list {
                 List::Adverb => self.adverbs.len() as u128,
                 List::Adjective => self.adjectives.len() as u128,
-                List::Name => self.names.len() as u128,
+                List::Noun => self.nouns.len() as u128,
             })
             .reduce(u128::saturating_mul)
             .unwrap_or(0u128)
@@ -209,7 +209,7 @@ impl<'a> Petnames<'a> {
             Lists::new(words).filter_map(|list| match list {
                 List::Adverb => self.adverbs.choose(rng).copied(),
                 List::Adjective => self.adjectives.choose(rng).copied(),
-                List::Name => self.names.choose(rng).copied(),
+                List::Noun => self.nouns.choose(rng).copied(),
             }),
             separator,
         )
@@ -281,7 +281,7 @@ impl<'a> Petnames<'a> {
             .map(|list| match list {
                 List::Adverb => &self.adverbs,
                 List::Adjective => &self.adjectives,
-                List::Name => &self.names,
+                List::Noun => &self.nouns,
             })
             .collect();
         NamesProduct::shuffled(&lists, rng, separator)
@@ -301,21 +301,21 @@ impl<'a> Default for Petnames<'a> {
 enum List {
     Adverb,
     Adjective,
-    Name,
+    Noun,
 }
 
 /// Iterator, yielding which word list to use next.
 ///
 /// This yields the appropriate list – [adverbs][List::Adverb],
-/// [adjectives][List::Adjective]s, [names][List::Name] –  from which to select
+/// [adjectives][List::Adjective]s, [nouns][List::Nouns] –  from which to select
 /// a word when constructing a petname of `n` words. For example, if you want 4
 /// words in your petname, this will first yield [List::Adverb], then
-/// [List::Adverb] again, then [List::Adjective], and lastly [List::Name].
+/// [List::Adverb] again, then [List::Adjective], and lastly [List::Noun].
 #[derive(Debug, PartialEq)]
 enum Lists {
     Adverb(u8),
     Adjective,
-    Name,
+    Noun,
     Done,
 }
 
@@ -323,7 +323,7 @@ impl Lists {
     fn new(words: u8) -> Self {
         match words {
             0 => Self::Done,
-            1 => Self::Name,
+            1 => Self::Noun,
             2 => Self::Adjective,
             n => Self::Adverb(n - 3),
         }
@@ -333,7 +333,7 @@ impl Lists {
         match self {
             Self::Adjective => Some(List::Adjective),
             Self::Adverb(_) => Some(List::Adverb),
-            Self::Name => Some(List::Name),
+            Self::Noun => Some(List::Noun),
             Self::Done => None,
         }
     }
@@ -342,8 +342,8 @@ impl Lists {
         *self = match self {
             Self::Adverb(0) => Self::Adjective,
             Self::Adverb(remaining) => Self::Adverb(*remaining - 1),
-            Self::Adjective => Self::Name,
-            Self::Name | Self::Done => Self::Done,
+            Self::Adjective => Self::Noun,
+            Self::Noun | Self::Done => Self::Done,
         }
     }
 
@@ -351,7 +351,7 @@ impl Lists {
         match self {
             Self::Adverb(n) => (n + 3) as usize,
             Self::Adjective => 2,
-            Self::Name => 1,
+            Self::Noun => 1,
             Self::Done => 0,
         }
     }
@@ -522,8 +522,8 @@ mod tests {
         assert_eq!(Some(super::List::Adverb), lists.next());
         assert_eq!(super::Lists::Adjective, lists);
         assert_eq!(Some(super::List::Adjective), lists.next());
-        assert_eq!(super::Lists::Name, lists);
-        assert_eq!(Some(super::List::Name), lists.next());
+        assert_eq!(super::Lists::Noun, lists);
+        assert_eq!(Some(super::List::Noun), lists.next());
         assert_eq!(super::Lists::Done, lists);
         assert_eq!(None, lists.next());
     }

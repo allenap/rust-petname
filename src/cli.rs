@@ -24,7 +24,7 @@ pub struct Cli {
     #[clap(short, long, value_name = "COM", possible_values = &["0", "1", "2"], default_value_t = 0, hide_possible_values = true)]
     pub complexity: u8,
 
-    /// Directory containing adjectives.txt, adverbs.txt, names.txt
+    /// Directory containing adjectives.txt, adverbs.txt, nouns.txt
     #[clap(short, long = "dir", value_name = "DIR", conflicts_with = "complexity")]
     pub directory: Option<PathBuf>,
 

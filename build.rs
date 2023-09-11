@@ -9,7 +9,7 @@ fn main() {
     let mut lines: Vec<String> = vec![];
 
     let list_sizes = ["small", "medium", "large"];
-    let list_names = ["adjectives", "adverbs", "names"];
+    let list_names = ["adjectives", "adverbs", "nouns"];
 
     for list_size in list_sizes {
         lines.push(format!("pub mod {list_size} {{"));
