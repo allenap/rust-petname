@@ -139,9 +139,9 @@ impl<'a> Petnames<'a> {
     /// The words are extracted from the given strings by splitting on whitespace.
     pub fn init(adjectives: &'a str, adverbs: &'a str, names: &'a str) -> Self {
         Self {
-            adjectives: Cow::Owned(adjectives.split_whitespace().collect::<Vec<_>>()),
-            adverbs: Cow::Owned(adverbs.split_whitespace().collect::<Vec<_>>()),
-            names: Cow::Owned(names.split_whitespace().collect::<Vec<_>>()),
+            adjectives: Cow::Owned(adjectives.split_whitespace().collect()),
+            adverbs: Cow::Owned(adverbs.split_whitespace().collect()),
+            names: Cow::Owned(names.split_whitespace().collect()),
         }
     }
 
@@ -329,6 +329,15 @@ impl Lists {
         }
     }
 
+    fn current(&self) -> Option<List> {
+        match self {
+            Self::Adjective => Some(List::Adjective),
+            Self::Adverb(_) => Some(List::Adverb),
+            Self::Name => Some(List::Name),
+            Self::Done => None,
+        }
+    }
+
     fn advance(&mut self) {
         *self = match self {
             Self::Adverb(0) => Self::Adjective,
@@ -337,31 +346,29 @@ impl Lists {
             Self::Name | Self::Done => Self::Done,
         }
     }
+
+    fn remaining(&self) -> usize {
+        match self {
+            Self::Adverb(n) => (n + 3) as usize,
+            Self::Adjective => 2,
+            Self::Name => 1,
+            Self::Done => 0,
+        }
+    }
 }
 
 impl Iterator for Lists {
     type Item = List;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let list = match self {
-            Self::Adjective => Some(List::Adjective),
-            Self::Adverb(_) => Some(List::Adverb),
-            Self::Name => Some(List::Name),
-            Self::Done => None,
-        };
+        let current = self.current();
         self.advance();
-        list
+        current
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let remains = match self {
-            Self::Adverb(n) => (n + 3) as usize,
-            Self::Adjective => 2,
-            Self::Name => 1,
-            Self::Done => 0,
-        };
-
-        (remains, Some(remains))
+        let remaining = self.remaining();
+        (remaining, Some(remaining))
     }
 }
 
