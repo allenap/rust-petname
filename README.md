@@ -44,31 +44,26 @@ The `petname` binary from rust-petname is drop-in compatible with the original
 should behave the same.
 
 ```shellsession
-$ petname --help
-rust-petname 1.1.3
-Gavin Panella <gavinpanella@gmail.com>
+$ petname -h
 Generate human readable random names
 
-USAGE:
-    petname [OPTIONS]
+Usage: petname [OPTIONS]
 
-OPTIONS:
-    -a, --alliterate                  Generate names where each word begins with the same letter
-    -A, --alliterate-with <LETTER>    Generate names where each word begins with the given letter
-    -c, --complexity <COM>            Use small words (0), medium words (1), or large words (2)
-                                      [default: 0]
-        --count <COUNT>               Generate multiple names; pass 0 to produce infinite names
-                                      (--count=0 is deprecated; use --stream instead) [default: 1]
-    -d, --dir <DIR>                   Directory containing adjectives.txt, adverbs.txt, nouns.txt
-    -h, --help                        Print help information
-    -l, --letters <LETTERS>           Maximum number of letters in each word; 0 for unlimited
-                                      [default: 0]
-        --non-repeating               Do not generate the same name more than once
-    -s, --separator <SEP>             Separator between words [default: -]
-        --stream                      Stream names continuously
-    -u, --ubuntu                      Alias; see --alliterate
-    -V, --version                     Print version information
-    -w, --words <WORDS>               Number of words in name [default: 2]
+Options:
+  -w, --words <WORDS>             Number of words in name [default: 2]
+  -s, --separator <SEP>           Separator between words [default: -]
+      --lists <LIST>              Use the built-in word lists with small, medium, or large words [default: small] [possible values: small, medium, large]
+  -d, --dir <DIR>                 Use custom word lists by specifying a directory containing `adjectives.txt`, `adverbs.txt`, and `nouns.txt`
+      --count <COUNT>             Generate multiple names; or use --stream to generate continuously [default: 1]
+      --stream                    Stream names continuously
+      --non-repeating             Do not generate the same name more than once
+  -l, --letters <LETTERS>         Maximum number of letters in each word; 0 for unlimited [default: 0]
+  -a, --alliterate                Generate names where each word begins with the same letter
+  -A, --alliterate-with <LETTER>  Generate names where each word begins with the given letter
+  -u, --ubuntu                    Alias; see --alliterate
+      --seed <SEED>               Seed the RNG with this value (unsigned 64-bit integer in base-10)
+  -h, --help                      Print help (see more with '--help')
+  -V, --version                   Print version
 
 Based on Dustin Kirkland's petname project <https://github.com/dustinkirkland/petname>.
 
