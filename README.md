@@ -68,10 +68,10 @@ Options:
 Based on Dustin Kirkland's petname project <https://github.com/dustinkirkland/petname>.
 
 $ petname
-untaunting-paxton
+unified-platypus
 
 $ petname -s _ -w 3
-suitably_overdelicate_jamee
+lovely_notable_rooster
 ```
 
 ### Performance

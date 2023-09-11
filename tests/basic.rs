@@ -73,7 +73,7 @@ fn petnames_iter_yields_names() {
     let mut rng = StepRng::new(0, 1);
     let petnames = Petnames::new("foo", "bar", "baz");
     let names = petnames.iter(&mut rng, 3, ".");
-    // Definintely an Iterator...
+    // Definitely an Iterator...
     let mut iter: Box<dyn Iterator<Item = _>> = Box::new(names);
     assert_eq!(Some("bar.foo.baz".to_string()), iter.next());
 }

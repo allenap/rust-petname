@@ -3,9 +3,16 @@
         "Clippy",
         "dtolnay",
         "itertools",
+        "pbcopy",
         "petname",
         "Petnames",
+        "pname",
+        "rngs",
         "rustfmt",
-        "rustup"
+        "rustup",
+        "Seedable",
+        "shellsession",
+        "smallrng",
+        "struct"
     ]
 }
