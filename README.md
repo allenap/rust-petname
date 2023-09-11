@@ -139,7 +139,7 @@ $ petname --words=3 --stream | grep 'love.*\bsalmon$'
 
 You can use of rust-petname in your own Rust projects with `cargo add petname`.
 
-### Features & `no_std` support
+## Features & `no_std` support
 
 There are a few features that can be selected – or, more correctly,
 _deselected_, since all features are enabled by default:
@@ -148,12 +148,16 @@ _deselected_, since all features are enabled by default:
   functions depend on this for a default RNG.
 - `default-words` enables the default word lists. Deselecting this will reduce
   the size of compiled artifacts.
-- `clap` enables the [clap][] command-line argument parser.
+- `clap` enables the [clap][] command-line argument parser, which is needed to
+  build the `petname` binary.
+  - **NOTE** that `clap` is **not** necessary for the library at all, and you
+    can deselect it, but it is presently a default feature since otherwise it's
+    inconvenient to build the binary. This will probably change in the future.
 
 All of these are required to build the command-line utility.
 
-However, the library can be built without any default features, and it will work
-in a [`no_std`][no_std] environment, like [Wasm][]. You'll need to figure out a
+The library can be built without any default features, and it will work in a
+[`no_std`][no_std] environment, like [Wasm][]. You'll need to figure out a
 source of randomness, but [SmallRng::seed_from_u64][smallrng::seed_from_u64] may
 be a good starting point.
 
