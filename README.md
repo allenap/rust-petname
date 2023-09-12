@@ -216,9 +216,10 @@ After installing the source (see above) run tests with: `cargo test`.
 ### Making a release
 
 1. Bump version in [`Cargo.toml`](Cargo.toml).
-2. Paste updated `--help` output into [`README.md`](README.md) (this file; see
-   near the top). On macOS the command `cargo run -- --help | pbcopy` is
-   helpful.
+2. Paste updated `-h` output into [`README.md`](README.md) (this file; see near
+   the top). On macOS the command `cargo run -- -h | pbcopy` is helpful.
+   **Note** that `--help` output is not the same as `-h` output: it's more
+   verbose and too much for an overview.
 3. Build **and** test: `cargo build && cargo test`. The latter on its own does
    do a build, but a test build can hide warnings about dead code, so do both.
 4. Commit with message "Bump version to `$VERSION`."
