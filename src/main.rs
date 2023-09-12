@@ -123,11 +123,7 @@ fn run(cli: Cli) -> Result<(), Error> {
     let count = if cli.stream { None } else { Some(cli.count) };
 
     // Get an iterator for the names we want to print out.
-    if cli.non_repeating {
-        printer(&mut writer, petnames.iter_non_repeating(&mut rng, cli.words, &cli.separator), count)
-    } else {
-        printer(&mut writer, petnames.iter(&mut rng, cli.words, &cli.separator), count)
-    }
+    printer(&mut writer, petnames.iter(&mut rng, cli.words, &cli.separator), count)
 }
 
 fn printer<OUT, NAMES>(writer: &mut OUT, names: NAMES, count: Option<usize>) -> Result<(), Error>

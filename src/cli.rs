@@ -36,10 +36,6 @@ pub struct Cli {
     #[arg(long, conflicts_with = "count")]
     pub stream: bool,
 
-    /// Do not generate the same name more than once
-    #[arg(long)]
-    pub non_repeating: bool,
-
     /// Maximum number of letters in each word; 0 for unlimited
     #[arg(short, long, value_name = "LETTERS", default_value_t = 0)]
     pub letters: usize,
