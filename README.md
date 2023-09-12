@@ -223,7 +223,7 @@ After installing the source (see above) run tests with: `cargo test`.
    do a build, but a test build can hide warnings about dead code, so do both.
 4. Commit with message "Bump version to `$VERSION`."
 5. Tag with "v`$VERSION`", e.g. `git tag v1.0.10`.
-6. Push: `git push --tags`.
+6. Push: `git push --follow-tags`.
 7. Publish: `cargo publish`.
 
 ## License
