@@ -56,7 +56,6 @@ Options:
   -d, --dir <DIR>                 Use custom word lists by specifying a directory containing `adjectives.txt`, `adverbs.txt`, and `nouns.txt`
       --count <COUNT>             Generate multiple names; or use --stream to generate continuously [default: 1]
       --stream                    Stream names continuously
-      --non-repeating             Do not generate the same name more than once
   -l, --letters <LETTERS>         Maximum number of letters in each word; 0 for unlimited [default: 0]
   -a, --alliterate                Generate names where each word begins with the same letter
   -A, --alliterate-with <LETTER>  Generate names where each word begins with the given letter
