@@ -82,6 +82,11 @@ pub fn petname(words: u8, separator: &str) -> String {
 /// A word list.
 pub type Words<'a> = Cow<'a, [&'a str]>;
 
+#[cfg(feature = "default-words")]
+mod words {
+    include!(concat!(env!("OUT_DIR"), "/words.rs"));
+}
+
 /// Trait that defines a generator of petnames.
 ///
 /// There are default implementations of `generate_one` and `iter`, i.e. only
@@ -163,11 +168,6 @@ pub struct Petnames<'a> {
     pub adjectives: Words<'a>,
     pub adverbs: Words<'a>,
     pub nouns: Words<'a>,
-}
-
-#[cfg(feature = "default-words")]
-mod words {
-    include!(concat!(env!("OUT_DIR"), "/words.rs"));
 }
 
 impl<'a> Petnames<'a> {
