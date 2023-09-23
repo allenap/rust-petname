@@ -52,7 +52,7 @@ Usage: petname [OPTIONS]
 Options:
   -w, --words <WORDS>             Number of words in name [default: 2]
   -s, --separator <SEP>           Separator between words [default: -]
-      --lists <LIST>              Use the built-in word lists with small, medium, or large words [default: small] [possible values: small, medium, large]
+      --lists <LIST>              Use the built-in word lists with small, medium, or large words [default: medium] [possible values: small, medium, large]
   -d, --dir <DIR>                 Use custom word lists by specifying a directory containing `adjectives.txt`, `adverbs.txt`, and `nouns.txt`
       --count <COUNT>             Generate multiple names; or use --stream to generate continuously [default: 1]
       --stream                    Stream names continuously

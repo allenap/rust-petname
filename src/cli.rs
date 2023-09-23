@@ -20,7 +20,7 @@ pub struct Cli {
     pub separator: String,
 
     /// Use the built-in word lists with small, medium, or large words
-    #[arg(long, value_name = "LIST", default_value_t = WordList::Small, alias = "complexity")]
+    #[arg(long, value_name = "LIST", default_value_t = WordList::Medium, alias = "complexity")]
     pub lists: WordList,
 
     /// Use custom word lists by specifying a directory containing
