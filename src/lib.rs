@@ -242,8 +242,7 @@ impl<'a> Petnames<'a> {
     /// Calculate the cardinality of this `Petnames`.
     ///
     /// If this is low, names may be repeated by the generator with a higher
-    /// frequency than your use-case may allow. If it is 0 (zero) the generator
-    /// will panic (unless `words` is also zero).
+    /// frequency than your use-case may allow.
     ///
     /// This can saturate. If the total possible combinations of words exceeds
     /// `u128::MAX` then this will return `u128::MAX`.
