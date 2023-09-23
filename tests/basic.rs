@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 #[cfg(all(feature = "default-rng", feature = "default-words"))]
 use petname::petname;
-use petname::Petnames;
+use petname::{Generator, Petnames};
 use rand::rngs::mock::StepRng;
 
 #[test]

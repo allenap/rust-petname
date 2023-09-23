@@ -1,7 +1,7 @@
 mod cli;
 
 use cli::Cli;
-use petname::Petnames;
+use petname::{Generator, Petnames};
 
 use std::collections::HashSet;
 use std::fmt;
