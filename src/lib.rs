@@ -59,7 +59,9 @@ extern crate alloc;
 
 use alloc::{
     borrow::Cow,
+    collections::BTreeMap,
     string::{String, ToString},
+    vec::Vec,
 };
 
 use itertools::Itertools;
@@ -259,6 +261,47 @@ impl<'a> Default for Petnames<'a> {
     fn default() -> Self {
         Self::small()
     }
+}
+
+/// Word lists prepared for alliteration.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Alliterations<'a> {
+    pub groups: BTreeMap<char, Petnames<'a>>,
+}
+
+impl<'a> From<Petnames<'a>> for Alliterations<'a> {
+    fn from(petnames: Petnames<'a>) -> Self {
+        let mut adjectives: BTreeMap<char, Vec<&str>> = group_words_by_first_letter(petnames.adjectives);
+        let mut adverbs: BTreeMap<char, Vec<&str>> = group_words_by_first_letter(petnames.adverbs);
+        let nouns: BTreeMap<char, Vec<&str>> = group_words_by_first_letter(petnames.nouns);
+        // We find all adjectives and adverbs that start with the same letter as
+        // each group of nouns. We start from nouns because it's possible to
+        // have a petname with length of 1, i.e. a noun. This means that it's
+        // okay at this point for the adjectives and adverbs lists to be empty.
+        Alliterations {
+            groups: nouns.into_iter().fold(BTreeMap::default(), |mut acc, (first_letter, nouns)| {
+                acc.insert(
+                    first_letter,
+                    Petnames {
+                        adjectives: adjectives.remove(&first_letter).unwrap_or_default().into(),
+                        adverbs: adverbs.remove(&first_letter).unwrap_or_default().into(),
+                        nouns: Cow::from(nouns),
+                    },
+                );
+                acc
+            }),
+        }
+    }
+}
+
+fn group_words_by_first_letter(words: Words) -> BTreeMap<char, Vec<&str>> {
+    words.iter().fold(BTreeMap::default(), |mut acc, s| match s.chars().next() {
+        Some(first_letter) => {
+            acc.entry(first_letter).or_default().push(s);
+            acc
+        }
+        None => acc,
+    })
 }
 
 /// Enum representing which word list to use.
