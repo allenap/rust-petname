@@ -150,7 +150,15 @@ impl Words {
         Ok(Self::Custom(
             read_file_to_string(dirname.join("adjectives.txt"))?,
             read_file_to_string(dirname.join("adverbs.txt"))?,
-            read_file_to_string(dirname.join("nouns.txt"))?,
+            // Load `nouns.txt`, but fall back to trying `names.txt` for
+            // compatibility with Dustin Kirkland's _petname_.
+            match read_file_to_string(dirname.join("nouns.txt")) {
+                Ok(nouns) => nouns,
+                Err(err) => match read_file_to_string(dirname.join("names.txt")) {
+                    Ok(nouns) => nouns,
+                    Err(_) => Err(err)?, // Error from `nouns.txt`.
+                },
+            },
         ))
     }
 }

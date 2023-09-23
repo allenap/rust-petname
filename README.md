@@ -39,9 +39,14 @@ If you have [installed Cargo][install-cargo], you can install rust-petname with
 `cargo install petname`. This puts a `petname` binary in `~/.cargo/bin`, which
 the Cargo installation process will probably have added to your `PATH`.
 
-The `petname` binary from rust-petname is drop-in compatible with the original
-`petname`. It's more strict when validating arguments, but for most uses it
-should behave the same.
+The `petname` binary from rust-petname is _mostly_ drop-in compatible with the
+original `petname`. It has more options and it's stricter when validating
+arguments, but for most uses it should behave the same[^differences].
+
+[^differences]:
+    When using the `--dir` option, Dustin Kirkland's _petname_ looks for a
+    file named `names.txt` whereas this looks for `nouns.txt` first before
+    checking for `names.txt`.
 
 ```shellsession
 $ petname -h
@@ -181,6 +186,8 @@ command-line too. Below are the most important:
 - When using custom word lists with `--dir <DIR>`, nouns are now found in a file
   named appropriately `DIR/nouns.txt`. Previously this was `names.txt` but this
   was confusing; the term "names" is overloaded enough already.
+  - For compatibility, if `nouns.txt` is not found, an attempt will be made to
+    load nouns from `names.txt`.
 - The option `--count 0` is no longer a synonym for `--stream`. Use `--stream`
   instead. It's not an error to pass `--count 0`, but it will result in zero
   names being generated.
