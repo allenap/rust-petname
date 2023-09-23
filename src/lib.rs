@@ -9,6 +9,7 @@
 //! The other thing you need is a random number generator from [rand][]:
 //!
 //! ```rust
+//! # use petname::Generator;
 //! # #[cfg(feature = "default-rng")]
 //! let mut rng = rand::thread_rng();
 //! # #[cfg(all(feature = "default-rng", feature = "default-words"))]
@@ -18,6 +19,7 @@
 //! It may be more convenient to use the default random number generator:
 //!
 //! ```rust
+//! # use petname::Generator;
 //! # #[cfg(all(feature = "default-rng", feature = "default-words"))]
 //! let pname = petname::Petnames::default().generate_one(7, ":");
 //! ```
@@ -33,6 +35,7 @@
 //! [`iter`][`Petnames::iter`]:
 //!
 //! ```rust
+//! # use petname::Generator;
 //! # #[cfg(feature = "default-rng")]
 //! let mut rng = rand::thread_rng();
 //! # #[cfg(feature = "default-words")]
@@ -46,6 +49,7 @@
 //! the letter "b":
 //!
 //! ```rust
+//! # use petname::Generator;
 //! # #[cfg(feature = "default-words")]
 //! let mut petnames = petname::Petnames::default();
 //! # #[cfg(feature = "default-words")]
@@ -59,22 +63,97 @@ extern crate alloc;
 
 use alloc::{
     borrow::Cow,
+    boxed::Box,
+    collections::BTreeMap,
     string::{String, ToString},
+    vec::Vec,
 };
 
 use itertools::Itertools;
-use rand::seq::SliceRandom;
+use rand::seq::{IteratorRandom, SliceRandom};
 
 /// Convenience function to generate a new petname from default word lists.
 #[allow(dead_code)]
-#[cfg(feature = "default-rng")]
-#[cfg(feature = "default-words")]
-pub fn petname(words: u8, separator: &str) -> String {
+#[cfg(all(feature = "default-rng", feature = "default-words"))]
+pub fn petname(words: u8, separator: &str) -> Option<String> {
     Petnames::default().generate_one(words, separator)
 }
 
 /// A word list.
 pub type Words<'a> = Cow<'a, [&'a str]>;
+
+#[cfg(feature = "default-words")]
+mod words {
+    include!(concat!(env!("OUT_DIR"), "/words.rs"));
+}
+
+/// Trait that defines a generator of petnames.
+///
+/// There are default implementations of `generate_one` and `iter`, i.e. only
+/// `generate` needs to be implemented.
+///
+pub trait Generator<'a> {
+    /// Generate a new petname.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use petname::Generator;
+    /// # #[cfg(all(feature = "default-rng", feature = "default-words"))]
+    /// let mut rng = rand::thread_rng();
+    /// # #[cfg(all(feature = "default-rng", feature = "default-words"))]
+    /// petname::Petnames::default().generate(&mut rng, 7, ":");
+    /// ```
+    ///
+    /// # Notes
+    ///
+    /// This may return fewer words than you request if one or more of the word
+    /// lists are empty. For example, if there are no adverbs, requesting 3 or
+    /// more words may still yield only "doubtful-salmon".
+    ///
+    fn generate<RNG>(&self, rng: &mut RNG, words: u8, separator: &str) -> Option<String>
+    where
+        RNG: rand::Rng;
+
+    /// Generate a single new petname.
+    ///
+    /// This is like `generate` but uses `rand::thread_rng` as the random
+    /// source. For efficiency use `generate` when creating multiple names, or
+    /// when you want to use a custom source of randomness.
+    #[cfg(feature = "default-rng")]
+    fn generate_one(&self, words: u8, separator: &str) -> Option<String> {
+        self.generate(&mut rand::thread_rng(), words, separator)
+    }
+
+    /// Iterator yielding petnames.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use petname::Generator;
+    /// # #[cfg(all(feature = "default-rng", feature = "default-words"))]
+    /// let mut rng = rand::thread_rng();
+    /// # #[cfg(all(feature = "default-rng", feature = "default-words"))]
+    /// let petnames = petname::Petnames::default();
+    /// # #[cfg(all(feature = "default-rng", feature = "default-words"))]
+    /// let mut iter = petnames.iter(&mut rng, 4, "_");
+    /// # #[cfg(all(feature = "default-rng", feature = "default-words"))]
+    /// println!("name: {}", iter.next().unwrap());
+    /// ```
+    fn iter<RNG>(
+        &'a self,
+        rng: &'a mut RNG,
+        words: u8,
+        separator: &str,
+    ) -> Box<dyn Iterator<Item = String> + 'a>
+    where
+        RNG: rand::Rng,
+        Self: Sized,
+    {
+        let names = Names { generator: self, rng, words, separator: separator.to_string() };
+        Box::new(names)
+    }
+}
 
 /// Word lists and the logic to combine them into _petnames_.
 ///
@@ -89,11 +168,6 @@ pub struct Petnames<'a> {
     pub adjectives: Words<'a>,
     pub adverbs: Words<'a>,
     pub nouns: Words<'a>,
-}
-
-#[cfg(feature = "default-words")]
-mod words {
-    include!(concat!(env!("OUT_DIR"), "/words.rs"));
 }
 
 impl<'a> Petnames<'a> {
@@ -143,6 +217,7 @@ impl<'a> Petnames<'a> {
     /// # Examples
     ///
     /// ```rust
+    /// # use petname::Generator;
     /// # #[cfg(feature = "default-words")]
     /// let mut petnames = petname::Petnames::default();
     /// # #[cfg(feature = "default-words")]
@@ -167,8 +242,7 @@ impl<'a> Petnames<'a> {
     /// Calculate the cardinality of this `Petnames`.
     ///
     /// If this is low, names may be repeated by the generator with a higher
-    /// frequency than your use-case may allow. If it is 0 (zero) the generator
-    /// will panic (unless `words` is also zero).
+    /// frequency than your use-case may allow.
     ///
     /// This can saturate. If the total possible combinations of words exceeds
     /// `u128::MAX` then this will return `u128::MAX`.
@@ -182,12 +256,110 @@ impl<'a> Petnames<'a> {
             .reduce(u128::saturating_mul)
             .unwrap_or(0u128)
     }
+}
 
+impl<'a> Generator<'a> for Petnames<'a> {
+    fn generate<RNG>(&self, rng: &mut RNG, words: u8, separator: &str) -> Option<String>
+    where
+        RNG: rand::Rng,
+    {
+        let name = Itertools::intersperse(
+            Lists::new(words).filter_map(|list| match list {
+                List::Adverb => self.adverbs.choose(rng).copied(),
+                List::Adjective => self.adjectives.choose(rng).copied(),
+                List::Noun => self.nouns.choose(rng).copied(),
+            }),
+            separator,
+        )
+        .collect::<String>();
+        if name.is_empty() {
+            None
+        } else {
+            Some(name)
+        }
+    }
+}
+
+#[cfg(feature = "default-words")]
+impl<'a> Default for Petnames<'a> {
+    /// Constructs a new `Petnames` from the default (small) word lists.
+    fn default() -> Self {
+        Self::small()
+    }
+}
+
+/// Word lists prepared for alliteration.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Alliterations<'a> {
+    pub groups: BTreeMap<char, Petnames<'a>>,
+}
+
+impl<'a> Alliterations<'a> {
+    /// Keep only those groups that match a predicate.
+    pub fn retain<F>(&mut self, predicate: F)
+    where
+        F: FnMut(&char, &mut Petnames) -> bool,
+    {
+        self.groups.retain(predicate)
+    }
+
+    /// Calculate the cardinality of this `Alliterations`.
+    ///
+    /// This is the sum of the cardinality of all groups.
+    ///
+    /// This can saturate. If the total possible combinations of words exceeds
+    /// `u128::MAX` then this will return `u128::MAX`.
+    pub fn cardinality(&self, words: u8) -> u128 {
+        self.groups
+            .values()
+            .map(|petnames| petnames.cardinality(words))
+            .reduce(u128::saturating_add)
+            .unwrap_or(0u128)
+    }
+}
+
+impl<'a> From<Petnames<'a>> for Alliterations<'a> {
+    fn from(petnames: Petnames<'a>) -> Self {
+        let mut adjectives: BTreeMap<char, Vec<&str>> = group_words_by_first_letter(petnames.adjectives);
+        let mut adverbs: BTreeMap<char, Vec<&str>> = group_words_by_first_letter(petnames.adverbs);
+        let nouns: BTreeMap<char, Vec<&str>> = group_words_by_first_letter(petnames.nouns);
+        // We find all adjectives and adverbs that start with the same letter as
+        // each group of nouns. We start from nouns because it's possible to
+        // have a petname with length of 1, i.e. a noun. This means that it's
+        // okay at this point for the adjectives and adverbs lists to be empty.
+        Alliterations {
+            groups: nouns.into_iter().fold(BTreeMap::default(), |mut acc, (first_letter, nouns)| {
+                acc.insert(
+                    first_letter,
+                    Petnames {
+                        adjectives: adjectives.remove(&first_letter).unwrap_or_default().into(),
+                        adverbs: adverbs.remove(&first_letter).unwrap_or_default().into(),
+                        nouns: Cow::from(nouns),
+                    },
+                );
+                acc
+            }),
+        }
+    }
+}
+
+fn group_words_by_first_letter(words: Words) -> BTreeMap<char, Vec<&str>> {
+    words.iter().fold(BTreeMap::default(), |mut acc, s| match s.chars().next() {
+        Some(first_letter) => {
+            acc.entry(first_letter).or_default().push(s);
+            acc
+        }
+        None => acc,
+    })
+}
+
+impl<'a> Generator<'a> for Alliterations<'a> {
     /// Generate a new petname.
     ///
     /// # Examples
     ///
     /// ```rust
+    /// # use petname::Generator;
     /// # #[cfg(all(feature = "default-rng", feature = "default-words"))]
     /// let mut rng = rand::thread_rng();
     /// # #[cfg(all(feature = "default-rng", feature = "default-words"))]
@@ -200,64 +372,18 @@ impl<'a> Petnames<'a> {
     /// lists are empty. For example, if there are no adverbs, requesting 3 or
     /// more words may still yield only "doubtful-salmon".
     ///
-    pub fn generate<RNG>(&self, rng: &mut RNG, words: u8, separator: &str) -> String
+    fn generate<RNG>(&self, rng: &mut RNG, words: u8, separator: &str) -> Option<String>
     where
         RNG: rand::Rng,
     {
-        Itertools::intersperse(
-            Lists::new(words).filter_map(|list| match list {
-                List::Adverb => self.adverbs.choose(rng).copied(),
-                List::Adjective => self.adjectives.choose(rng).copied(),
-                List::Noun => self.nouns.choose(rng).copied(),
-            }),
-            separator,
-        )
-        .collect::<String>()
-    }
-
-    /// Generate a single new petname.
-    ///
-    /// This is like `generate` but uses `rand::thread_rng` as the random
-    /// source. For efficiency use `generate` when creating multiple names, or
-    /// when you want to use a custom source of randomness.
-    #[cfg(feature = "default-rng")]
-    pub fn generate_one(&self, words: u8, separator: &str) -> String {
-        self.generate(&mut rand::thread_rng(), words, separator)
-    }
-
-    /// Iterator yielding petnames.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// # #[cfg(all(feature = "default-rng", feature = "default-words"))]
-    /// let mut rng = rand::thread_rng();
-    /// # #[cfg(all(feature = "default-rng", feature = "default-words"))]
-    /// let petnames = petname::Petnames::default();
-    /// # #[cfg(all(feature = "default-rng", feature = "default-words"))]
-    /// let mut iter = petnames.iter(&mut rng, 4, "_");
-    /// # #[cfg(all(feature = "default-rng", feature = "default-words"))]
-    /// println!("name: {}", iter.next().unwrap());
-    /// ```
-    ///
-    pub fn iter<RNG>(
-        &'a self,
-        rng: &'a mut RNG,
-        words: u8,
-        separator: &str,
-    ) -> impl Iterator<Item = String> + 'a
-    where
-        RNG: rand::Rng,
-    {
-        Names { petnames: self, rng, words, separator: separator.to_string() }
+        self.groups.values().choose(rng).and_then(|group| group.generate(rng, words, separator))
     }
 }
 
 #[cfg(feature = "default-words")]
-impl<'a> Default for Petnames<'a> {
-    /// Constructs a new `Petnames` from the default (small) word lists.
+impl<'a> Default for Alliterations<'a> {
     fn default() -> Self {
-        Self::small()
+        Petnames::default().into()
     }
 }
 
@@ -338,24 +464,26 @@ impl Iterator for Lists {
 }
 
 /// Iterator yielding petnames.
-struct Names<'a, RNG>
+struct Names<'a, RNG, GENERATOR>
 where
     RNG: rand::Rng,
+    GENERATOR: Generator<'a>,
 {
-    petnames: &'a Petnames<'a>,
+    generator: &'a GENERATOR,
     rng: &'a mut RNG,
     words: u8,
     separator: String,
 }
 
-impl<'a, RNG> Iterator for Names<'a, RNG>
+impl<'a, RNG, GENERATOR> Iterator for Names<'a, RNG, GENERATOR>
 where
     RNG: rand::Rng,
+    GENERATOR: Generator<'a>,
 {
     type Item = String;
 
     fn next(&mut self) -> Option<Self::Item> {
-        Some(self.petnames.generate(self.rng, self.words, &self.separator))
+        self.generator.generate(self.rng, self.words, &self.separator)
     }
 }
 
