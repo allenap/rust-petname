@@ -282,9 +282,9 @@ impl<'a> Generator<'a> for Petnames<'a> {
 
 #[cfg(feature = "default-words")]
 impl<'a> Default for Petnames<'a> {
-    /// Constructs a new `Petnames` from the default (small) word lists.
+    /// Constructs a new `Petnames` from the default (medium) word lists.
     fn default() -> Self {
-        Self::small()
+        Self::medium()
     }
 }
 

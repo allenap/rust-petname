@@ -36,10 +36,10 @@ fn petnames_default_has_non_zero_cardinality() {
     let petnames = Petnames::default();
     // This test will need to be adjusted when word lists change.
     assert_eq!(0, petnames.cardinality(0));
-    assert_eq!(456, petnames.cardinality(1));
-    assert_eq!(204744, petnames.cardinality(2));
-    assert_eq!(53438184, petnames.cardinality(3));
-    assert_eq!(13947366024, petnames.cardinality(4));
+    assert_eq!(1060, petnames.cardinality(1));
+    assert_eq!(1269880, petnames.cardinality(2));
+    assert_eq!(2069904400, petnames.cardinality(3));
+    assert_eq!(3373944172000, petnames.cardinality(4));
 }
 
 #[test]

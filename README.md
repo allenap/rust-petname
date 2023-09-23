@@ -203,6 +203,7 @@ command-line too. Below are the most important:
 - `Petnames::generate`, `Petnames::generate_one`, and `Petnames::iter` have been
   extracted into a `Generator` trait. This must be in scope in order to call
   those methods ([#102]).
+- The default word lists are now the "medium" lists.
 
 [#101]: https://github.com/allenap/rust-petname/pull/101
 [#102]: https://github.com/allenap/rust-petname/pull/102
