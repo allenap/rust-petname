@@ -46,7 +46,10 @@ fn alliterations_default_has_non_zero_cardinality() {
 fn alliterations_generate_uses_adverb_adjective_name() {
     let petnames = Petnames::new("able bold", "burly curly", "ant bee cow");
     let alliterations: Alliterations = petnames.into();
-    assert_eq!(alliterations.generate(&mut StepRng::new(1234567890, 1), 3, "-"), "burly-bold-bee");
+    assert_eq!(
+        alliterations.generate(&mut StepRng::new(1234567890, 1), 3, "-"),
+        Some("burly-bold-bee".into())
+    );
 }
 
 #[test]
@@ -58,4 +61,13 @@ fn alliterations_iter_yields_names() {
     let expected: HashSet<String> = ["able ant", "burly bold bee", "curly cow"].map(String::from).into();
     let observed: HashSet<String> = names.take(10).collect::<HashSet<String>>();
     assert_eq!(expected, observed);
+}
+
+#[test]
+fn alliterations_iter_yields_nothing_when_empty() {
+    let mut rng = StepRng::new(0, 1);
+    let alliteration = Alliterations { groups: Default::default() };
+    assert_eq!(0, alliteration.cardinality(3));
+    let mut names: Box<dyn Iterator<Item = _>> = alliteration.iter(&mut rng, 3, ".");
+    assert_eq!(None, names.next());
 }

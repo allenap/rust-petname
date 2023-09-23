@@ -75,7 +75,7 @@ use rand::seq::{IteratorRandom, SliceRandom};
 /// Convenience function to generate a new petname from default word lists.
 #[allow(dead_code)]
 #[cfg(all(feature = "default-rng", feature = "default-words"))]
-pub fn petname(words: u8, separator: &str) -> String {
+pub fn petname(words: u8, separator: &str) -> Option<String> {
     Petnames::default().generate_one(words, separator)
 }
 
@@ -111,7 +111,7 @@ pub trait Generator<'a> {
     /// lists are empty. For example, if there are no adverbs, requesting 3 or
     /// more words may still yield only "doubtful-salmon".
     ///
-    fn generate<RNG>(&self, rng: &mut RNG, words: u8, separator: &str) -> String
+    fn generate<RNG>(&self, rng: &mut RNG, words: u8, separator: &str) -> Option<String>
     where
         RNG: rand::Rng;
 
@@ -121,7 +121,7 @@ pub trait Generator<'a> {
     /// source. For efficiency use `generate` when creating multiple names, or
     /// when you want to use a custom source of randomness.
     #[cfg(feature = "default-rng")]
-    fn generate_one(&self, words: u8, separator: &str) -> String {
+    fn generate_one(&self, words: u8, separator: &str) -> Option<String> {
         self.generate(&mut rand::thread_rng(), words, separator)
     }
 
@@ -260,11 +260,11 @@ impl<'a> Petnames<'a> {
 }
 
 impl<'a> Generator<'a> for Petnames<'a> {
-    fn generate<RNG>(&self, rng: &mut RNG, words: u8, separator: &str) -> String
+    fn generate<RNG>(&self, rng: &mut RNG, words: u8, separator: &str) -> Option<String>
     where
         RNG: rand::Rng,
     {
-        Itertools::intersperse(
+        let name = Itertools::intersperse(
             Lists::new(words).filter_map(|list| match list {
                 List::Adverb => self.adverbs.choose(rng).copied(),
                 List::Adjective => self.adjectives.choose(rng).copied(),
@@ -272,7 +272,12 @@ impl<'a> Generator<'a> for Petnames<'a> {
             }),
             separator,
         )
-        .collect::<String>()
+        .collect::<String>();
+        if name.is_empty() {
+            None
+        } else {
+            Some(name)
+        }
     }
 }
 
@@ -368,15 +373,11 @@ impl<'a> Generator<'a> for Alliterations<'a> {
     /// lists are empty. For example, if there are no adverbs, requesting 3 or
     /// more words may still yield only "doubtful-salmon".
     ///
-    fn generate<RNG>(&self, rng: &mut RNG, words: u8, separator: &str) -> String
+    fn generate<RNG>(&self, rng: &mut RNG, words: u8, separator: &str) -> Option<String>
     where
         RNG: rand::Rng,
     {
-        self.groups
-            .values()
-            .choose(rng)
-            .map(|petnames| petnames.generate(rng, words, separator))
-            .unwrap_or_default()
+        self.groups.values().choose(rng).and_then(|group| group.generate(rng, words, separator))
     }
 }
 
@@ -483,7 +484,7 @@ where
     type Item = String;
 
     fn next(&mut self) -> Option<Self::Item> {
-        Some(self.generator.generate(self.rng, self.words, &self.separator))
+        self.generator.generate(self.rng, self.words, &self.separator)
     }
 }
 

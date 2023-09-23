@@ -49,7 +49,7 @@ fn petnames_generate_uses_adverb_adjective_name() {
         adverbs: vec!["adverb"].into(),
         nouns: vec!["noun"].into(),
     };
-    assert_eq!(petnames.generate(&mut StepRng::new(0, 1), 3, "-"), "adverb-adjective-noun");
+    assert_eq!(petnames.generate(&mut StepRng::new(0, 1), 3, "-"), Some("adverb-adjective-noun".into()));
 }
 
 #[test]
@@ -58,4 +58,13 @@ fn petnames_iter_yields_names() {
     let petnames = Petnames::new("foo", "bar", "baz");
     let mut names: Box<dyn Iterator<Item = _>> = petnames.iter(&mut rng, 3, ".");
     assert_eq!(Some("bar.foo.baz".to_string()), names.next());
+}
+
+#[test]
+fn petnames_iter_yields_nothing_when_empty() {
+    let mut rng = StepRng::new(0, 1);
+    let petnames = Petnames::new("", "", "");
+    assert_eq!(0, petnames.cardinality(3));
+    let mut names: Box<dyn Iterator<Item = _>> = petnames.iter(&mut rng, 3, ".");
+    assert_eq!(None, names.next());
 }
