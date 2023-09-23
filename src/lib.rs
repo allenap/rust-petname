@@ -290,6 +290,30 @@ pub struct Alliterations<'a> {
     pub groups: BTreeMap<char, Petnames<'a>>,
 }
 
+impl<'a> Alliterations<'a> {
+    /// Keep only those groups that match a predicate.
+    pub fn retain<F>(&mut self, predicate: F)
+    where
+        F: FnMut(&char, &mut Petnames) -> bool,
+    {
+        self.groups.retain(predicate)
+    }
+
+    /// Calculate the cardinality of this `Alliterations`.
+    ///
+    /// This is the sum of the cardinality of all groups.
+    ///
+    /// This can saturate. If the total possible combinations of words exceeds
+    /// `u128::MAX` then this will return `u128::MAX`.
+    pub fn cardinality(&self, words: u8) -> u128 {
+        self.groups
+            .values()
+            .map(|petnames| petnames.cardinality(words))
+            .reduce(u128::saturating_add)
+            .unwrap_or(0u128)
+    }
+}
+
 impl<'a> From<Petnames<'a>> for Alliterations<'a> {
     fn from(petnames: Petnames<'a>) -> Self {
         let mut adjectives: BTreeMap<char, Vec<&str>> = group_words_by_first_letter(petnames.adjectives);
@@ -353,6 +377,13 @@ impl<'a> Generator<'a> for Alliterations<'a> {
             .choose(rng)
             .map(|petnames| petnames.generate(rng, words, separator))
             .unwrap_or_default()
+    }
+}
+
+#[cfg(feature = "default-words")]
+impl<'a> Default for Alliterations<'a> {
+    fn default() -> Self {
+        Petnames::default().into()
     }
 }
 

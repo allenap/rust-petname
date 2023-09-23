@@ -7,27 +7,27 @@ use rand::rngs::mock::StepRng;
 
 #[test]
 #[cfg(feature = "default-words")]
-fn default_petnames_has_adjectives() {
+fn petnames_default_has_adjectives() {
     let petnames = Petnames::default();
     assert_ne!(petnames.adjectives.len(), 0);
 }
 
 #[test]
 #[cfg(feature = "default-words")]
-fn default_petnames_has_adverbs() {
+fn petnames_default_has_adverbs() {
     let petnames = Petnames::default();
     assert_ne!(petnames.adverbs.len(), 0);
 }
 
 #[test]
 #[cfg(feature = "default-words")]
-fn default_petnames_has_names() {
+fn petnames_default_has_names() {
     let petnames = Petnames::default();
     assert_ne!(petnames.nouns.len(), 0);
 }
 
 #[test]
-fn retain_applies_given_predicate() {
+fn petnames_retain_applies_given_predicate() {
     let petnames_expected = Petnames::new("bob", "bob", "bob jane");
     let mut petnames = Petnames::new("alice bob carol", "alice bob", "bob carol jane");
     petnames.retain(|word| word.len() < 5);
@@ -36,7 +36,7 @@ fn retain_applies_given_predicate() {
 
 #[test]
 #[cfg(feature = "default-words")]
-fn default_petnames_has_non_zero_cardinality() {
+fn petnames_default_has_non_zero_cardinality() {
     let petnames = Petnames::default();
     // This test will need to be adjusted when word lists change.
     assert_eq!(0, petnames.cardinality(0));
@@ -47,13 +47,23 @@ fn default_petnames_has_non_zero_cardinality() {
 }
 
 #[test]
-fn generate_uses_adverb_adjective_name() {
+fn petnames_generate_uses_adverb_adjective_name() {
     let petnames = Petnames {
         adjectives: Cow::Owned(vec!["adjective"]),
         adverbs: Cow::Owned(vec!["adverb"]),
         nouns: Cow::Owned(vec!["noun"]),
     };
     assert_eq!(petnames.generate(&mut StepRng::new(0, 1), 3, "-"), "adverb-adjective-noun");
+}
+
+#[test]
+fn petnames_iter_yields_names() {
+    let mut rng = StepRng::new(0, 1);
+    let petnames = Petnames::new("foo", "bar", "baz");
+    let names = petnames.iter(&mut rng, 3, ".");
+    // Definitely an Iterator...
+    let mut iter: Box<dyn Iterator<Item = _>> = Box::new(names);
+    assert_eq!(Some("bar.foo.baz".to_string()), iter.next());
 }
 
 #[test]
@@ -66,14 +76,4 @@ fn petname_renders_desired_number_of_words() {
 #[cfg(all(feature = "default-rng", feature = "default-words"))]
 fn petname_renders_with_desired_separator() {
     assert_eq!(petname(7, "@").split('@').count(), 7);
-}
-
-#[test]
-fn petnames_iter_yields_names() {
-    let mut rng = StepRng::new(0, 1);
-    let petnames = Petnames::new("foo", "bar", "baz");
-    let names = petnames.iter(&mut rng, 3, ".");
-    // Definitely an Iterator...
-    let mut iter: Box<dyn Iterator<Item = _>> = Box::new(names);
-    assert_eq!(Some("bar.foo.baz".to_string()), iter.next());
 }
