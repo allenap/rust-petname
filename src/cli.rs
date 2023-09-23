@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use clap::{Parser, ValueEnum};
+use clap::{builder::PossibleValue, Parser};
 
 /// Generate human readable random names.
 #[derive(Parser)]
@@ -20,7 +20,7 @@ pub struct Cli {
     pub separator: String,
 
     /// Use the built-in word lists with small, medium, or large words
-    #[arg(long, value_name = "LIST", default_value_t = WordList::Small)]
+    #[arg(long, value_name = "LIST", default_value_t = WordList::Small, alias = "complexity")]
     pub lists: WordList,
 
     /// Use custom word lists by specifying a directory containing
@@ -64,7 +64,7 @@ pub struct Cli {
     pub seed: Option<u64>,
 }
 
-#[derive(Clone, ValueEnum)]
+#[derive(Clone)]
 pub enum WordList {
     Small,
     Medium,
@@ -78,5 +78,21 @@ impl std::fmt::Display for WordList {
             Self::Medium => write!(f, "medium"),
             Self::Large => write!(f, "large"),
         }
+    }
+}
+
+impl clap::ValueEnum for WordList {
+    fn value_variants<'a>() -> &'a [Self] {
+        &[Self::Small, Self::Medium, Self::Large]
+    }
+
+    fn to_possible_value(&self) -> Option<PossibleValue> {
+        // Numeric aliases, and the `--complexity` alias for `--lists`, are for
+        // compatibility with https://github.com/dustinkirkland/petname.
+        Some(match self {
+            Self::Small => PossibleValue::new("small").alias("0"),
+            Self::Medium => PossibleValue::new("medium").alias("1"),
+            Self::Large => PossibleValue::new("large").alias("2"),
+        })
     }
 }
