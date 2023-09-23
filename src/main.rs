@@ -1,9 +1,9 @@
 mod cli;
 
 use cli::Cli;
+use petname::Alliterations;
 use petname::{Generator, Petnames};
 
-use std::collections::HashSet;
 use std::fmt;
 use std::fs;
 use std::io;
@@ -11,7 +11,7 @@ use std::path;
 use std::process;
 
 use clap::Parser;
-use rand::{seq::IteratorRandom, SeedableRng};
+use rand::SeedableRng;
 
 fn main() {
     let cli = Cli::parse();
@@ -84,37 +84,6 @@ fn run(cli: Cli) -> Result<(), Error> {
     let mut rng =
         cli.seed.map(rand::rngs::StdRng::seed_from_u64).unwrap_or_else(rand::rngs::StdRng::from_entropy);
 
-    // Handle alliteration, either by eliminating a specified
-    // character, or using a random one.
-    let alliterate = cli.alliterate || cli.ubuntu || cli.alliterate_with.is_some();
-    if alliterate {
-        // We choose the first letter from the intersection of the
-        // first letters of each word list in `petnames`.
-        let firsts = common_first_letters(&petnames.adjectives, &[&petnames.adverbs, &petnames.nouns]);
-        // if a specific character was requested for alliteration,
-        // attempt to use it.
-        if let Some(c) = cli.alliterate_with {
-            if firsts.contains(&c) {
-                petnames.retain(|s| s.starts_with(c));
-            } else {
-                return Err(Error::Alliteration(
-                    "no petnames begin with the chosen alliteration character".to_string(),
-                ));
-            }
-        } else {
-            // Otherwise choose the first letter at random; fails if
-            // there are no letters.
-            match firsts.iter().choose(&mut rng) {
-                Some(c) => petnames.retain(|s| s.starts_with(*c)),
-                None => {
-                    return Err(Error::Alliteration(
-                        "word lists have no initial letters in common".to_string(),
-                    ))
-                }
-            };
-        }
-    }
-
     // Manage stdout.
     let stdout = io::stdout();
     let mut writer = io::BufWriter::new(stdout.lock());
@@ -122,8 +91,28 @@ fn run(cli: Cli) -> Result<(), Error> {
     // Stream, or print a limited number of words?
     let count = if cli.stream { None } else { Some(cli.count) };
 
-    // Get an iterator for the names we want to print out.
-    printer(&mut writer, petnames.iter(&mut rng, cli.words, &cli.separator), count)
+    // Get an iterator for the names we want to print out, handling alliteration.
+    if cli.alliterate || cli.ubuntu {
+        let mut alliterations: Alliterations = petnames.into();
+        alliterations.retain(|_, group| group.cardinality(cli.words) > 0);
+        if alliterations.cardinality(cli.words) == 0 {
+            return Err(Error::Alliteration("word lists have no initial letters in common".to_string()));
+        }
+        printer(&mut writer, alliterations.iter(&mut rng, cli.words, &cli.separator), count)
+    } else if let Some(alliterate_with) = cli.alliterate_with {
+        let mut alliterations: Alliterations = petnames.into();
+        alliterations.retain(|first_letter, group| {
+            *first_letter == alliterate_with && group.cardinality(cli.words) > 0
+        });
+        if alliterations.cardinality(cli.words) == 0 {
+            return Err(Error::Alliteration(
+                "no petnames begin with the chosen alliteration character".to_string(),
+            ));
+        }
+        printer(&mut writer, alliterations.iter(&mut rng, cli.words, &cli.separator), count)
+    } else {
+        printer(&mut writer, petnames.iter(&mut rng, cli.words, &cli.separator), count)
+    }
 }
 
 fn printer<OUT, NAMES>(writer: &mut OUT, names: NAMES, count: Option<usize>) -> Result<(), Error>
@@ -145,17 +134,6 @@ where
     }
 
     Ok(())
-}
-
-fn common_first_letters(init: &[&str], more: &[&[&str]]) -> HashSet<char> {
-    let mut firsts = first_letters(init);
-    let firsts_other: Vec<HashSet<char>> = more.iter().map(|list| first_letters(list)).collect();
-    firsts.retain(|c| firsts_other.iter().all(|fs| fs.contains(c)));
-    firsts
-}
-
-fn first_letters(names: &[&str]) -> HashSet<char> {
-    names.iter().filter_map(|s| s.chars().next()).collect()
 }
 
 enum Words {
