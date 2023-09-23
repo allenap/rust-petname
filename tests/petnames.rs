@@ -1,7 +1,3 @@
-use std::borrow::Cow;
-
-#[cfg(all(feature = "default-rng", feature = "default-words"))]
-use petname::petname;
 use petname::{Generator, Petnames};
 use rand::rngs::mock::StepRng;
 
@@ -49,9 +45,9 @@ fn petnames_default_has_non_zero_cardinality() {
 #[test]
 fn petnames_generate_uses_adverb_adjective_name() {
     let petnames = Petnames {
-        adjectives: Cow::Owned(vec!["adjective"]),
-        adverbs: Cow::Owned(vec!["adverb"]),
-        nouns: Cow::Owned(vec!["noun"]),
+        adjectives: vec!["adjective"].into(),
+        adverbs: vec!["adverb"].into(),
+        nouns: vec!["noun"].into(),
     };
     assert_eq!(petnames.generate(&mut StepRng::new(0, 1), 3, "-"), "adverb-adjective-noun");
 }
@@ -60,20 +56,6 @@ fn petnames_generate_uses_adverb_adjective_name() {
 fn petnames_iter_yields_names() {
     let mut rng = StepRng::new(0, 1);
     let petnames = Petnames::new("foo", "bar", "baz");
-    let names = petnames.iter(&mut rng, 3, ".");
-    // Definitely an Iterator...
-    let mut iter: Box<dyn Iterator<Item = _>> = Box::new(names);
-    assert_eq!(Some("bar.foo.baz".to_string()), iter.next());
-}
-
-#[test]
-#[cfg(all(feature = "default-rng", feature = "default-words"))]
-fn petname_renders_desired_number_of_words() {
-    assert_eq!(petname(7, "-").split('-').count(), 7);
-}
-
-#[test]
-#[cfg(all(feature = "default-rng", feature = "default-words"))]
-fn petname_renders_with_desired_separator() {
-    assert_eq!(petname(7, "@").split('@').count(), 7);
+    let mut names: Box<dyn Iterator<Item = _>> = petnames.iter(&mut rng, 3, ".");
+    assert_eq!(Some("bar.foo.baz".to_string()), names.next());
 }
