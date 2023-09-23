@@ -174,14 +174,17 @@ command-line too. Below are the most important:
 ### Command-line
 
 - The `--complexity <COMPLEXITY>` option has been replaced by `--lists <LISTS>`.
-  For compatibility, `--complexity [0,1,2]` will still work, but its
-  availability is not shown in the `-h|--help` text.
+  - For compatibility, `--complexity [0,1,2]` will still work, but its
+    availability is not shown in the `-h|--help` text.
+  - The default is now "medium" (equivalent to `--complexity 1`). Previously it
+    was "small" (`--complexity 0`).
 - When using custom word lists with `--dir <DIR>`, nouns are now found in a file
   named appropriately `DIR/nouns.txt`. Previously this was `names.txt` but this
   was confusing; the term "names" is overloaded enough already.
 - The option `--count 0` is no longer a synonym for `--stream`. Use `--stream`
   instead. It's not an error to pass `--count 0`, but it will result in zero
   names being generated.
+- The `--non-repeating` flag is no longer recognised ([#101]).
 
 ### Library
 
@@ -196,6 +199,13 @@ command-line too. Below are the most important:
   returning `impl Iterator<Item = String>` instead. This also means that
   `Names::cardinality(&self)` is no longer available; use
   `Petnames::cardinality(&self, words: u8)` instead.
+- `Petnames::iter_non_repeating` has been removed ([#101]).
+- `Petnames::generate`, `Petnames::generate_one`, and `Petnames::iter` have been
+  extracted into a `Generator` trait. This must be in scope in order to call
+  those methods ([#102]).
+
+[#101]: https://github.com/allenap/rust-petname/pull/101
+[#102]: https://github.com/allenap/rust-petname/pull/102
 
 ## Developing & Contributing
 
