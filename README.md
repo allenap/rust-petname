@@ -52,7 +52,7 @@ Usage: petname [OPTIONS]
 Options:
   -w, --words <WORDS>             Number of words in name [default: 2]
   -s, --separator <SEP>           Separator between words [default: -]
-      --lists <LIST>              Use the built-in word lists with small, medium, or large words [default: small] [possible values: small, medium, large]
+      --lists <LIST>              Use the built-in word lists with small, medium, or large words [default: medium] [possible values: small, medium, large]
   -d, --dir <DIR>                 Use custom word lists by specifying a directory containing `adjectives.txt`, `adverbs.txt`, and `nouns.txt`
       --count <COUNT>             Generate multiple names; or use --stream to generate continuously [default: 1]
       --stream                    Stream names continuously
@@ -174,6 +174,8 @@ command-line too. Below are the most important:
 ### Command-line
 
 - The `--complexity <COMPLEXITY>` option has been replaced by `--lists <LISTS>`.
+  For compatibility, `--complexity [0,1,2]` will still work, but its
+  availability is not shown in the `-h|--help` text.
 - When using custom word lists with `--dir <DIR>`, nouns are now found in a file
   named appropriately `DIR/nouns.txt`. Previously this was `names.txt` but this
   was confusing; the term "names" is overloaded enough already.
@@ -187,8 +189,6 @@ command-line too. Below are the most important:
   - `std_rng` is now `default-rng`,
   - `default_dictionary` is now `default-words`.
 - The `names` field on the `Petnames` struct has been renamed to `nouns`.
-  Previously the complexity was given as a number – 0, 1, or 2 – but now the
-  word lists to use are given as a string: small, medium, or large.
 - `Petnames::new()` is now `Petnames::default()`.
 - `Petnames::new(…)` now accepts word lists as strings.
 - `Names` is no longer public. This served as the iterator struct returned by
