@@ -56,6 +56,7 @@
 //! petnames.retain(|s| s.starts_with("b"));
 //! # #[cfg(all(feature = "default-rng", feature = "default-words"))]
 //! let name = petnames.generate_one(3, ".").expect("no names");
+//! # #[cfg(all(feature = "default-rng", feature = "default-words"))]
 //! assert!(name.starts_with('b'));
 //! ```
 //!
@@ -85,6 +86,7 @@
 //! use petname::Generator;
 //! # #[cfg(feature = "default-words")]
 //! let generator: &dyn Generator = &petname::Petnames::default();
+//! # #[cfg(feature = "default-words")]
 //! let generator: &dyn Generator = &petname::Alliterations::default();
 //! ```
 //!
