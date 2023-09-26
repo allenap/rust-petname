@@ -71,6 +71,19 @@
 //! let mut alliterations: petname::Alliterations = petnames.into();
 //! # #[cfg(all(feature = "default-rng", feature = "default-words"))]
 //! alliterations.generate_one(3, "/");
+//!
+//! Both [`Petnames`] and [`Alliterations`] implement [`Generator`]; this needs
+//! to be in scope in order to generate names. It's [object-safe] so you can use
+//! `Petnames` and `Alliterations` as trait objects:
+//!
+//! [object-safe]:
+//!     https://doc.rust-lang.org/reference/items/traits.html#object-safety
+//!
+//! ```rust
+//! use petname::Generator;
+//! # #[cfg(feature = "default-words")]
+//! let generator: &dyn Generator = &petname::Petnames::default();
+//! let generator: &dyn Generator = &petname::Alliterations::default();
 //! ```
 //!
 
@@ -126,9 +139,7 @@ pub trait Generator<'a> {
     /// lists are empty. For example, if there are no adverbs, requesting 3 or
     /// more words may still yield only "doubtful-salmon".
     ///
-    fn generate<RNG>(&self, rng: &mut RNG, words: u8, separator: &str) -> Option<String>
-    where
-        RNG: rand::RngCore;
+    fn generate(&self, rng: &mut dyn rand::RngCore, words: u8, separator: &str) -> Option<String>;
 
     /// Generate a single new petname.
     ///
@@ -155,14 +166,13 @@ pub trait Generator<'a> {
     /// # #[cfg(all(feature = "default-rng", feature = "default-words"))]
     /// println!("name: {}", iter.next().unwrap());
     /// ```
-    fn iter<RNG>(
+    fn iter(
         &'a self,
-        rng: &'a mut RNG,
+        rng: &'a mut dyn rand::RngCore,
         words: u8,
         separator: &str,
     ) -> Box<dyn Iterator<Item = String> + 'a>
     where
-        RNG: rand::RngCore,
         Self: Sized,
     {
         let names = Names { generator: self, rng, words, separator: separator.to_string() };
@@ -274,10 +284,7 @@ impl<'a> Petnames<'a> {
 }
 
 impl<'a> Generator<'a> for Petnames<'a> {
-    fn generate<RNG>(&self, rng: &mut RNG, words: u8, separator: &str) -> Option<String>
-    where
-        RNG: rand::RngCore,
-    {
+    fn generate(&self, rng: &mut dyn rand::RngCore, words: u8, separator: &str) -> Option<String> {
         let name = Itertools::intersperse(
             Lists::new(words).filter_map(|list| match list {
                 List::Adverb => self.adverbs.choose(rng).copied(),
@@ -387,10 +394,7 @@ impl<'a> Generator<'a> for Alliterations<'a> {
     /// lists are empty. For example, if there are no adverbs, requesting 3 or
     /// more words may still yield only "doubtful-salmon".
     ///
-    fn generate<RNG>(&self, rng: &mut RNG, words: u8, separator: &str) -> Option<String>
-    where
-        RNG: rand::RngCore,
-    {
+    fn generate(&self, rng: &mut dyn rand::RngCore, words: u8, separator: &str) -> Option<String> {
         self.groups.values().choose(rng).and_then(|group| group.generate(rng, words, separator))
     }
 }
@@ -479,20 +483,18 @@ impl Iterator for Lists {
 }
 
 /// Iterator yielding petnames.
-struct Names<'a, RNG, GENERATOR>
+struct Names<'a, GENERATOR>
 where
-    RNG: rand::RngCore,
     GENERATOR: Generator<'a>,
 {
     generator: &'a GENERATOR,
-    rng: &'a mut RNG,
+    rng: &'a mut dyn rand::RngCore,
     words: u8,
     separator: String,
 }
 
-impl<'a, RNG, GENERATOR> Iterator for Names<'a, RNG, GENERATOR>
+impl<'a, GENERATOR> Iterator for Names<'a, GENERATOR>
 where
-    RNG: rand::RngCore,
     GENERATOR: Generator<'a>,
 {
     type Item = String;
