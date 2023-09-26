@@ -15,7 +15,12 @@ use rand::SeedableRng;
 
 fn main() {
     let cli = Cli::parse();
-    match run(cli) {
+
+    // Manage stdout.
+    let stdout = io::stdout();
+    let mut writer = io::BufWriter::new(stdout.lock());
+
+    match run(cli, &mut writer) {
         Ok(()) | Err(Error::Disconnected) => {
             process::exit(0);
         }
@@ -26,6 +31,7 @@ fn main() {
     }
 }
 
+#[derive(Debug)]
 enum Error {
     Io(io::Error),
     FileIo(path::PathBuf, io::Error),
@@ -52,7 +58,10 @@ impl From<io::Error> for Error {
     }
 }
 
-fn run(cli: Cli) -> Result<(), Error> {
+fn run<OUT>(cli: Cli, writer: &mut OUT) -> Result<(), Error>
+where
+    OUT: io::Write,
+{
     // Load custom word lists, if specified.
     let words = match cli.directory {
         Some(dirname) => Words::load(dirname)?,
@@ -84,10 +93,6 @@ fn run(cli: Cli) -> Result<(), Error> {
     let mut rng =
         cli.seed.map(rand::rngs::StdRng::seed_from_u64).unwrap_or_else(rand::rngs::StdRng::from_entropy);
 
-    // Manage stdout.
-    let stdout = io::stdout();
-    let mut writer = io::BufWriter::new(stdout.lock());
-
     // Stream, or print a limited number of words?
     let count = if cli.stream { None } else { Some(cli.count) };
 
@@ -98,7 +103,7 @@ fn run(cli: Cli) -> Result<(), Error> {
         if alliterations.cardinality(cli.words) == 0 {
             return Err(Error::Alliteration("word lists have no initial letters in common".to_string()));
         }
-        printer(&mut writer, alliterations.iter(&mut rng, cli.words, &cli.separator), count)
+        printer(writer, alliterations.iter(&mut rng, cli.words, &cli.separator), count)
     } else if let Some(alliterate_with) = cli.alliterate_with {
         let mut alliterations: Alliterations = petnames.into();
         alliterations.retain(|first_letter, group| {
@@ -109,9 +114,9 @@ fn run(cli: Cli) -> Result<(), Error> {
                 "no petnames begin with the chosen alliteration character".to_string(),
             ));
         }
-        printer(&mut writer, alliterations.iter(&mut rng, cli.words, &cli.separator), count)
+        printer(writer, alliterations.iter(&mut rng, cli.words, &cli.separator), count)
     } else {
-        printer(&mut writer, petnames.iter(&mut rng, cli.words, &cli.separator), count)
+        printer(writer, petnames.iter(&mut rng, cli.words, &cli.separator), count)
     }
 }
 
@@ -171,5 +176,135 @@ fn suppress_disconnect(err: io::Error) -> Error {
     match err.kind() {
         io::ErrorKind::BrokenPipe => Error::Disconnected,
         _ => err.into(),
+    }
+}
+
+/// Integration tests for the command-line `petname`.
+///
+/// These ensure command-line argument compatibility with those supported in
+/// Dustin Kirkland's [`petname`](https://github.com/dustinkirkland/petname) as
+/// well as testing the functionality of this package's command-line interface.
+///
+#[cfg(test)]
+mod integration {
+    use std::fs;
+
+    use clap::Parser;
+
+    fn run_and_capture(cli: super::Cli) -> String {
+        let mut stdout = Vec::new();
+        super::run(cli, &mut stdout).unwrap();
+        String::from_utf8(stdout).unwrap()
+    }
+
+    #[test]
+    fn option_words() {
+        let cli = super::Cli::parse_from(&["petname", "--words=5"]);
+        assert_eq!(run_and_capture(cli).split('-').count(), 5);
+    }
+
+    #[test]
+    fn option_letters() {
+        let cli = super::Cli::parse_from(&["petname", "--letters=3", "--count=100", "--separator= "]);
+        assert_eq!(run_and_capture(cli).split_whitespace().map(str::len).max(), Some(3))
+    }
+
+    #[test]
+    fn option_separator() {
+        let cli = super::Cli::parse_from(&["petname", "--separator=<:>"]);
+        assert_eq!(run_and_capture(cli).split("<:>").count(), 2)
+    }
+
+    /// A directory can be specified containing `adverbs.txt`, `adjectives.txt`,
+    /// and `nouns.txt`.
+    #[test]
+    fn option_dir_nouns() -> anyhow::Result<()> {
+        let dir = tempdir::TempDir::new("petname")?;
+        fs::write(&dir.path().join("adverbs.txt"), "adverb")?;
+        fs::write(&dir.path().join("adjectives.txt"), "adjective")?;
+        fs::write(&dir.path().join("nouns.txt"), "noun")?;
+
+        let args: &[std::ffi::OsString] =
+            &["petname".into(), "--dir".into(), dir.path().into(), "--words=3".into()];
+        let cli = super::Cli::parse_from(args);
+        assert_eq!(run_and_capture(cli), "adverb-adjective-noun\n");
+        Ok(())
+    }
+
+    /// A directory can be specified containing `adverbs.txt`, `adjectives.txt`,
+    /// and `nouns.txt`/`names.txt`. If both `nouns.txt` and `names.txt` are
+    /// present, `nouns.txt` is preferred.
+    #[test]
+    fn compat_dir_nouns_before_names() -> anyhow::Result<()> {
+        let dir = tempdir::TempDir::new("petname")?;
+        fs::write(&dir.path().join("adverbs.txt"), "adverb")?;
+        fs::write(&dir.path().join("adjectives.txt"), "adjective")?;
+        fs::write(&dir.path().join("nouns.txt"), "noun")?;
+        fs::write(&dir.path().join("names.txt"), "name")?;
+
+        let args: &[std::ffi::OsString] =
+            &["petname".into(), "--dir".into(), dir.path().into(), "--words=3".into()];
+        let cli = super::Cli::parse_from(args);
+        assert_eq!(run_and_capture(cli), "adverb-adjective-noun\n");
+        Ok(())
+    }
+
+    /// A directory can be specified containing `adverbs.txt`, `adjectives.txt`,
+    /// and `names.txt`. The latter (`names.txt`) is only for compatibility with
+    /// Dustin Kirkland's _petname_.
+    #[test]
+    fn compat_dir_names() -> anyhow::Result<()> {
+        let dir = tempdir::TempDir::new("petname")?;
+        fs::write(&dir.path().join("adverbs.txt"), "adverb")?;
+        fs::write(&dir.path().join("adjectives.txt"), "adjective")?;
+        fs::write(&dir.path().join("names.txt"), "name")?;
+
+        let args: &[std::ffi::OsString] =
+            &["petname".into(), "--dir".into(), dir.path().into(), "--words=3".into()];
+        let cli = super::Cli::parse_from(args);
+        assert_eq!(run_and_capture(cli), "adverb-adjective-name\n");
+        Ok(())
+    }
+
+    #[test]
+    fn option_lists() {
+        let cli = super::Cli::parse_from(&["petname", "--lists=large"]);
+        assert!(!run_and_capture(cli).is_empty());
+    }
+
+    #[test]
+    fn compat_complexity() {
+        let cli = super::Cli::parse_from(&["petname", "--complexity=2"]);
+        assert!(!run_and_capture(cli).is_empty());
+    }
+
+    #[test]
+    fn option_alliterate() {
+        let cli = super::Cli::parse_from(&["petname", "--alliterate", "--words=3"]);
+        let first_letters: std::collections::HashSet<char> =
+            run_and_capture(cli).split('-').map(|word| word.chars().next().unwrap()).collect();
+        assert_eq!(first_letters.len(), 1);
+    }
+
+    #[test]
+    fn option_alliterate_with() {
+        let cli = super::Cli::parse_from(&["petname", "--alliterate-with=a", "--words=3"]);
+        let first_letters: std::collections::HashSet<char> =
+            run_and_capture(cli).split('-').map(|word| word.chars().next().unwrap()).collect();
+        assert_eq!(first_letters, ['a'].into());
+    }
+
+    #[test]
+    fn compat_ubuntu() {
+        let cli = super::Cli::parse_from(&["petname", "--ubuntu", "--words=3"]);
+        let first_letters: std::collections::HashSet<char> =
+            run_and_capture(cli).split('-').map(|word| word.chars().next().unwrap()).collect();
+        assert_eq!(first_letters.len(), 1);
+    }
+
+    #[test]
+    fn option_seed() {
+        let cli = super::Cli::parse_from(&["petname", "--seed=12345", "--words=3"]);
+        assert_eq!(run_and_capture(cli), "meaningfully-enthralled-termite\n");
     }
 }

@@ -61,13 +61,14 @@ Options:
   -w, --words <WORDS>             Number of words in name [default: 2]
   -s, --separator <SEP>           Separator between words [default: -]
       --lists <LIST>              Use the built-in word lists with small, medium, or large words [default: medium] [possible values: small, medium, large]
+  -c, --complexity <NUM>          Alias for compatibility with upstream; prefer --lists instead
   -d, --dir <DIR>                 Use custom word lists by specifying a directory containing `adjectives.txt`, `adverbs.txt`, and `nouns.txt`
       --count <COUNT>             Generate multiple names; or use --stream to generate continuously [default: 1]
       --stream                    Stream names continuously
   -l, --letters <LETTERS>         Maximum number of letters in each word; 0 for unlimited [default: 0]
   -a, --alliterate                Generate names where each word begins with the same letter
   -A, --alliterate-with <LETTER>  Generate names where each word begins with the given letter
-  -u, --ubuntu                    Alias; see --alliterate
+  -u, --ubuntu                    Alias for compatibility with upstream; prefer --alliterate instead
       --seed <SEED>               Seed the RNG with this value (unsigned 64-bit integer in base-10)
   -h, --help                      Print help (see more with '--help')
   -V, --version                   Print version

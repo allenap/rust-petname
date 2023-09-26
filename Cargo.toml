@@ -30,6 +30,10 @@ default-rng = ["rand/std", "rand/std_rng"]
 # Allows the default word lists to be used.
 default-words = []
 
+[dev-dependencies]
+anyhow = "^1.0.75"
+tempdir = "^0.3.7"
+
 [build-dependencies]
 anyhow = "^1.0.75"
 

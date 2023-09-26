@@ -13,6 +13,7 @@
         "Seedable",
         "shellsession",
         "smallrng",
-        "struct"
+        "struct",
+        "tempdir"
     ]
 }
