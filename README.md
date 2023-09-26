@@ -2,6 +2,9 @@
 
 Generate human readable random names.
 
+**🚨 UPGRADING FROM 1.x? There are several breaking changes; please read the
+[notes](#upgrading-from-1x).**
+
 [Petnames][petname-intro] are useful when you need to name a large number of
 resources – like servers, services, perhaps bicycles for hire – and you want
 those names to be easy to recall and communicate unambiguously. For example,
@@ -141,7 +144,7 @@ $ petname --words=3 --stream | grep 'love.*\bsalmon$'
 
 ## Library
 
-You can use of rust-petname in your own Rust projects with `cargo add petname`.
+You can use rust-petname in your own Rust projects with `cargo add petname`.
 
 ## Features & `no_std` support
 
