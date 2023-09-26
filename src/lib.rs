@@ -4,38 +4,38 @@
 //! from upstream [petname](https://github.com/dustinkirkland/petname) are
 //! included with the `default-words` feature (enabled by default). See
 //! [`Petnames::small`], [`Petnames::medium`], and [`Petnames::large`] to select
-//! a particular built-in word list, or use the [`Default`] implementation.
+//! a particular built-in word list, or use [`Petnames::default()`].
 //!
 //! The other thing you need is a random number generator from [rand][]:
 //!
 //! ```rust
-//! # use petname::Generator;
+//! use petname::Generator; // Trait needs to be in scope for `generate`.
 //! # #[cfg(feature = "default-rng")]
 //! let mut rng = rand::thread_rng();
 //! # #[cfg(all(feature = "default-rng", feature = "default-words"))]
-//! let pname = petname::Petnames::default().generate(&mut rng, 7, ":");
+//! let name = petname::Petnames::default().generate(&mut rng, 7, ":").expect("no names");
 //! ```
 //!
 //! It may be more convenient to use the default random number generator:
 //!
 //! ```rust
-//! # use petname::Generator;
+//! use petname::Generator; // Trait needs to be in scope for `generate_one`.
 //! # #[cfg(all(feature = "default-rng", feature = "default-words"))]
-//! let pname = petname::Petnames::default().generate_one(7, ":");
+//! let name = petname::Petnames::default().generate_one(7, ":").expect("no names");
 //! ```
 //!
 //! There's a [convenience function][petname] that'll do all of this:
 //!
 //! ```rust
 //! # #[cfg(all(feature = "default-rng", feature = "default-words"))]
-//! let pname = petname::petname(7, ":");
+//! let name = petname::petname(7, ":");
 //! ```
 //!
 //! But the most flexible approach is to create an [`Iterator`] with
 //! [`iter`][`Petnames::iter`]:
 //!
 //! ```rust
-//! # use petname::Generator;
+//! use petname::Generator; // Trait needs to be in scope for `iter`.
 //! # #[cfg(feature = "default-rng")]
 //! let mut rng = rand::thread_rng();
 //! # #[cfg(feature = "default-words")]
@@ -55,13 +55,14 @@
 //! # #[cfg(feature = "default-words")]
 //! petnames.retain(|s| s.starts_with("b"));
 //! # #[cfg(all(feature = "default-rng", feature = "default-words"))]
-//! petnames.generate_one(3, ".");
+//! let name = petnames.generate_one(3, ".").expect("no names");
+//! assert!(name.starts_with('b'));
 //! ```
 //!
 //! There's another way to generate alliterative petnames which is useful when
-//! you want names to alliterate, but you don't need each name to use the same
+//! you you don't need or want each name to be limiting to using the same
 //! initial letter as the previous generated name. Create the `Petnames` as
-//! before, and then convert it into an `Alliterations`:
+//! before, and then convert it into an [`Alliterations`]:
 //!
 //! ```rust
 //! # use petname::Generator;
@@ -70,7 +71,8 @@
 //! # #[cfg(feature = "default-words")]
 //! let mut alliterations: petname::Alliterations = petnames.into();
 //! # #[cfg(all(feature = "default-rng", feature = "default-words"))]
-//! alliterations.generate_one(3, "/");
+//! alliterations.generate_one(3, "/").expect("no names");
+//! ```
 //!
 //! Both [`Petnames`] and [`Alliterations`] implement [`Generator`]; this needs
 //! to be in scope in order to generate names. It's [object-safe] so you can use
@@ -246,14 +248,13 @@ impl<'a> Petnames<'a> {
     /// # #[cfg(feature = "default-words")]
     /// let mut petnames = petname::Petnames::default();
     /// # #[cfg(feature = "default-words")]
-    /// petnames.retain(|s| s.starts_with("b"));
-    /// # #[cfg(feature = "default-words")]
-    /// # #[cfg(feature = "default-rng")]
-    /// petnames.generate_one(2, ".");
+    /// petnames.retain(|s| s.starts_with("h"));
+    /// # #[cfg(all(feature = "default-words", feature = "default-rng"))]
+    /// assert!(petnames.generate_one(2, ".").unwrap().starts_with('h'));
     /// ```
     ///
-    /// This is merely a convenience wrapper that applies the same predicate to
-    /// the adjectives, adverbs, and nouns lists.
+    /// This is a convenience wrapper that applies the same predicate to the
+    /// adjectives, adverbs, and nouns lists.
     ///
     pub fn retain<F>(&mut self, mut predicate: F)
     where
@@ -304,7 +305,7 @@ impl<'a> Generator<'a> for Petnames<'a> {
 
 #[cfg(feature = "default-words")]
 impl<'a> Default for Petnames<'a> {
-    /// Constructs a new `Petnames` from the default (medium) word lists.
+    /// Constructs a new [`Petnames`] from the default (medium) word lists.
     fn default() -> Self {
         Self::medium()
     }
@@ -401,6 +402,7 @@ impl<'a> Generator<'a> for Alliterations<'a> {
 
 #[cfg(feature = "default-words")]
 impl<'a> Default for Alliterations<'a> {
+    /// Constructs a new [`Alliterations`] from the default [`Petnames`].
     fn default() -> Self {
         Petnames::default().into()
     }
