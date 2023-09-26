@@ -8,14 +8,12 @@ use petname::{Alliterations, Generator, Petnames};
 fn alliterations_from_petnames() {
     let petnames = Petnames::new("able bold", "burly curly", "ant bee cow");
     let alliterations: Alliterations = petnames.into();
-    let alliterations_expected = Alliterations {
-        groups: [
-            ('a', Petnames::new("able", "", "ant")),
-            ('b', Petnames::new("bold", "burly", "bee")),
-            ('c', Petnames::new("", "curly", "cow")),
-        ]
-        .into(),
-    };
+    let alliterations_expected: Alliterations = [
+        ('a', Petnames::new("able", "", "ant")),
+        ('b', Petnames::new("bold", "burly", "bee")),
+        ('c', Petnames::new("", "curly", "cow")),
+    ]
+    .into();
     assert_eq!(alliterations_expected, alliterations);
 }
 
@@ -24,9 +22,8 @@ fn alliterations_retain_applies_given_predicate() {
     let petnames = Petnames::new("able bold", "burly curly", "ant bee cow");
     let mut alliterations: Alliterations = petnames.into();
     alliterations.retain(|first_letter, _petnames| *first_letter != 'b');
-    let alliterations_expected = Alliterations {
-        groups: [('a', Petnames::new("able", "", "ant")), ('c', Petnames::new("", "curly", "cow"))].into(),
-    };
+    let alliterations_expected: Alliterations =
+        [('a', Petnames::new("able", "", "ant")), ('c', Petnames::new("", "curly", "cow"))].into();
     assert_eq!(alliterations_expected, alliterations);
 }
 
@@ -66,7 +63,7 @@ fn alliterations_iter_yields_names() {
 #[test]
 fn alliterations_iter_yields_nothing_when_empty() {
     let mut rng = StepRng::new(0, 1);
-    let alliteration = Alliterations { groups: Default::default() };
+    let alliteration: Alliterations = [].into();
     assert_eq!(0, alliteration.cardinality(3));
     let mut names: Box<dyn Iterator<Item = _>> = alliteration.iter(&mut rng, 3, ".");
     assert_eq!(None, names.next());

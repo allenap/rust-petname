@@ -314,7 +314,7 @@ impl<'a> Default for Petnames<'a> {
 /// Word lists prepared for alliteration.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Alliterations<'a> {
-    pub groups: BTreeMap<char, Petnames<'a>>,
+    groups: BTreeMap<char, Petnames<'a>>,
 }
 
 impl<'a> Alliterations<'a> {
@@ -363,6 +363,15 @@ impl<'a> From<Petnames<'a>> for Alliterations<'a> {
                 acc
             }),
         }
+    }
+}
+
+impl<'a, GROUPS> From<GROUPS> for Alliterations<'a>
+where
+    GROUPS: IntoIterator<Item = (char, Petnames<'a>)>,
+{
+    fn from(groups: GROUPS) -> Self {
+        Self { groups: groups.into_iter().collect() }
     }
 }
 
