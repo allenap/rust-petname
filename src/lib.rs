@@ -58,6 +58,21 @@
 //! petnames.generate_one(3, ".");
 //! ```
 //!
+//! There's another way to generate alliterative petnames which is useful when
+//! you want names to alliterate, but you don't need each name to use the same
+//! initial letter as the previous generated name. Create the `Petnames` as
+//! before, and then convert it into an `Alliterations`:
+//!
+//! ```rust
+//! # use petname::Generator;
+//! # #[cfg(feature = "default-words")]
+//! let mut petnames = petname::Petnames::default();
+//! # #[cfg(feature = "default-words")]
+//! let mut alliterations: petname::Alliterations = petnames.into();
+//! # #[cfg(all(feature = "default-rng", feature = "default-words"))]
+//! alliterations.generate_one(3, "/");
+//! ```
+//!
 
 extern crate alloc;
 
