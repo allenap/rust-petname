@@ -128,7 +128,7 @@ pub trait Generator<'a> {
     ///
     fn generate<RNG>(&self, rng: &mut RNG, words: u8, separator: &str) -> Option<String>
     where
-        RNG: rand::Rng;
+        RNG: rand::RngCore;
 
     /// Generate a single new petname.
     ///
@@ -162,7 +162,7 @@ pub trait Generator<'a> {
         separator: &str,
     ) -> Box<dyn Iterator<Item = String> + 'a>
     where
-        RNG: rand::Rng,
+        RNG: rand::RngCore,
         Self: Sized,
     {
         let names = Names { generator: self, rng, words, separator: separator.to_string() };
@@ -276,7 +276,7 @@ impl<'a> Petnames<'a> {
 impl<'a> Generator<'a> for Petnames<'a> {
     fn generate<RNG>(&self, rng: &mut RNG, words: u8, separator: &str) -> Option<String>
     where
-        RNG: rand::Rng,
+        RNG: rand::RngCore,
     {
         let name = Itertools::intersperse(
             Lists::new(words).filter_map(|list| match list {
@@ -389,7 +389,7 @@ impl<'a> Generator<'a> for Alliterations<'a> {
     ///
     fn generate<RNG>(&self, rng: &mut RNG, words: u8, separator: &str) -> Option<String>
     where
-        RNG: rand::Rng,
+        RNG: rand::RngCore,
     {
         self.groups.values().choose(rng).and_then(|group| group.generate(rng, words, separator))
     }
@@ -481,7 +481,7 @@ impl Iterator for Lists {
 /// Iterator yielding petnames.
 struct Names<'a, RNG, GENERATOR>
 where
-    RNG: rand::Rng,
+    RNG: rand::RngCore,
     GENERATOR: Generator<'a>,
 {
     generator: &'a GENERATOR,
@@ -492,7 +492,7 @@ where
 
 impl<'a, RNG, GENERATOR> Iterator for Names<'a, RNG, GENERATOR>
 where
-    RNG: rand::Rng,
+    RNG: rand::RngCore,
     GENERATOR: Generator<'a>,
 {
     type Item = String;
