@@ -1,5 +1,5 @@
 [package]
-authors = ["Gavin Panella <gavinpanella@gmail.com>"]
+authors = ["Gavin Panella <gavin@allenap.me>"]
 categories = ["command-line-utilities", "no-std"]
 description = "Generate human readable random names. Usable as a library and from the command-line."
 edition = "2021"
