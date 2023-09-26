@@ -237,8 +237,10 @@ After installing the source (see above) run tests with: `cargo test`.
    the top). On macOS the command `cargo run -- -h | pbcopy` is helpful.
    **Note** that `--help` output is not the same as `-h` output: it's more
    verbose and too much for an overview.
-3. Build **and** test: `cargo build && cargo test`. The latter on its own does
-   do a build, but a test build can hide warnings about dead code, so do both.
+3. Build **and** test. The latter on its own does do a build, but a test build
+   can hide warnings about dead code, so do both.
+   - With default features: `cargo build && cargo test`
+   - Without: `cargo build --no-default-features && cargo test --no-default-features`
 4. Commit with message "Bump version to `$VERSION`."
 5. Tag with "v`$VERSION`", e.g. `git tag v1.0.10`.
 6. Push: `git push && git push --tags`.
