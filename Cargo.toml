@@ -39,7 +39,7 @@ anyhow = "^1.0.75"
 
 [dependencies]
 clap = { version = "^4.4.2", features = ["cargo", "derive"], optional = true }
-itertools = { version = "^0.11.0", default-features = false }
+itertools = { version = "^0.12.0", default-features = false }
 rand = { version = "^0.8.5", default-features = false }
 
 [package.metadata.docs.rs]
