@@ -4,7 +4,7 @@
 //! from upstream [petname](https://github.com/dustinkirkland/petname) are
 //! included with the `default-words` feature (enabled by default). See
 //! [`Petnames::small`], [`Petnames::medium`], and [`Petnames::large`] to select
-//! a particular built-in word list, or use [`Petnames::default()`].
+//! a particular built-in word list, or use [`Petnames::default`].
 //!
 //! The other thing you need is a random number generator from [rand][]:
 //!
@@ -61,9 +61,9 @@
 //! ```
 //!
 //! There's another way to generate alliterative petnames which is useful when
-//! you you don't need or want each name to be limiting to using the same
-//! initial letter as the previous generated name. Create the `Petnames` as
-//! before, and then convert it into an [`Alliterations`]:
+//! you you don't need or want each name to be limited to using the same initial
+//! letter as the previous generated name. Create the `Petnames` as before, and
+//! then convert it into an [`Alliterations`]:
 //!
 //! ```rust
 //! # use petname::Generator;
