@@ -6,15 +6,6 @@ on:
     - cron: "0 0 * * 0" # weekly
 
 jobs:
-  check:
-    name: Check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@stable
-      - run: cargo check
-      - run: cargo check --no-default-features
-
   test:
     name: Test
     runs-on: ubuntu-latest
@@ -35,7 +26,7 @@ jobs:
       - run: cargo fmt --all -- --check
 
   clippy:
-    name: Clippy
+    name: Clippy # i.e. `cargo check` plus extra linting.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
