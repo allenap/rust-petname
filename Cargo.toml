@@ -8,7 +8,7 @@ license = "Apache-2.0"
 name = "petname"
 readme = "README.md"
 repository = "https://github.com/allenap/rust-petname"
-version = "2.0.0-beta.2"
+version = "2.0.0-beta.3"
 
 [lib]
 name = "petname"
