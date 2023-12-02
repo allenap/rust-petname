@@ -115,47 +115,47 @@ mod compatibility {
     /// -w|--words number of words in the name, default is 2,
     #[test]
     fn compat_words() {
-        assert_eq!(Cli::parse_from(&["petname"]).words, 2);
-        assert_eq!(Cli::parse_from(&["petname", "-w", "7"]).words, 7);
-        assert_eq!(Cli::parse_from(&["petname", "--words", "5"]).words, 5);
-        assert_eq!(Cli::parse_from(&["petname", "--words=6"]).words, 6);
+        assert_eq!(Cli::parse_from(["petname"]).words, 2);
+        assert_eq!(Cli::parse_from(["petname", "-w", "7"]).words, 7);
+        assert_eq!(Cli::parse_from(["petname", "--words", "5"]).words, 5);
+        assert_eq!(Cli::parse_from(["petname", "--words=6"]).words, 6);
     }
 
     /// -l|--letters maximum number of letters in each word, default is
     /// unlimited,
     #[test]
     fn compat_letters() {
-        assert_eq!(Cli::parse_from(&["petname"]).letters, 0); // means: unlimited.
-        assert_eq!(Cli::parse_from(&["petname", "-l", "7"]).letters, 7);
-        assert_eq!(Cli::parse_from(&["petname", "--letters", "5"]).letters, 5);
-        assert_eq!(Cli::parse_from(&["petname", "--letters=6"]).letters, 6);
+        assert_eq!(Cli::parse_from(["petname"]).letters, 0); // means: unlimited.
+        assert_eq!(Cli::parse_from(["petname", "-l", "7"]).letters, 7);
+        assert_eq!(Cli::parse_from(["petname", "--letters", "5"]).letters, 5);
+        assert_eq!(Cli::parse_from(["petname", "--letters=6"]).letters, 6);
     }
 
     /// -s|--separator string used to separate name words, default is '-',
     #[test]
     fn compat_separator() {
-        assert_eq!(Cli::parse_from(&["petname"]).separator, "-");
-        assert_eq!(Cli::parse_from(&["petname", "-s", ":"]).separator, ":");
-        assert_eq!(Cli::parse_from(&["petname", "--separator", "|"]).separator, "|");
-        assert_eq!(Cli::parse_from(&["petname", "--separator=."]).separator, ".");
+        assert_eq!(Cli::parse_from(["petname"]).separator, "-");
+        assert_eq!(Cli::parse_from(["petname", "-s", ":"]).separator, ":");
+        assert_eq!(Cli::parse_from(["petname", "--separator", "|"]).separator, "|");
+        assert_eq!(Cli::parse_from(["petname", "--separator=."]).separator, ".");
     }
 
     /// -c|--complexity [0, 1, 2]; 0 = easy words, 1 = standard words, 2 =
     /// complex words, default=1,
     #[test]
     fn compat_complexity() {
-        assert_eq!(Cli::parse_from(&["petname"]).complexity, None);
-        assert_eq!(Cli::parse_from(&["petname", "-c", "0"]).complexity, Some(WordList::Small));
-        assert_eq!(Cli::parse_from(&["petname", "--complexity", "1"]).complexity, Some(WordList::Medium));
-        assert_eq!(Cli::parse_from(&["petname", "--complexity=2"]).complexity, Some(WordList::Large));
+        assert_eq!(Cli::parse_from(["petname"]).complexity, None);
+        assert_eq!(Cli::parse_from(["petname", "-c", "0"]).complexity, Some(WordList::Small));
+        assert_eq!(Cli::parse_from(["petname", "--complexity", "1"]).complexity, Some(WordList::Medium));
+        assert_eq!(Cli::parse_from(["petname", "--complexity=2"]).complexity, Some(WordList::Large));
     }
 
     /// -u|--ubuntu generate ubuntu-style names, alliteration of first character
     /// of each word.
     #[test]
     fn compat_ubuntu() {
-        assert_eq!(Cli::parse_from(&["petname"]).ubuntu, false);
-        assert_eq!(Cli::parse_from(&["petname", "-u"]).ubuntu, true);
-        assert_eq!(Cli::parse_from(&["petname", "--ubuntu"]).ubuntu, true);
+        assert!(!Cli::parse_from(["petname"]).ubuntu);
+        assert!(Cli::parse_from(["petname", "-u"]).ubuntu);
+        assert!(Cli::parse_from(["petname", "--ubuntu"]).ubuntu);
     }
 }

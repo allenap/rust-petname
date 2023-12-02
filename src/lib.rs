@@ -4,7 +4,7 @@
 //! from upstream [petname](https://github.com/dustinkirkland/petname) are
 //! included with the `default-words` feature (enabled by default). See
 //! [`Petnames::small`], [`Petnames::medium`], and [`Petnames::large`] to select
-//! a particular built-in word list, or use [`Petnames::default()`].
+//! a particular built-in word list, or use [`Petnames::default`].
 //!
 //! The other thing you need is a random number generator from [rand][]:
 //!
@@ -61,9 +61,9 @@
 //! ```
 //!
 //! There's another way to generate alliterative petnames which is useful when
-//! you you don't need or want each name to be limiting to using the same
-//! initial letter as the previous generated name. Create the `Petnames` as
-//! before, and then convert it into an [`Alliterations`]:
+//! you you don't need or want each name to be limited to using the same initial
+//! letter as the previous generated name. Create the `Petnames` as before, and
+//! then convert it into an [`Alliterations`]:
 //!
 //! ```rust
 //! # use petname::Generator;
@@ -101,7 +101,6 @@ use alloc::{
     vec::Vec,
 };
 
-use itertools::Itertools;
 use rand::seq::{IteratorRandom, SliceRandom};
 
 /// Convenience function to generate a new petname from default word lists.
@@ -288,7 +287,7 @@ impl<'a> Petnames<'a> {
 
 impl<'a> Generator<'a> for Petnames<'a> {
     fn generate(&self, rng: &mut dyn rand::RngCore, words: u8, separator: &str) -> Option<String> {
-        let name = Itertools::intersperse(
+        let name = itertools::intersperse(
             Lists::new(words).filter_map(|list| match list {
                 List::Adverb => self.adverbs.choose(rng).copied(),
                 List::Adjective => self.adjectives.choose(rng).copied(),
