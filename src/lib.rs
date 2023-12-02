@@ -101,7 +101,6 @@ use alloc::{
     vec::Vec,
 };
 
-use itertools::Itertools;
 use rand::seq::{IteratorRandom, SliceRandom};
 
 /// Convenience function to generate a new petname from default word lists.
@@ -288,7 +287,7 @@ impl<'a> Petnames<'a> {
 
 impl<'a> Generator<'a> for Petnames<'a> {
     fn generate(&self, rng: &mut dyn rand::RngCore, words: u8, separator: &str) -> Option<String> {
-        let name = Itertools::intersperse(
+        let name = itertools::intersperse(
             Lists::new(words).filter_map(|list| match list {
                 List::Adverb => self.adverbs.choose(rng).copied(),
                 List::Adjective => self.adjectives.choose(rng).copied(),
