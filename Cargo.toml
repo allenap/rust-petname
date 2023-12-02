@@ -36,6 +36,8 @@ tempdir = "0.3"
 
 [build-dependencies]
 anyhow = "1"
+proc-macro2 = "1"
+quote = "1"
 
 [dependencies]
 clap = { version = "4.4", features = ["cargo", "derive"], optional = true }
