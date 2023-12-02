@@ -199,19 +199,19 @@ mod integration {
 
     #[test]
     fn option_words() {
-        let cli = super::Cli::parse_from(&["petname", "--words=5"]);
+        let cli = super::Cli::parse_from(["petname", "--words=5"]);
         assert_eq!(run_and_capture(cli).split('-').count(), 5);
     }
 
     #[test]
     fn option_letters() {
-        let cli = super::Cli::parse_from(&["petname", "--letters=3", "--count=100", "--separator= "]);
+        let cli = super::Cli::parse_from(["petname", "--letters=3", "--count=100", "--separator= "]);
         assert_eq!(run_and_capture(cli).split_whitespace().map(str::len).max(), Some(3))
     }
 
     #[test]
     fn option_separator() {
-        let cli = super::Cli::parse_from(&["petname", "--separator=<:>"]);
+        let cli = super::Cli::parse_from(["petname", "--separator=<:>"]);
         assert_eq!(run_and_capture(cli).split("<:>").count(), 2)
     }
 
@@ -220,9 +220,9 @@ mod integration {
     #[test]
     fn option_dir_nouns() -> anyhow::Result<()> {
         let dir = tempdir::TempDir::new("petname")?;
-        fs::write(&dir.path().join("adverbs.txt"), "adverb")?;
-        fs::write(&dir.path().join("adjectives.txt"), "adjective")?;
-        fs::write(&dir.path().join("nouns.txt"), "noun")?;
+        fs::write(dir.path().join("adverbs.txt"), "adverb")?;
+        fs::write(dir.path().join("adjectives.txt"), "adjective")?;
+        fs::write(dir.path().join("nouns.txt"), "noun")?;
 
         let args: &[std::ffi::OsString] =
             &["petname".into(), "--dir".into(), dir.path().into(), "--words=3".into()];
@@ -237,10 +237,10 @@ mod integration {
     #[test]
     fn compat_dir_nouns_before_names() -> anyhow::Result<()> {
         let dir = tempdir::TempDir::new("petname")?;
-        fs::write(&dir.path().join("adverbs.txt"), "adverb")?;
-        fs::write(&dir.path().join("adjectives.txt"), "adjective")?;
-        fs::write(&dir.path().join("nouns.txt"), "noun")?;
-        fs::write(&dir.path().join("names.txt"), "name")?;
+        fs::write(dir.path().join("adverbs.txt"), "adverb")?;
+        fs::write(dir.path().join("adjectives.txt"), "adjective")?;
+        fs::write(dir.path().join("nouns.txt"), "noun")?;
+        fs::write(dir.path().join("names.txt"), "name")?;
 
         let args: &[std::ffi::OsString] =
             &["petname".into(), "--dir".into(), dir.path().into(), "--words=3".into()];
@@ -255,9 +255,9 @@ mod integration {
     #[test]
     fn compat_dir_names() -> anyhow::Result<()> {
         let dir = tempdir::TempDir::new("petname")?;
-        fs::write(&dir.path().join("adverbs.txt"), "adverb")?;
-        fs::write(&dir.path().join("adjectives.txt"), "adjective")?;
-        fs::write(&dir.path().join("names.txt"), "name")?;
+        fs::write(dir.path().join("adverbs.txt"), "adverb")?;
+        fs::write(dir.path().join("adjectives.txt"), "adjective")?;
+        fs::write(dir.path().join("names.txt"), "name")?;
 
         let args: &[std::ffi::OsString] =
             &["petname".into(), "--dir".into(), dir.path().into(), "--words=3".into()];
@@ -268,19 +268,19 @@ mod integration {
 
     #[test]
     fn option_lists() {
-        let cli = super::Cli::parse_from(&["petname", "--lists=large"]);
+        let cli = super::Cli::parse_from(["petname", "--lists=large"]);
         assert!(!run_and_capture(cli).is_empty());
     }
 
     #[test]
     fn compat_complexity() {
-        let cli = super::Cli::parse_from(&["petname", "--complexity=2"]);
+        let cli = super::Cli::parse_from(["petname", "--complexity=2"]);
         assert!(!run_and_capture(cli).is_empty());
     }
 
     #[test]
     fn option_alliterate() {
-        let cli = super::Cli::parse_from(&["petname", "--alliterate", "--words=3"]);
+        let cli = super::Cli::parse_from(["petname", "--alliterate", "--words=3"]);
         let first_letters: std::collections::HashSet<char> =
             run_and_capture(cli).split('-').map(|word| word.chars().next().unwrap()).collect();
         assert_eq!(first_letters.len(), 1);
@@ -288,7 +288,7 @@ mod integration {
 
     #[test]
     fn option_alliterate_with() {
-        let cli = super::Cli::parse_from(&["petname", "--alliterate-with=a", "--words=3"]);
+        let cli = super::Cli::parse_from(["petname", "--alliterate-with=a", "--words=3"]);
         let first_letters: std::collections::HashSet<char> =
             run_and_capture(cli).split('-').map(|word| word.chars().next().unwrap()).collect();
         assert_eq!(first_letters, ['a'].into());
@@ -296,7 +296,7 @@ mod integration {
 
     #[test]
     fn compat_ubuntu() {
-        let cli = super::Cli::parse_from(&["petname", "--ubuntu", "--words=3"]);
+        let cli = super::Cli::parse_from(["petname", "--ubuntu", "--words=3"]);
         let first_letters: std::collections::HashSet<char> =
             run_and_capture(cli).split('-').map(|word| word.chars().next().unwrap()).collect();
         assert_eq!(first_letters.len(), 1);
@@ -304,7 +304,7 @@ mod integration {
 
     #[test]
     fn option_seed() {
-        let cli = super::Cli::parse_from(&["petname", "--seed=12345", "--words=3"]);
+        let cli = super::Cli::parse_from(["petname", "--seed=12345", "--words=3"]);
         assert_eq!(run_and_capture(cli), "meaningfully-enthralled-termite\n");
     }
 }
