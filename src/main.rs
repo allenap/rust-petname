@@ -16,11 +16,15 @@ use rand::SeedableRng;
 fn main() {
     let cli = Cli::parse();
 
-    // Manage stdout.
-    let stdout = io::stdout();
-    let mut writer = io::BufWriter::new(stdout.lock());
+    // Manage stdout and buffer in a single scope so that `Drop` impls are
+    // called before we handle `run`'s result, e.g. by exiting the process.
+    let result = {
+        let stdout = io::stdout();
+        let mut writer = io::BufWriter::new(stdout.lock());
+        run(cli, &mut writer)
+    };
 
-    match run(cli, &mut writer) {
+    match result {
         Ok(()) | Err(Error::Disconnected) => {
             process::exit(0);
         }
@@ -137,6 +141,8 @@ where
             }
         }
     }
+
+    writer.flush().map_err(suppress_disconnect)?;
 
     Ok(())
 }
