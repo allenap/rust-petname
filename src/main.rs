@@ -311,6 +311,6 @@ mod integration {
     #[test]
     fn option_seed() {
         let cli = super::Cli::parse_from(["petname", "--seed=12345", "--words=3"]);
-        assert_eq!(run_and_capture(cli), "meaningfully-enthralled-termite\n");
+        assert_eq!(run_and_capture(cli), "meaningfully-enthralled-pinscher\n");
     }
 }
