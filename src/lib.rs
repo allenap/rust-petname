@@ -305,7 +305,7 @@ impl<'a> Generator<'a> for Petnames<'a> {
 }
 
 #[cfg(feature = "default-words")]
-impl<'a> Default for Petnames<'a> {
+impl Default for Petnames<'_> {
     /// Constructs a new [`Petnames`] from the default (medium) word lists.
     fn default() -> Self {
         Self::medium()
@@ -318,7 +318,7 @@ pub struct Alliterations<'a> {
     groups: BTreeMap<char, Petnames<'a>>,
 }
 
-impl<'a> Alliterations<'a> {
+impl Alliterations<'_> {
     /// Keep only those groups that match a predicate.
     pub fn retain<F>(&mut self, predicate: F)
     where
@@ -411,7 +411,7 @@ impl<'a> Generator<'a> for Alliterations<'a> {
 }
 
 #[cfg(feature = "default-words")]
-impl<'a> Default for Alliterations<'a> {
+impl Default for Alliterations<'_> {
     /// Constructs a new [`Alliterations`] from the default [`Petnames`].
     fn default() -> Self {
         Petnames::default().into()
