@@ -120,8 +120,8 @@ mod words {
 
 /// Trait that defines a generator of petnames.
 ///
-/// There are default implementations of `generate_one` and `iter`, i.e. only
-/// `generate` needs to be implemented.
+/// There are default implementations of `generate`, `generate_one` and `iter`, i.e. only
+/// `generate_raw` needs to be implemented.
 ///
 pub trait Generator<'a> {
     /// Generate a new petname.
@@ -142,7 +142,9 @@ pub trait Generator<'a> {
     /// lists are empty. For example, if there are no adverbs, requesting 3 or
     /// more words may still yield only "doubtful-salmon".
     ///
-    fn generate(&self, rng: &mut dyn rand::RngCore, words: u8, separator: &str) -> Option<String>;
+    fn generate(&self, rng: &mut dyn rand::RngCore, words: u8, separator: &str) -> Option<String> {
+        self.generate_raw(rng, words).map(|x| x.join(separator))
+    }
 
     /// Generate a single new petname.
     ///
@@ -153,6 +155,26 @@ pub trait Generator<'a> {
     fn generate_one(&self, words: u8, separator: &str) -> Option<String> {
         self.generate(&mut rand::thread_rng(), words, separator)
     }
+
+    /// Generate a new petname and return the constituent words.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use petname::Generator;
+    /// # #[cfg(all(feature = "default-rng", feature = "default-words"))]
+    /// let mut rng = rand::thread_rng();
+    /// # #[cfg(all(feature = "default-rng", feature = "default-words"))]
+    /// assert_eq!(7, petname::Petnames::default().generate_raw(&mut rng, 7).unwrap().len());
+    /// ```
+    ///
+    /// # Notes
+    ///
+    /// This may return fewer words than you request if one or more of the word
+    /// lists are empty. For example, if there are no adverbs, requesting 3 or
+    /// more words may still yield only `["doubtful", "salmon"]`.
+    ///
+    fn generate_raw(&self, rng: &mut dyn rand::RngCore, words: u8) -> Option<Vec<&'a str>>;
 
     /// Iterator yielding petnames.
     ///
@@ -286,16 +308,14 @@ impl<'a> Petnames<'a> {
 }
 
 impl<'a> Generator<'a> for Petnames<'a> {
-    fn generate(&self, rng: &mut dyn rand::RngCore, words: u8, separator: &str) -> Option<String> {
-        let name = itertools::intersperse(
-            Lists::new(words).filter_map(|list| match list {
+    fn generate_raw(&self, rng: &mut dyn rand::RngCore, words: u8) -> Option<Vec<&'a str>> {
+        let name = Lists::new(words)
+            .filter_map(|list| match list {
                 List::Adverb => self.adverbs.choose(rng).copied(),
                 List::Adjective => self.adjectives.choose(rng).copied(),
                 List::Noun => self.nouns.choose(rng).copied(),
-            }),
-            separator,
-        )
-        .collect::<String>();
+            })
+            .collect::<Vec<_>>();
         if name.is_empty() {
             None
         } else {
@@ -405,8 +425,8 @@ impl<'a> Generator<'a> for Alliterations<'a> {
     /// lists are empty. For example, if there are no adverbs, requesting 3 or
     /// more words may still yield only "doubtful-salmon".
     ///
-    fn generate(&self, rng: &mut dyn rand::RngCore, words: u8, separator: &str) -> Option<String> {
-        self.groups.values().choose(rng).and_then(|group| group.generate(rng, words, separator))
+    fn generate_raw(&self, rng: &mut dyn rand::RngCore, words: u8) -> Option<Vec<&'a str>> {
+        self.groups.values().choose(rng).and_then(|group| group.generate_raw(rng, words))
     }
 }
 
