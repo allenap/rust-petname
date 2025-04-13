@@ -44,7 +44,7 @@ fn alliterations_generate_uses_adverb_adjective_name() {
     let petnames = Petnames::new("able bold", "burly curly", "ant bee cow");
     let alliterations: Alliterations = petnames.into();
     assert_eq!(
-        alliterations.generate(&mut StepRng::new(1234567890, 1), 3, "-"),
+        alliterations.generate(&mut StepRng::new(6234567891, 1), 3, "-"),
         Some("burly-bold-bee".into())
     );
 }
