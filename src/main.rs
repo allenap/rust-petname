@@ -95,7 +95,7 @@ where
 
     // We're going to need a source of randomness.
     let mut rng =
-        cli.seed.map(rand::rngs::StdRng::seed_from_u64).unwrap_or_else(rand::rngs::StdRng::from_entropy);
+        cli.seed.map(rand::rngs::StdRng::seed_from_u64).unwrap_or_else(rand::rngs::StdRng::from_os_rng);
 
     // Stream, or print a limited number of words?
     let count = if cli.stream { None } else { Some(cli.count) };
@@ -311,6 +311,6 @@ mod integration {
     #[test]
     fn option_seed() {
         let cli = super::Cli::parse_from(["petname", "--seed=12345", "--words=3"]);
-        assert_eq!(run_and_capture(cli), "meaningfully-enthralled-pinscher\n");
+        assert_eq!(run_and_capture(cli), "meaningfully-enthralled-vendace\n");
     }
 }
