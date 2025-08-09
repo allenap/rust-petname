@@ -396,7 +396,7 @@ where
     }
 }
 
-fn group_words_by_first_letter(words: Words) -> BTreeMap<char, Vec<&str>> {
+fn group_words_by_first_letter(words: Words<'_>) -> BTreeMap<char, Vec<&str>> {
     words.iter().fold(BTreeMap::default(), |mut acc, s| match s.chars().next() {
         Some(first_letter) => {
             acc.entry(first_letter).or_default().push(s);
