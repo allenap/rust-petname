@@ -72,7 +72,7 @@ fn petnames_iter_yields_nothing_when_empty() {
 #[test]
 fn petnames_raw_works() {
     let mut rng = StepRng::new(0, 1);
-    let words = vec![":?-_", "_?:-", "-:_?"];
+    let words = [":?-_", "_?:-", "-:_?"];
     let petnames = Petnames::new(words[0], words[1], words[2]);
     let result = petnames.generate_raw(&mut rng, 3).unwrap();
     assert_eq!(3, result.len());
