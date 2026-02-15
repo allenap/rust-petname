@@ -113,9 +113,26 @@ pub fn petname(words: u8, separator: &str) -> Option<String> {
 /// A word list.
 pub type Words<'a> = Cow<'a, [&'a str]>;
 
+// Re=export `word_list!` macro.
+pub use petname_macros::word_list;
+
 #[cfg(feature = "default-words")]
 mod words {
-    include!(concat!(env!("OUT_DIR"), "/words.rs"));
+    pub mod small {
+        crate::word_list!("words/small/adjectives.txt");
+        crate::word_list!("words/small/adverbs.txt");
+        crate::word_list!("words/small/nouns.txt");
+    }
+    pub mod medium {
+        crate::word_list!("words/medium/adjectives.txt");
+        crate::word_list!("words/medium/adverbs.txt");
+        crate::word_list!("words/medium/nouns.txt");
+    }
+    pub mod large {
+        crate::word_list!("words/large/adjectives.txt");
+        crate::word_list!("words/large/adverbs.txt");
+        crate::word_list!("words/large/nouns.txt");
+    }
 }
 
 /// Trait that defines a generator of petnames.

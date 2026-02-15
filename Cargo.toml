@@ -1,3 +1,6 @@
+[workspace]
+members = ["petname-macros"]
+
 [package]
 authors = ["Gavin Panella <gavin@allenap.me>"]
 categories = ["command-line-utilities", "no-std"]
@@ -35,12 +38,8 @@ anyhow = "1"
 tempdir = "0.3"
 rand_core = "0.10"
 
-[build-dependencies]
-anyhow = "1"
-proc-macro2 = "1"
-quote = "1"
-
 [dependencies]
+petname-macros = { path = "petname-macros" }
 clap = { version = "4", features = ["cargo", "derive"], optional = true }
 rand = { version = "0.10", default-features = false }
 
