@@ -33,6 +33,7 @@ default-words = []
 [dev-dependencies]
 anyhow = "1"
 tempdir = "0.3"
+rand_core = "0.10"
 
 [build-dependencies]
 anyhow = "1"
@@ -40,9 +41,8 @@ proc-macro2 = "1"
 quote = "1"
 
 [dependencies]
-clap = { version = "4.4", features = ["cargo", "derive"], optional = true }
-itertools = { version = ">=0.11", default-features = false }
-rand = { version = "0.9", default-features = false }
+clap = { version = "4", features = ["cargo", "derive"], optional = true }
+rand = { version = "0.10", default-features = false }
 
 [package.metadata.docs.rs]
 # Limit docs.rs builds to a single tier one target, because they're identical on

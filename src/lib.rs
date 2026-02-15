@@ -11,7 +11,7 @@
 //! ```rust
 //! use petname::Generator; // Trait needs to be in scope for `generate`.
 //! # #[cfg(feature = "default-rng")]
-//! let mut rng = rand::thread_rng();
+//! let mut rng = rand::rngs::ThreadRng::default();
 //! # #[cfg(all(feature = "default-rng", feature = "default-words"))]
 //! let name = petname::Petnames::default().generate(&mut rng, 7, ":").expect("no names");
 //! ```
@@ -37,7 +37,7 @@
 //! ```rust
 //! use petname::Generator; // Trait needs to be in scope for `iter`.
 //! # #[cfg(feature = "default-rng")]
-//! let mut rng = rand::thread_rng();
+//! let mut rng = rand::rngs::ThreadRng::default();
 //! # #[cfg(feature = "default-words")]
 //! let petnames = petname::Petnames::default();
 //! # #[cfg(all(feature = "default-rng", feature = "default-words"))]
@@ -131,7 +131,7 @@ pub trait Generator<'a> {
     /// ```rust
     /// # use petname::Generator;
     /// # #[cfg(all(feature = "default-rng", feature = "default-words"))]
-    /// let mut rng = rand::thread_rng();
+    /// let mut rng = rand::rngs::ThreadRng::default();
     /// # #[cfg(all(feature = "default-rng", feature = "default-words"))]
     /// petname::Petnames::default().generate(&mut rng, 7, ":");
     /// ```
@@ -142,13 +142,13 @@ pub trait Generator<'a> {
     /// lists are empty. For example, if there are no adverbs, requesting 3 or
     /// more words may still yield only "doubtful-salmon".
     ///
-    fn generate(&self, rng: &mut dyn rand::RngCore, words: u8, separator: &str) -> Option<String> {
+    fn generate(&self, rng: &mut dyn rand::Rng, words: u8, separator: &str) -> Option<String> {
         self.generate_raw(rng, words).map(|x| x.join(separator))
     }
 
     /// Generate a single new petname.
     ///
-    /// This is like `generate` but uses `rand::thread_rng` as the random
+    /// This is like `generate` but uses `rand::rngs::ThreadRng` as the random
     /// source. For efficiency use `generate` when creating multiple names, or
     /// when you want to use a custom source of randomness.
     #[cfg(feature = "default-rng")]
@@ -163,7 +163,7 @@ pub trait Generator<'a> {
     /// ```rust
     /// # use petname::Generator;
     /// # #[cfg(all(feature = "default-rng", feature = "default-words"))]
-    /// let mut rng = rand::thread_rng();
+    /// let mut rng = rand::rngs::ThreadRng::default();
     /// # #[cfg(all(feature = "default-rng", feature = "default-words"))]
     /// assert_eq!(7, petname::Petnames::default().generate_raw(&mut rng, 7).unwrap().len());
     /// ```
@@ -174,7 +174,7 @@ pub trait Generator<'a> {
     /// lists are empty. For example, if there are no adverbs, requesting 3 or
     /// more words may still yield only `["doubtful", "salmon"]`.
     ///
-    fn generate_raw(&self, rng: &mut dyn rand::RngCore, words: u8) -> Option<Vec<&'a str>>;
+    fn generate_raw(&self, rng: &mut dyn rand::Rng, words: u8) -> Option<Vec<&'a str>>;
 
     /// Iterator yielding petnames.
     ///
@@ -183,7 +183,7 @@ pub trait Generator<'a> {
     /// ```rust
     /// # use petname::Generator;
     /// # #[cfg(all(feature = "default-rng", feature = "default-words"))]
-    /// let mut rng = rand::thread_rng();
+    /// let mut rng = rand::rngs::ThreadRng::default();
     /// # #[cfg(all(feature = "default-rng", feature = "default-words"))]
     /// let petnames = petname::Petnames::default();
     /// # #[cfg(all(feature = "default-rng", feature = "default-words"))]
@@ -193,7 +193,7 @@ pub trait Generator<'a> {
     /// ```
     fn iter(
         &'a self,
-        rng: &'a mut dyn rand::RngCore,
+        rng: &'a mut dyn rand::Rng,
         words: u8,
         separator: &str,
     ) -> Box<dyn Iterator<Item = String> + 'a>
@@ -308,7 +308,7 @@ impl<'a> Petnames<'a> {
 }
 
 impl<'a> Generator<'a> for Petnames<'a> {
-    fn generate_raw(&self, rng: &mut dyn rand::RngCore, words: u8) -> Option<Vec<&'a str>> {
+    fn generate_raw(&self, rng: &mut dyn rand::Rng, words: u8) -> Option<Vec<&'a str>> {
         let name = Lists::new(words)
             .filter_map(|list| match list {
                 List::Adverb => self.adverbs.choose(rng).copied(),
@@ -414,7 +414,7 @@ impl<'a> Generator<'a> for Alliterations<'a> {
     /// ```rust
     /// # use petname::Generator;
     /// # #[cfg(all(feature = "default-rng", feature = "default-words"))]
-    /// let mut rng = rand::thread_rng();
+    /// let mut rng = rand::rngs::ThreadRng::default();
     /// # #[cfg(all(feature = "default-rng", feature = "default-words"))]
     /// petname::Petnames::default().generate(&mut rng, 7, ":");
     /// ```
@@ -425,7 +425,7 @@ impl<'a> Generator<'a> for Alliterations<'a> {
     /// lists are empty. For example, if there are no adverbs, requesting 3 or
     /// more words may still yield only "doubtful-salmon".
     ///
-    fn generate_raw(&self, rng: &mut dyn rand::RngCore, words: u8) -> Option<Vec<&'a str>> {
+    fn generate_raw(&self, rng: &mut dyn rand::Rng, words: u8) -> Option<Vec<&'a str>> {
         self.groups.values().choose(rng).and_then(|group| group.generate_raw(rng, words))
     }
 }
@@ -520,7 +520,7 @@ where
     GENERATOR: Generator<'a>,
 {
     generator: &'a GENERATOR,
-    rng: &'a mut dyn rand::RngCore,
+    rng: &'a mut dyn rand::Rng,
     words: u8,
     separator: String,
 }

@@ -39,6 +39,7 @@ fn main() {
 enum Error {
     Io(io::Error),
     FileIo(path::PathBuf, io::Error),
+    Randomness(String),
     Cardinality(String),
     Alliteration(String),
     Disconnected,
@@ -49,6 +50,7 @@ impl fmt::Display for Error {
         match *self {
             Error::Io(ref e) => write!(f, "{e}"),
             Error::FileIo(ref path, ref e) => write!(f, "{e}: {}", path.display()),
+            Error::Randomness(ref message) => write!(f, "no source of randomness: {message}"),
             Error::Cardinality(ref message) => write!(f, "cardinality is zero: {message}"),
             Error::Alliteration(ref message) => write!(f, "cannot alliterate: {message}"),
             Error::Disconnected => write!(f, "caller disconnected / stopped reading"),
@@ -94,8 +96,12 @@ where
     }
 
     // We're going to need a source of randomness.
-    let mut rng =
-        cli.seed.map(rand::rngs::StdRng::seed_from_u64).unwrap_or_else(rand::rngs::StdRng::from_os_rng);
+    let mut rng = if let Some(seed) = cli.seed {
+        rand::rngs::StdRng::seed_from_u64(seed)
+    } else {
+        rand::rngs::StdRng::try_from_rng(&mut rand::rngs::SysRng)
+            .map_err(|err| Error::Randomness(err.to_string()))?
+    };
 
     // Stream, or print a limited number of words?
     let count = if cli.stream { None } else { Some(cli.count) };
