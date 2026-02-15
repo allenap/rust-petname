@@ -1,8 +1,8 @@
 use std::collections::HashSet;
 
-use rand::rngs::mock::StepRng;
-
 use petname::{Alliterations, Generator, Petnames};
+
+mod mocks;
 
 #[test]
 fn alliterations_from_petnames() {
@@ -44,14 +44,14 @@ fn alliterations_generate_uses_adverb_adjective_name() {
     let petnames = Petnames::new("able bold", "burly curly", "ant bee cow");
     let alliterations: Alliterations = petnames.into();
     assert_eq!(
-        alliterations.generate(&mut StepRng::new(6234567891, 1), 3, "-"),
+        alliterations.generate(&mut mocks::StepRng::new(6234567891, 1), 3, "-"),
         Some("burly-bold-bee".into())
     );
 }
 
 #[test]
 fn alliterations_iter_yields_names() {
-    let mut rng = StepRng::new(1234567890, 1234567890);
+    let mut rng = mocks::StepRng::new(1234567890, 1234567890);
     let petnames = Petnames::new("able bold", "burly curly", "ant bee cow");
     let alliterations: Alliterations = petnames.into();
     let names = alliterations.iter(&mut rng, 3, " ");
@@ -62,7 +62,7 @@ fn alliterations_iter_yields_names() {
 
 #[test]
 fn alliterations_iter_yields_nothing_when_empty() {
-    let mut rng = StepRng::new(0, 1);
+    let mut rng = mocks::StepRng::new(0, 1);
     let alliteration: Alliterations = [].into();
     assert_eq!(0, alliteration.cardinality(3));
     let mut names: Box<dyn Iterator<Item = _>> = alliteration.iter(&mut rng, 3, ".");
