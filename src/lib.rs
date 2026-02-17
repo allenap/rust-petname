@@ -92,6 +92,7 @@
 //!
 
 extern crate alloc;
+extern crate self as petname;
 
 use alloc::{
     borrow::Cow,
@@ -113,27 +114,8 @@ pub fn petname(words: u8, separator: &str) -> Option<String> {
 /// A word list.
 pub type Words<'a> = Cow<'a, [&'a str]>;
 
-// Re-export `words!` macro.
-pub use petname_macros::words;
-
-#[cfg(feature = "default-words")]
-mod words {
-    pub mod small {
-        crate::words!("words/small/adjectives.txt");
-        crate::words!("words/small/adverbs.txt");
-        crate::words!("words/small/nouns.txt");
-    }
-    pub mod medium {
-        crate::words!("words/medium/adjectives.txt");
-        crate::words!("words/medium/adverbs.txt");
-        crate::words!("words/medium/nouns.txt");
-    }
-    pub mod large {
-        crate::words!("words/large/adjectives.txt");
-        crate::words!("words/large/adverbs.txt");
-        crate::words!("words/large/nouns.txt");
-    }
-}
+// Re-export proc macro.
+pub use petname_macros::petnames;
 
 /// Trait that defines a generator of petnames.
 ///
@@ -241,31 +223,19 @@ impl<'a> Petnames<'a> {
     /// Constructs a new `Petnames` from the small word lists.
     #[cfg(feature = "default-words")]
     pub fn small() -> Self {
-        Self {
-            adjectives: Cow::from(&words::small::ADJECTIVES[..]),
-            adverbs: Cow::from(&words::small::ADVERBS[..]),
-            nouns: Cow::from(&words::small::NOUNS[..]),
-        }
+        petnames!(dir = "words/small")
     }
 
     /// Constructs a new `Petnames` from the medium word lists.
     #[cfg(feature = "default-words")]
     pub fn medium() -> Self {
-        Self {
-            adjectives: Cow::from(&words::medium::ADJECTIVES[..]),
-            adverbs: Cow::from(&words::medium::ADVERBS[..]),
-            nouns: Cow::from(&words::medium::NOUNS[..]),
-        }
+        petnames!(dir = "words/medium")
     }
 
     /// Constructs a new `Petnames` from the large word lists.
     #[cfg(feature = "default-words")]
     pub fn large() -> Self {
-        Self {
-            adjectives: Cow::from(&words::large::ADJECTIVES[..]),
-            adverbs: Cow::from(&words::large::ADVERBS[..]),
-            nouns: Cow::from(&words::large::NOUNS[..]),
-        }
+        petnames!(dir = "words/large")
     }
 
     /// Constructs a new `Petnames` from the given word lists.
