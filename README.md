@@ -161,6 +161,8 @@ _deselected_, since all features are enabled by default:
   - **NOTE** that `clap` is **not** necessary for the library at all, and you
     can deselect it, but it is presently a default feature since otherwise it's
     inconvenient to build the binary. This will probably change in the future.
+- `macros` enables the `petnames!` macro. It's required for the `default-words`
+  feature, but otherwise it can be deselected.
 
 All of these are required to build the command-line utility.
 

@@ -92,6 +92,8 @@
 //!
 
 extern crate alloc;
+
+#[cfg(feature = "macros")]
 extern crate self as petname;
 
 use alloc::{
@@ -115,6 +117,7 @@ pub fn petname(words: u8, separator: &str) -> Option<String> {
 pub type Words<'a> = Cow<'a, [&'a str]>;
 
 // Re-export proc macro.
+#[cfg(feature = "macros")]
 pub use petname_macros::petnames;
 
 /// Trait that defines a generator of petnames.
