@@ -177,6 +177,10 @@ be a good starting point.
 [wasm]: https://webassembly.org/
 [smallrng::seed_from_u64]: https://docs.rs/rand/latest/rand/rngs/struct.SmallRng.html#method.seed_from_u64
 
+## Upgrading from 2.x
+
+TODO
+
 ## Upgrading from 1.x
 
 Version 2.0 brought several breaking changes to both the API and the
@@ -239,18 +243,19 @@ After installing the source (see above) run tests with: `cargo test`.
 ### Making a release
 
 1. Bump version in [`Cargo.toml`](Cargo.toml).
-2. Paste updated `-h` output into [`README.md`](README.md) (this file; see near
+1. Update the dependency on `petnames-macros` too.
+1. Paste updated `-h` output into [`README.md`](README.md) (this file; see near
    the top). On macOS the command `cargo run -- -h | pbcopy` is helpful.
    **Note** that `--help` output is not the same as `-h` output: it's more
    verbose and too much for an overview.
-3. Build **and** test. The latter on its own does do a build, but a test build
+1. Build **and** test. The latter on its own does do a build, but a test build
    can hide warnings about dead code, so do both.
    - With default features: `cargo build && cargo test`
    - Without: `cargo build --no-default-features && cargo test --no-default-features`
-4. Commit with message "Bump version to `$VERSION`."
-5. Tag with "v`$VERSION`", e.g. `git tag v1.0.10`.
-6. Push: `git push && git push --tags`.
-7. Publish: `cargo publish`.
+1. Commit with message "Bump version to `$VERSION`."
+1. Tag with "v`$VERSION`", e.g. `git tag v1.0.10`.
+1. Push: `git push && git push --tags`.
+1. Publish: `cargo publish`.
 
 ## License
 
