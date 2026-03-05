@@ -1,0 +1,20 @@
+[package]
+name = "petname-macros"
+description = "Proc macros for the petname crate."
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+version.workspace = true
+
+[lib]
+proc-macro = true
+
+[dependencies]
+proc-macro2 = "1"
+quote = "1"
+
+[dependencies.syn]
+version = "2"
+default-features = false
+features = ["parsing", "proc-macro"]

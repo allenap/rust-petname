@@ -24,7 +24,7 @@
 //! let name = petname::Petnames::default().generate_one(7, ":").expect("no names");
 //! ```
 //!
-//! There's a [convenience function][petname] that'll do all of this:
+//! There's a [convenience function][petname()] that'll do all of this:
 //!
 //! ```rust
 //! # #[cfg(all(feature = "default-rng", feature = "default-words"))]
@@ -93,6 +93,9 @@
 
 extern crate alloc;
 
+#[cfg(feature = "macros")]
+extern crate self as petname;
+
 use alloc::{
     borrow::Cow,
     boxed::Box,
@@ -113,10 +116,9 @@ pub fn petname(words: u8, separator: &str) -> Option<String> {
 /// A word list.
 pub type Words<'a> = Cow<'a, [&'a str]>;
 
-#[cfg(feature = "default-words")]
-mod words {
-    include!(concat!(env!("OUT_DIR"), "/words.rs"));
-}
+// Re-export proc macro.
+#[cfg(feature = "macros")]
+pub use petname_macros::petnames;
 
 /// Trait that defines a generator of petnames.
 ///
@@ -224,31 +226,19 @@ impl<'a> Petnames<'a> {
     /// Constructs a new `Petnames` from the small word lists.
     #[cfg(feature = "default-words")]
     pub fn small() -> Self {
-        Self {
-            adjectives: Cow::from(&words::small::ADJECTIVES[..]),
-            adverbs: Cow::from(&words::small::ADVERBS[..]),
-            nouns: Cow::from(&words::small::NOUNS[..]),
-        }
+        petnames!("words/small")
     }
 
     /// Constructs a new `Petnames` from the medium word lists.
     #[cfg(feature = "default-words")]
     pub fn medium() -> Self {
-        Self {
-            adjectives: Cow::from(&words::medium::ADJECTIVES[..]),
-            adverbs: Cow::from(&words::medium::ADVERBS[..]),
-            nouns: Cow::from(&words::medium::NOUNS[..]),
-        }
+        petnames!("words/medium")
     }
 
     /// Constructs a new `Petnames` from the large word lists.
     #[cfg(feature = "default-words")]
     pub fn large() -> Self {
-        Self {
-            adjectives: Cow::from(&words::large::ADJECTIVES[..]),
-            adverbs: Cow::from(&words::large::ADVERBS[..]),
-            nouns: Cow::from(&words::large::NOUNS[..]),
-        }
+        petnames!("words/large")
     }
 
     /// Constructs a new `Petnames` from the given word lists.

@@ -1,14 +1,24 @@
-[package]
+[workspace]
+members = ["petname-macros"]
+
+[workspace.package]
 authors = ["Gavin Panella <gavin@allenap.me>"]
+edition = "2021"
+license = "Apache-2.0"
+version = "3.0.0-alpha.3"
+repository = "https://github.com/allenap/rust-petname"
+
+[package]
+name = "petname"
 categories = ["command-line-utilities", "no-std"]
 description = "Generate human readable random names. Usable as a library and from the command-line."
-edition = "2021"
 keywords = ["pet", "name", "rand", "random", "generator"]
-license = "Apache-2.0"
-name = "petname"
 readme = "README.md"
-repository = "https://github.com/allenap/rust-petname"
-version = "3.0.0-alpha.3"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+version.workspace = true
 
 [lib]
 name = "petname"
@@ -24,23 +34,21 @@ required-features = ["clap", "default-rng", "default-words"]
 # `clap` is NOT required for the library but is required for the command-line
 # binary. Omitting it from the `default` list means that it must be specified
 # _every time_ you want to build the binary, so it's here as a convenience.
-default = ["clap", "default-rng", "default-words"]
+default = ["clap", "default-rng", "default-words", "macros"]
 # Allows generating petnames with thread rng.
 default-rng = ["rand/thread_rng"]
 # Allows the default word lists to be used.
-default-words = []
+default-words = ["macros"]
+# Provides the `petnames!` proc macro.
+macros = ["dep:petname-macros"]
 
 [dev-dependencies]
 anyhow = "1"
 tempdir = "0.3"
 rand_core = "0.10"
 
-[build-dependencies]
-anyhow = "1"
-proc-macro2 = "1"
-quote = "1"
-
 [dependencies]
+petname-macros = { version = "3.0.0-alpha.3", path = "petname-macros", optional = true }
 clap = { version = "4", features = ["cargo", "derive"], optional = true }
 rand = { version = "0.10", default-features = false }
 
