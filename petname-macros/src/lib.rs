@@ -1,4 +1,5 @@
 use proc_macro::TokenStream;
+use std::borrow::Cow;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
@@ -49,7 +50,9 @@ impl Parse for PetnamesInput {
                 other => {
                     return Err(syn::Error::new(
                         name.span(),
-                        format!("unexpected argument `{other}`, expected `adjectives`, `adverbs`, or `nouns`"),
+                        format!(
+                            "unexpected argument `{other}`, expected `adjectives`, `adverbs`, or `nouns`"
+                        ),
                     ));
                 }
             }
@@ -62,17 +65,48 @@ impl Parse for PetnamesInput {
     }
 }
 
-impl PetnamesInput {
-    /// Resolve a relative path for a word list, using the directory prefix if given.
-    ///
-    /// Returns an error if neither a directory nor an explicit path is provided.
-    fn resolve(&self, name: &str, path: &Option<LitStr>, default_filename: &str) -> Result<String, String> {
-        match (&self.dir, path) {
-            (Some(d), Some(p)) => Ok(format!("{}/{}", d.value(), p.value())),
-            (Some(d), None) => Ok(format!("{}/{}", d.value(), default_filename)),
-            (None, Some(p)) => Ok(p.value()),
-            (None, None) => Err(format!("missing `{name}` argument (or an unnamed directory)")),
+/// Paths resolved from input to the `petnames!` macro.
+///
+/// These can be relative paths, because they have not yet been anchored to
+/// `CARGO_MANIFEST_DIR` for example, or absolute, like after a call to
+/// [`Self::resolve`].
+struct PetnamesPaths {
+    adjectives: PathBuf,
+    adverbs: PathBuf,
+    nouns: PathBuf,
+}
+
+impl From<PetnamesInput> for PetnamesPaths {
+    fn from(input: PetnamesInput) -> Self {
+        fn value_or<'a>(value: Option<&'_ LitStr>, default: &'a str) -> Cow<'a, str> {
+            value.map(LitStr::value).map(Cow::from).unwrap_or_else(|| default.into())
         }
+
+        let path_adjectives = value_or(input.adjectives.as_ref(), "adjectives.txt");
+        let path_adverbs = value_or(input.adverbs.as_ref(), "adverbs.txt");
+        let path_nouns = value_or(input.nouns.as_ref(), "nouns.txt");
+
+        match input.dir.as_ref().map(LitStr::value).map(PathBuf::from) {
+            Some(base) => PetnamesPaths {
+                adjectives: base.join(path_adjectives.as_ref()),
+                adverbs: base.join(path_adverbs.as_ref()),
+                nouns: base.join(path_nouns.as_ref()),
+            },
+            None => PetnamesPaths {
+                adjectives: path_adjectives.as_ref().into(),
+                adverbs: path_adverbs.as_ref().into(),
+                nouns: path_nouns.as_ref().into(),
+            },
+        }
+    }
+}
+
+impl PetnamesPaths {
+    fn resolve(mut self, path: &Path) -> Self {
+        self.adjectives = path.join(self.adjectives);
+        self.adverbs = path.join(self.adverbs);
+        self.nouns = path.join(self.nouns);
+        self
     }
 }
 
@@ -93,31 +127,29 @@ impl PetnamesInput {
 /// let p = petname::petnames!(
 ///     "words/small",
 ///     adjectives = "adjectives.txt",
-///     nouns = "nouns.txt",
 ///     adverbs = "adverbs.txt",
+///     nouns = "nouns.txt",
 /// );
 /// ```
 #[proc_macro]
 pub fn petnames(input: TokenStream) -> TokenStream {
-    let parsed: PetnamesInput = syn::parse(input).expect("petnames! parse error");
-
-    let adj_rel = parsed.resolve("adjectives", &parsed.adjectives, "adjectives.txt")
-        .expect("petnames! argument error");
-    let adv_rel = parsed.resolve("adverbs", &parsed.adverbs, "adverbs.txt")
-        .expect("petnames! argument error");
-    let noun_rel = parsed.resolve("nouns", &parsed.nouns, "nouns.txt")
-        .expect("petnames! argument error");
+    let input: PetnamesInput = syn::parse(input).expect("petnames! parse error");
 
     let manifest_dir = std::env::var_os("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
-    let base = PathBuf::from(&manifest_dir);
+    let manifest_path = PathBuf::from(&manifest_dir);
+    let paths = PetnamesPaths::from(input).resolve(&manifest_path);
 
-    let adj_words = read_and_process(&base, &adj_rel);
-    let adv_words = read_and_process(&base, &adv_rel);
-    let noun_words = read_and_process(&base, &noun_rel);
+    let (adj_words, adj_count) = read_and_process(&paths.adjectives);
+    let (adv_words, adv_count) = read_and_process(&paths.adverbs);
+    let (noun_words, noun_count) = read_and_process(&paths.nouns);
 
-    let adj_count = adj_words.len();
-    let adv_count = adv_words.len();
-    let noun_count = noun_words.len();
+    fn path_str<'a>(path: &'a Path, name: &'static str) -> &'a str {
+        path.to_str().unwrap_or_else(|| panic!("{name} path not UTF-8: {}", path.display()))
+    }
+
+    let adj_path = path_str(&paths.adjectives, "adjectives");
+    let adv_path = path_str(&paths.adverbs, "adverbs");
+    let noun_path = path_str(&paths.nouns, "nouns");
 
     let expanded: TokenStream2 = quote! {
         {
@@ -126,12 +158,13 @@ pub fn petnames(input: TokenStream) -> TokenStream {
             // the files as dependencies so that changes trigger a rebuild. The
             // results are discarded. While `proc_macro::tracked_path::path` is
             // unstable, this is the idiomatic workaround.
-            const _: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/", #adj_rel));
-            const _: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/", #adv_rel));
-            const _: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/", #noun_rel));
-            static ADJECTIVES: [&str; #adj_count] = [ #( #adj_words ),* ];
-            static ADVERBS: [&str; #adv_count] = [ #( #adv_words ),* ];
-            static NOUNS: [&str; #noun_count] = [ #( #noun_words ),* ];
+            const _: &'static str = include_str!(#adj_path);
+            const _: &'static str = include_str!(#adv_path);
+            const _: &'static str = include_str!(#noun_path);
+            // This is where the word lists are actually embedded.
+            static ADJECTIVES: [&'static str; #adj_count] = [ #( #adj_words ),* ];
+            static ADVERBS: [&'static str; #adv_count] = [ #( #adv_words ),* ];
+            static NOUNS: [&'static str; #noun_count] = [ #( #noun_words ),* ];
             ::petname::Petnames {
                 adjectives: ::alloc::borrow::Cow::Borrowed(&ADJECTIVES[..]),
                 adverbs: ::alloc::borrow::Cow::Borrowed(&ADVERBS[..]),
@@ -143,11 +176,12 @@ pub fn petnames(input: TokenStream) -> TokenStream {
     expanded.into()
 }
 
-fn read_and_process(base: &Path, relative_path: &str) -> Vec<String> {
-    let file_path = base.join(relative_path);
-    let contents = std::fs::read_to_string(&file_path)
-        .unwrap_or_else(|e| panic!("Failed to read {}: {e}", file_path.display()));
-    split_words_deduplicate_and_sort(&contents)
+fn read_and_process(path: &Path) -> (Vec<String>, usize) {
+    let contents =
+        std::fs::read_to_string(path).unwrap_or_else(|e| panic!("could not read {}: {e}", path.display()));
+    let words = split_words_deduplicate_and_sort(&contents);
+    let count = words.len();
+    (words, count)
 }
 
 fn split_words_deduplicate_and_sort(input: &str) -> Vec<String> {
