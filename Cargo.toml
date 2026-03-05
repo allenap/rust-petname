@@ -1,17 +1,24 @@
 [workspace]
 members = ["petname-macros"]
 
-[package]
+[workspace.package]
 authors = ["Gavin Panella <gavin@allenap.me>"]
+edition = "2021"
+license = "Apache-2.0"
+version = "3.0.0-alpha.3"
+repository = "https://github.com/allenap/rust-petname"
+
+[package]
+name = "petname"
 categories = ["command-line-utilities", "no-std"]
 description = "Generate human readable random names. Usable as a library and from the command-line."
-edition = "2021"
 keywords = ["pet", "name", "rand", "random", "generator"]
-license = "Apache-2.0"
-name = "petname"
 readme = "README.md"
-repository = "https://github.com/allenap/rust-petname"
-version = "3.0.0-alpha.3"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+version.workspace = true
 
 [lib]
 name = "petname"
