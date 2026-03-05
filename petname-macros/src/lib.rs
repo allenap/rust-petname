@@ -9,75 +9,69 @@ use syn::{Ident, LitStr, Token};
 
 /// Input to the `petnames!` macro.
 ///
-/// Supports two forms:
-/// - `petnames!(dir = "words/small")` — finds adjectives.txt, adverbs.txt,
-///   nouns.txt in the given directory.
-/// - `petnames!(adjectives = "...", adverbs = "...", nouns = "...")` — explicit
-///   paths for each word list.
-enum PetnamesInput {
-    Dir(LitStr),
-    Explicit { adjectives: LitStr, adverbs: LitStr, nouns: LitStr },
+/// An optional unnamed directory prefix may be followed by named arguments
+/// for each word list. Individual paths are resolved relative to the directory
+/// if one is given, or used directly otherwise.
+struct PetnamesInput {
+    dir: Option<LitStr>,
+    adjectives: Option<LitStr>,
+    adverbs: Option<LitStr>,
+    nouns: Option<LitStr>,
 }
 
 impl Parse for PetnamesInput {
     fn parse(input: ParseStream) -> syn::Result<Self> {
-        let first: Ident = input.parse()?;
-        input.parse::<Token![=]>()?;
-        let first_value: LitStr = input.parse()?;
+        let mut dir = None;
+        let mut adjectives = None;
+        let mut adverbs = None;
+        let mut nouns = None;
 
-        if first == "dir" {
-            Ok(PetnamesInput::Dir(first_value))
-        } else {
-            // Parse remaining named arguments in any order.
-            let mut adjectives = None;
-            let mut adverbs = None;
-            let mut nouns = None;
-
-            // Assign the first argument.
-            match first.to_string().as_str() {
-                "adjectives" => adjectives = Some(first_value),
-                "adverbs" => adverbs = Some(first_value),
-                "nouns" => nouns = Some(first_value),
-                other => {
-                    let message = format!(
-                        "unexpected argument `{other}`, expected `dir`, `adjectives`, `adverbs`, or `nouns`"
-                    );
-                    return Err(syn::Error::new(first.span(), message));
-                }
-            }
-
-            // Parse the rest.
-            while input.peek(Token![,]) {
+        // Optional unnamed directory argument.
+        if input.peek(LitStr) {
+            dir = Some(input.parse::<LitStr>()?);
+            if input.peek(Token![,]) {
                 input.parse::<Token![,]>()?;
-                if input.is_empty() {
-                    break; // trailing comma
+            }
+        }
+
+        // Named arguments in any order.
+        while !input.is_empty() {
+            let name: Ident = input.parse()?;
+            input.parse::<Token![=]>()?;
+            let value: LitStr = input.parse()?;
+            match name.to_string().as_str() {
+                "adjectives" if adjectives.is_none() => adjectives = Some(value),
+                "adverbs" if adverbs.is_none() => adverbs = Some(value),
+                "nouns" if nouns.is_none() => nouns = Some(value),
+                "adjectives" | "adverbs" | "nouns" => {
+                    return Err(syn::Error::new(name.span(), format!("duplicate argument `{name}`")));
                 }
-                let name: Ident = input.parse()?;
-                input.parse::<Token![=]>()?;
-                let value: LitStr = input.parse()?;
-                match name.to_string().as_str() {
-                    "adjectives" if adjectives.is_none() => adjectives = Some(value),
-                    "adverbs" if adverbs.is_none() => adverbs = Some(value),
-                    "nouns" if nouns.is_none() => nouns = Some(value),
-                    "adjectives" | "adverbs" | "nouns" => {
-                        return Err(syn::Error::new(name.span(), format!("duplicate argument `{name}`")));
-                    }
-                    other => {
-                        let message = format!(
-                            "unexpected argument `{other}`, expected `adjectives`, `adverbs`, or `nouns`"
-                        );
-                        return Err(syn::Error::new(name.span(), message));
-                    }
+                other => {
+                    return Err(syn::Error::new(
+                        name.span(),
+                        format!("unexpected argument `{other}`, expected `adjectives`, `adverbs`, or `nouns`"),
+                    ));
                 }
             }
+            if input.peek(Token![,]) {
+                input.parse::<Token![,]>()?;
+            }
+        }
 
-            Ok(PetnamesInput::Explicit {
-                adjectives: adjectives
-                    .ok_or_else(|| syn::Error::new(input.span(), "missing `adjectives` argument"))?,
-                adverbs: adverbs
-                    .ok_or_else(|| syn::Error::new(input.span(), "missing `adverbs` argument"))?,
-                nouns: nouns.ok_or_else(|| syn::Error::new(input.span(), "missing `nouns` argument"))?,
-            })
+        Ok(PetnamesInput { dir, adjectives, adverbs, nouns })
+    }
+}
+
+impl PetnamesInput {
+    /// Resolve a relative path for a word list, using the directory prefix if given.
+    ///
+    /// Returns an error if neither a directory nor an explicit path is provided.
+    fn resolve(&self, name: &str, path: &Option<LitStr>, default_filename: &str) -> Result<String, String> {
+        match (&self.dir, path) {
+            (Some(d), Some(p)) => Ok(format!("{}/{}", d.value(), p.value())),
+            (Some(d), None) => Ok(format!("{}/{}", d.value(), default_filename)),
+            (None, Some(p)) => Ok(p.value()),
+            (None, None) => Err(format!("missing `{name}` argument (or an unnamed directory)")),
         }
     }
 }
@@ -85,31 +79,37 @@ impl Parse for PetnamesInput {
 /// Construct a [`Petnames`] from word list files at compile time.
 ///
 /// ```ignore
-/// // Directory form — looks for adjectives.txt, adverbs.txt, nouns.txt:
-/// let p = petname::petnames!(dir = "words/small");
+/// // Unnamed directory — looks for adjectives.txt, adverbs.txt, nouns.txt:
+/// let p = petname::petnames!("words/small");
 ///
-/// // Explicit form — specify each file path:
+/// // Named arguments — specify each file path explicitly:
 /// let p = petname::petnames!(
 ///     adjectives = "words/small/adjectives.txt",
 ///     adverbs = "words/small/adverbs.txt",
 ///     nouns = "words/small/nouns.txt",
 /// );
+///
+/// // Directory prefix with overrides — paths are resolved relative to the directory:
+/// let p = petname::petnames!(
+///     "words/small",
+///     adjectives = "adjectives.txt",
+///     nouns = "nouns.txt",
+///     adverbs = "adverbs.txt",
+/// );
 /// ```
 #[proc_macro]
 pub fn petnames(input: TokenStream) -> TokenStream {
     let parsed: PetnamesInput = syn::parse(input).expect("petnames! parse error");
+
+    let adj_rel = parsed.resolve("adjectives", &parsed.adjectives, "adjectives.txt")
+        .expect("petnames! argument error");
+    let adv_rel = parsed.resolve("adverbs", &parsed.adverbs, "adverbs.txt")
+        .expect("petnames! argument error");
+    let noun_rel = parsed.resolve("nouns", &parsed.nouns, "nouns.txt")
+        .expect("petnames! argument error");
+
     let manifest_dir = std::env::var_os("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
     let base = PathBuf::from(&manifest_dir);
-
-    let (adj_rel, adv_rel, noun_rel) = match &parsed {
-        PetnamesInput::Dir(dir) => {
-            let d = dir.value();
-            (format!("{d}/adjectives.txt"), format!("{d}/adverbs.txt"), format!("{d}/nouns.txt"))
-        }
-        PetnamesInput::Explicit { adjectives, adverbs, nouns } => {
-            (adjectives.value(), adverbs.value(), nouns.value())
-        }
-    };
 
     let adj_words = read_and_process(&base, &adj_rel);
     let adv_words = read_and_process(&base, &adv_rel);

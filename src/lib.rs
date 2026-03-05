@@ -223,19 +223,19 @@ impl<'a> Petnames<'a> {
     /// Constructs a new `Petnames` from the small word lists.
     #[cfg(feature = "default-words")]
     pub fn small() -> Self {
-        petnames!(dir = "words/small")
+        petnames!("words/small")
     }
 
     /// Constructs a new `Petnames` from the medium word lists.
     #[cfg(feature = "default-words")]
     pub fn medium() -> Self {
-        petnames!(dir = "words/medium")
+        petnames!("words/medium")
     }
 
     /// Constructs a new `Petnames` from the large word lists.
     #[cfg(feature = "default-words")]
     pub fn large() -> Self {
-        petnames!(dir = "words/large")
+        petnames!("words/large")
     }
 
     /// Constructs a new `Petnames` from the given word lists.
