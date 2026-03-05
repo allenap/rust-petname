@@ -24,7 +24,7 @@
 //! let name = petname::Petnames::default().generate_one(7, ":").expect("no names");
 //! ```
 //!
-//! There's a [convenience function][petname] that'll do all of this:
+//! There's a [convenience function][petname()] that'll do all of this:
 //!
 //! ```rust
 //! # #[cfg(all(feature = "default-rng", feature = "default-words"))]

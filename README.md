@@ -175,7 +175,7 @@ be a good starting point.
 [clap]: https://crates.io/crates/clap
 [no_std]: https://doc.rust-lang.org/reference/crates-and-source-files.html#preludes-and-no_std
 [wasm]: https://webassembly.org/
-[smallrng::seed_from_u64]: https://docs.rs/rand/latest/rand/trait.SeedableRng.html#method.seed_from_u64
+[smallrng::seed_from_u64]: https://docs.rs/rand/latest/rand/rngs/struct.SmallRng.html#method.seed_from_u64
 
 ## Upgrading from 1.x
 
