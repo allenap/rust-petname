@@ -51,7 +51,7 @@ fn petnames_generate_uses_adverb_adjective_name() {
         nouns: vec!["noun"].into(),
     };
     assert_eq!(
-        petnames.generate(&mut mocks::StepRng::new(0, 1), 3, "-"),
+        petnames.iter(&mut mocks::StepRng::new(0, 1), 3, "-").next(),
         Some("adverb-adjective-noun".into())
     );
 }
@@ -78,7 +78,8 @@ fn petnames_raw_works() {
     let mut rng = mocks::StepRng::new(0, 1);
     let words = [":?-_", "_?:-", "-:_?"];
     let petnames = Petnames::new(words[0], words[1], words[2]);
-    let result = petnames.generate_raw(&mut rng, 3).unwrap();
-    assert_eq!(3, result.len());
-    assert_eq!(vec![words[1], words[0], words[2]], result);
+    let mut buf = Vec::new();
+    petnames.generate_parts(&mut buf, &mut rng, 3);
+    assert_eq!(3, buf.len());
+    assert_eq!(vec![words[1], words[0], words[2]], buf);
 }

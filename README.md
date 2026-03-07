@@ -196,11 +196,8 @@ largely unchanged.
 - The `rand` dependency has been bumped from 0.9 to 0.10. If you depend on
   `rand` types (e.g. `RngCore`, `SmallRng`) directly in your own code, you will
   need to upgrade your `rand` dependency to match.
-- The `Generator` trait has a new required method, `generate_raw`. If you have a
-  custom implementation of `Generator`, you must implement `generate_raw` (which
-  returns `Option<Vec<&'a str>>`). The `generate` method now has a default
-  implementation built on top of `generate_raw`, so you may be able to remove
-  your existing `generate` implementation.
+- The `Generator` trait has changed. The `generate` and `generate_one` methods
+  are gone. The one required method now is `generate_parts`.
 - The built-in word lists are now compiled into the library via the `petnames!`
   proc macro rather than via `build.rs`. This is mostly an internal change, but
   it does mean that the `petname-macros` crate is a new compile-time dependency
