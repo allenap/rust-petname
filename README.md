@@ -26,6 +26,7 @@ too.
 Notable features:
 
 - Choose from 3 built-in word lists, or provide your own.
+- A `petnames!` macro to statically embed word lists at compile-time.
 - Alliterative names, like _viable-vulture_, _proper-pony_, ...
 - Build names with 1-255 components (adjectives, adverbs, nouns).
 - Name components can be unseparated, or joined by any character or string.
