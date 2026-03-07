@@ -110,27 +110,61 @@ impl PetnamesPaths {
     }
 }
 
-/// Construct a [`Petnames`] from word list files at compile time.
+/// Construct a `Petnames` from word list files at compile time.
+///
+/// Word list files should be UTF-8, with words delimited by whitespace.
+///
+/// ⚠️ Note when reading the examples that all non-absolute paths are ultimately
+/// resolved relative to the build-time `CARGO_MANIFEST_DIR`, i.e. the directory
+/// of `Cargo.toml` for the crate being compiled.
+///
+/// # Examples
+///
+/// Given a directory path it will look for `adjectives.txt`, `adverbs.txt`, and
+/// `nouns.txt` within that directory:
 ///
 /// ```ignore
-/// // Unnamed directory — looks for adjectives.txt, adverbs.txt, nouns.txt:
 /// let p = petname::petnames!("words/small");
+/// ```
 ///
-/// // Named arguments — specify each file path explicitly:
+/// One can specify each file path explicitly too:
+///
+/// ```ignore
 /// let p = petname::petnames!(
 ///     adjectives = "words/small/adjectives.txt",
-///     adverbs = "words/small/adverbs.txt",
-///     nouns = "words/small/nouns.txt",
-/// );
-///
-/// // Directory prefix with overrides — paths are resolved relative to the directory:
-/// let p = petname::petnames!(
-///     "words/small",
-///     adjectives = "adjectives.txt",
-///     adverbs = "adverbs.txt",
-///     nouns = "nouns.txt",
+///     adverbs = "words/medium/adverbs.txt",
+///     nouns = "words/large/nouns.txt",
 /// );
 /// ```
+///
+/// Given both a directory path and individual paths, the files' paths are
+/// resolved relative to the directory:
+///
+/// ```ignore
+/// let p = petname::petnames!(
+///     "words",
+///     adjectives = "small/adjectives.txt",
+///     adverbs = "medium/adverbs.txt",
+///     nouns = "large/nouns.txt",
+/// );
+/// ```
+///
+/// It is not necessary to specify all of the paths. This will look for
+/// `adjectives.txt`, `adverbs.txt`, and `cars.txt` in the `words/other`
+/// directory:
+///
+/// ```ignore
+/// let p = petname::petnames!("words/other", nouns = "cars.txt");
+/// ```
+///
+/// It is not necessary to specify _any_ of the paths. This will look for
+/// `adjectives.txt`, `adverbs.txt`, and `nouns.txt` in the crate root
+/// directory:
+///
+/// ```ignore
+/// let p = petname::petnames!();
+/// ```
+///
 #[proc_macro]
 pub fn petnames(input: TokenStream) -> TokenStream {
     let input: PetnamesInput = syn::parse(input).expect("petnames! parse error");
