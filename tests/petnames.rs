@@ -74,12 +74,11 @@ fn petnames_iter_yields_nothing_when_empty() {
 }
 
 #[test]
-fn petnames_raw_works() {
+fn petnames_generate_into_works() {
     let mut rng = mocks::StepRng::new(0, 1);
-    let words = [":?-_", "_?:-", "-:_?"];
+    let words = ["adj", "adv", "noun"];
     let petnames = Petnames::new(words[0], words[1], words[2]);
-    let mut buf = Vec::new();
-    petnames.generate_parts(&mut buf, &mut rng, 3);
-    assert_eq!(3, buf.len());
-    assert_eq!(vec![words[1], words[0], words[2]], buf);
+    let mut buf = String::new();
+    petnames.generate_into(&mut buf, &mut rng, 3, " ");
+    assert_eq!("adv adj noun", &buf);
 }

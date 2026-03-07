@@ -197,7 +197,7 @@ largely unchanged.
   `rand` types (e.g. `RngCore`, `SmallRng`) directly in your own code, you will
   need to upgrade your `rand` dependency to match.
 - The `Generator` trait has changed. The `generate` and `generate_one` methods
-  are gone. The one required method now is `generate_parts`.
+  are gone. The one required method now is `generate_into`.
 - The built-in word lists are now compiled into the library via the `petnames!`
   proc macro rather than via `build.rs`. This is mostly an internal change, but
   it does mean that the `petname-macros` crate is a new compile-time dependency

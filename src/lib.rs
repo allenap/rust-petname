@@ -121,32 +121,43 @@ pub use petname_macros::petnames;
 /// Trait that defines a generator of petnames.
 ///
 /// There is a default implementation of [`iter`][`Self::iter`]; only
-/// [`generate_parts`][`Self::generate_parts`] needs to be implemented.
+/// [`generate_into`][`Self::generate_into`] needs to be implemented.
 ///
 pub trait Generator<'a> {
-    /// Generate the parts for a new petname.
+    /// Generate a petname into a given [`String`] buffer.
+    ///
+    /// This can be more efficient than [`iter`][`Self::iter`] when generating
+    /// many names because the buffer can be reused; `iter` creates a new
+    /// `String` on every iteration.
+    ///
+    /// This method does not clear the buffer. The generated name is pushed at
+    /// the end of the string.
     ///
     /// # Examples
     ///
     /// ```rust
     /// # use petname::Generator;
-    /// let mut buf: Vec<&str> = Vec::with_capacity(7);
+    /// let mut buf = String::new();
     /// # #[cfg(all(feature = "default-rng", feature = "default-words"))] {
     /// let mut rng = rand::rngs::ThreadRng::default();
-    /// petname::Petnames::default().generate_parts(&mut buf, &mut rng, 7);
-    /// assert_eq!(7, buf.len());
+    /// petname::Petnames::default().generate_into(&mut buf, &mut rng, 7, "::".into());
+    /// assert_eq!(7, buf.split("::").count());
     /// # }
     /// ```
     ///
     /// # Notes
     ///
-    /// This may return fewer words than you request if one or more of the word
-    /// lists are empty. For example, if there are no adverbs, requesting 3 or
-    /// more words may still yield only `["doubtful", "salmon"]`.
+    /// This constructed name _may_ return fewer words than you request if one
+    /// or more of the word lists are empty. For example, if there are no
+    /// adverbs, requesting 3 or more words may still yield only `["doubtful",
+    /// "salmon"]`.
     ///
-    fn generate_parts(&self, buf: &mut Vec<&'a str>, rng: &mut dyn rand::Rng, words: u8);
+    fn generate_into(&self, buf: &mut String, rng: &mut dyn rand::Rng, words: u8, separator: &str);
 
     /// Iterator yielding petnames.
+    ///
+    /// A new [`String`] is allocated for each name yielded. See also the notes
+    /// on [`generate_into`][`Self::generate_into`].
     ///
     /// # Examples
     ///
@@ -264,12 +275,28 @@ impl<'a> Petnames<'a> {
 }
 
 impl<'a> Generator<'a> for Petnames<'a> {
-    fn generate_parts(&self, buf: &mut Vec<&'a str>, rng: &mut dyn rand::Rng, words: u8) {
-        buf.extend(Lists::new(words).filter_map(|list| match list {
-            List::Adverb => self.adverbs.choose(rng).copied(),
-            List::Adjective => self.adjectives.choose(rng).copied(),
-            List::Noun => self.nouns.choose(rng).copied(),
-        }));
+    fn generate_into(&self, buf: &mut String, rng: &mut dyn rand::Rng, words: u8, separator: &str) {
+        for list in Lists::new(words) {
+            match list {
+                List::Adverb => {
+                    if let Some(word) = self.adverbs.choose(rng).copied() {
+                        buf.push_str(word);
+                        buf.push_str(separator);
+                    }
+                }
+                List::Adjective => {
+                    if let Some(word) = self.adjectives.choose(rng).copied() {
+                        buf.push_str(word);
+                        buf.push_str(separator);
+                    }
+                }
+                List::Noun => {
+                    if let Some(word) = self.nouns.choose(rng).copied() {
+                        buf.push_str(word);
+                    }
+                }
+            };
+        }
     }
 }
 
@@ -356,27 +383,9 @@ fn group_words_by_first_letter(words: Words<'_>) -> BTreeMap<char, Vec<&str>> {
 }
 
 impl<'a> Generator<'a> for Alliterations<'a> {
-    /// Generate a new petname.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// # use petname::Generator;
-    /// # #[cfg(all(feature = "default-rng", feature = "default-words"))] {
-    /// let mut rng = rand::rngs::ThreadRng::default();
-    /// petname::Petnames::default().iter(&mut rng, 7, ":").next();
-    /// # }
-    /// ```
-    ///
-    /// # Notes
-    ///
-    /// This may return fewer words than you request if one or more of the word
-    /// lists are empty. For example, if there are no adverbs, requesting 3 or
-    /// more words may still yield only "doubtful-salmon".
-    ///
-    fn generate_parts(&self, buf: &mut Vec<&'a str>, rng: &mut dyn rand::Rng, words: u8) {
+    fn generate_into(&self, buf: &mut String, rng: &mut dyn rand::Rng, words: u8, separator: &str) {
         if let Some(group) = self.groups.values().choose(rng) {
-            group.generate_parts(buf, rng, words);
+            group.generate_into(buf, rng, words, separator);
         }
     }
 }
@@ -483,20 +492,9 @@ where
     type Item = String;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let mut parts = Vec::with_capacity(self.words as usize);
-        self.generator.generate_parts(&mut parts, self.rng, self.words);
-        let mut parts = parts.iter();
-        if let Some(first) = parts.next() {
-            let mut buf = String::new();
-            buf.push_str(first);
-            for part in parts {
-                buf.push_str(&self.separator);
-                buf.push_str(part);
-            }
-            Some(buf)
-        } else {
-            None
-        }
+        let mut buf = String::new();
+        self.generator.generate_into(&mut buf, self.rng, self.words, &self.separator);
+        (!buf.is_empty()).then_some(buf)
     }
 }
 
