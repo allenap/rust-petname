@@ -99,11 +99,11 @@ user    0m0.032s
 sys     0m0.008s
 
 $ time target/release/petname
-cool-guinea
+contiguous-seriema
 
-real    0m0.002s
-user    0m0.002s
-sys     0m0.000s
+real    0m0.004s
+user    0m0.001s
+sys     0m0.002s
 ```
 
 These timings are irrelevant if you only need to name a single thing, but if you
@@ -118,9 +118,9 @@ sys     0m5.163s
 
 $ time { for i in $(seq 1000); do target/release/petname; done; } > /dev/null
 
-real    0m2.199s
-user    0m1.333s
-sys     0m0.987s
+real    0m2.293s
+user    0m1.044s
+sys     0m1.003s
 ```
 
 To be fair, `/usr/bin/petname` is a shell script. The Go command-line version
@@ -134,12 +134,12 @@ considerably:
 ```shellsession
 $ time target/release/petname --count=10000000 > /dev/null
 
-real    0m1.327s
-user    0m1.322s
-sys     0m0.004s
+real    0m0.785s
+user    0m0.767s
+sys     0m0.016s
 ```
 
-That's ~240,000 (two hundred and forty thousand) times faster, for about 7.5
+That's ~408,000 (four hundred and eight thousand) times faster, for about 12.7
 million petnames a second on this hardware. This is useful if you want to apply
 an external filter to the names being generated:
 
