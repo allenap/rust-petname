@@ -94,13 +94,7 @@ extern crate alloc;
 #[cfg(feature = "macros")]
 extern crate self as petname;
 
-use alloc::{
-    borrow::Cow,
-    boxed::Box,
-    collections::BTreeMap,
-    string::{String, ToString},
-    vec::Vec,
-};
+use alloc::{borrow::Cow, boxed::Box, collections::BTreeMap, string::String, vec::Vec};
 
 use rand::seq::{IndexedRandom, IteratorRandom};
 
@@ -174,12 +168,12 @@ pub trait Generator<'a> {
         &'a self,
         rng: &'a mut dyn rand::Rng,
         words: u8,
-        separator: &str,
+        separator: &'a str,
     ) -> Box<dyn Iterator<Item = String> + 'a>
     where
         Self: Sized,
     {
-        let names = Names { generator: self, rng, words, separator: separator.to_string() };
+        let names = Names { generator: self, rng, words, separator };
         Box::new(names)
     }
 }
@@ -482,7 +476,7 @@ where
     generator: &'a GENERATOR,
     rng: &'a mut dyn rand::Rng,
     words: u8,
-    separator: String,
+    separator: &'a str,
 }
 
 impl<'a, GENERATOR> Iterator for Names<'a, GENERATOR>
@@ -493,7 +487,7 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut buf = String::new();
-        self.generator.generate_into(&mut buf, self.rng, self.words, &self.separator);
+        self.generator.generate_into(&mut buf, self.rng, self.words, self.separator);
         (!buf.is_empty()).then_some(buf)
     }
 }
