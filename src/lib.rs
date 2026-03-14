@@ -344,6 +344,16 @@ impl Default for Petnames<'_> {
 }
 
 /// Word lists prepared for alliteration.
+///
+/// Construct from a [`Petnames`] with [`Alliterations::from`]. This takes that
+/// instance and splits it into several _groups_. In each, all of the nouns,
+/// adverbs, and adjectives will start with the same letter. A name generated
+/// from any of them will naturally produce an alliterative petname.
+///
+/// You can also create one of these from an iterable of `(char, Petnames)`.
+/// This might be useful for testing, or for repurposing this to generate names
+/// with assonance, say.
+///
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Alliterations<'a> {
     groups: BTreeMap<char, Petnames<'a>>,
@@ -351,6 +361,15 @@ pub struct Alliterations<'a> {
 
 impl Alliterations<'_> {
     /// Keep only those groups that match a predicate.
+    ///
+    /// A _group_ is defined by a [`char`] and a corresponding [`Petnames`]
+    /// instance.
+    ///
+    /// The given predicate can return `true` to keep the group or `false` to
+    /// evict it. It can also mutate each `Petnames` instance. The notional
+    /// invariant is that every noun, adverb, and adjective in that `Petnames`
+    /// instance should start with that `char`, but it's okay to break that.
+    ///
     pub fn retain<F>(&mut self, predicate: F)
     where
         F: FnMut(&char, &mut Petnames) -> bool,
