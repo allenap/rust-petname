@@ -1,18 +1,15 @@
 #![no_std]
 //!
-//! You can populate [`Petnames`] with your own word lists, but the word lists
-//! from upstream [petname](https://github.com/dustinkirkland/petname) are
-//! included with the `default-words` feature (enabled by default). See
-//! [`Petnames::small`], [`Petnames::medium`], and [`Petnames::large`] to select
-//! a particular built-in word list, or use [`Petnames::default`].
+//! [`petname()`] will generate a single name with a default random number
+//! generator:
 //!
-//! For more flexibility, see the [`petnames!`] macro, with which you can
-//! statically embed your own word lists at compile-time. This is available with
-//! the `macros` feature (enabled by default). The same mechanism is used to
-//! embed the default word lists.
+//! ```rust
+//! # #[cfg(all(feature = "default-rng", feature = "default-words"))]
+//! let name: Option<String> = petname::petname(3, "-");
+//! // e.g. deftly-apt-swiftlet
+//! ```
 //!
-//! To generate a petname, the other thing you need is a random number generator
-//! from [rand][]:
+//! You can bring your own random number generator from [rand][]:
 //!
 //! ```rust
 //! use petname::Generator; // Trait needs to be in scope for `iter`.
@@ -24,19 +21,12 @@
 //! # } }
 //! ```
 //!
-//! There's a [convenience function][petname()] that'll generate a single name
-//! with a default random number generator:
+//! See that call to [`iter`][`Petnames::iter`] above? It returned a standard
+//! [`Iterator`]. This is more efficient than calling [`petname()`] repeatedly,
+//! plus you get all the features of Rust iterators:
 //!
 //! ```rust
-//! # #[cfg(all(feature = "default-rng", feature = "default-words"))]
-//! let name = petname::petname(7, ":");
-//! ```
-//!
-//! A more flexible approach is to create an [`Iterator`] with
-//! [`iter`][`Petnames::iter`]:
-//!
-//! ```rust
-//! use petname::Generator; // Trait needs to be in scope for `iter`.
+//! # use petname::Generator; // Trait needs to be in scope for `iter`.
 //! # #[cfg(feature = "default-rng")]
 //! let mut rng = rand::rngs::ThreadRng::default();
 //! # #[cfg(feature = "default-words")]
@@ -45,6 +35,27 @@
 //! let ten_thousand_names: Vec<String> =
 //!   petnames.iter(&mut rng, 3, "_").take(10000).collect();
 //! ```
+//!
+//! 💡 Even more efficient but slightly less convenient is
+//! [`Generator::generate_into`].
+//!
+//! # Word lists
+//!
+//! You can populate [`Petnames`] with your own word lists at runtime, but the
+//! word lists from upstream [petname][] are included with the `default-words`
+//! feature (which is enabled by default). See [`Petnames::small`],
+//! [`Petnames::medium`], and [`Petnames::large`] to select a particular
+//! built-in word list, or use [`Petnames::default`].
+//!
+//! ## Embedding your own word lists
+//!
+//! The [`petnames!`] macro will statically embed your own word lists at
+//! compile-time. This is available with the `macros` feature (enabled by
+//! default). This same mechanism is used to embed the default word lists.
+//!
+//! [petname]: https://github.com/dustinkirkland/petname
+//!
+//! ## Basic filtering
 //!
 //! You can modify the word lists to, for example, only use words beginning with
 //! the letter "b":
@@ -60,10 +71,12 @@
 //! # } }
 //! ```
 //!
-//! There's another way to generate alliterative petnames which is useful when
-//! you don't need or want each name to be limited to using the same initial
-//! letter as the previous generated name. Create the `Petnames` as before, and
-//! then convert it into an [`Alliterations`]:
+//! ## Alliterating
+//!
+//! There is another way to generate alliterative petnames, useful in particular
+//! when you don't need or want each name to be limited to using the same
+//! initial letter as the previous generated name. Create the `Petnames` as
+//! before, and then convert it into an [`Alliterations`]:
 //!
 //! ```rust
 //! # use petname::Generator;
@@ -74,6 +87,8 @@
 //! alliterations.iter(&mut rand::rng(), 3, "/").next().expect("no names");
 //! # }
 //! ```
+//!
+//! # The [`Generator`] trait
 //!
 //! Both [`Petnames`] and [`Alliterations`] implement [`Generator`]; this needs
 //! to be in scope in order to generate names. It's [object-safe] so you can use
