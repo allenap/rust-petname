@@ -151,7 +151,7 @@ pub trait Generator<'a> {
     /// let mut buf = String::new();
     /// # #[cfg(all(feature = "default-rng", feature = "default-words"))] {
     /// let mut rng = rand::rngs::ThreadRng::default();
-    /// petname::Petnames::default().generate_into(&mut buf, &mut rng, 7, "::".into());
+    /// petname::Petnames::default().generate_into(&mut buf, &mut rng, 7, "::");
     /// assert_eq!(7, buf.split("::").count());
     /// # }
     /// ```
