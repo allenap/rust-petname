@@ -113,7 +113,7 @@ where
         if alliterations.cardinality(cli.words) == 0 {
             return Err(Error::Alliteration("word lists have no initial letters in common".to_string()));
         }
-        printer(writer, alliterations.iter(&mut rng, cli.words, &cli.separator), count)
+        printer(writer, alliterations, &mut rng, cli.words, &cli.separator, count)
     } else if let Some(alliterate_with) = cli.alliterate_with {
         let mut alliterations: Alliterations = petnames.into();
         alliterations.retain(|first_letter, group| {
@@ -124,26 +124,45 @@ where
                 "no petnames begin with the chosen alliteration character".to_string(),
             ));
         }
-        printer(writer, alliterations.iter(&mut rng, cli.words, &cli.separator), count)
+        printer(writer, alliterations, &mut rng, cli.words, &cli.separator, count)
     } else {
-        printer(writer, petnames.iter(&mut rng, cli.words, &cli.separator), count)
+        printer(writer, petnames, &mut rng, cli.words, &cli.separator, count)
     }
 }
 
-fn printer<OUT, NAMES>(writer: &mut OUT, names: NAMES, count: Option<usize>) -> Result<(), Error>
+fn printer<'a, OUT, GENERATOR, RNG>(
+    writer: &mut OUT,
+    generator: GENERATOR,
+    rng: &mut RNG,
+    words: u8,
+    separator: &str,
+    count: Option<usize>,
+) -> Result<(), Error>
 where
     OUT: io::Write,
-    NAMES: Iterator<Item = String>,
+    GENERATOR: Generator<'a>,
+    RNG: rand::Rng,
 {
+    let mut buf = String::new();
     match count {
-        None => {
-            for name in names {
-                writeln!(writer, "{name}").map_err(suppress_disconnect)?;
+        None => loop {
+            generator.generate_into(&mut buf, rng, words, separator);
+            if buf.is_empty() {
+                break;
+            } else {
+                writeln!(writer, "{buf}").map_err(suppress_disconnect)?;
+                buf.clear();
             }
-        }
+        },
         Some(n) => {
-            for name in names.take(n) {
-                writeln!(writer, "{name}")?;
+            for _ in 0..n {
+                generator.generate_into(&mut buf, rng, words, separator);
+                if buf.is_empty() {
+                    break;
+                } else {
+                    writeln!(writer, "{buf}")?;
+                    buf.clear();
+                }
             }
         }
     }

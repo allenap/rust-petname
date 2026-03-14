@@ -99,11 +99,11 @@ user    0m0.032s
 sys     0m0.008s
 
 $ time target/release/petname
-cool-guinea
+contiguous-seriema
 
-real    0m0.002s
-user    0m0.002s
-sys     0m0.000s
+real    0m0.004s
+user    0m0.001s
+sys     0m0.002s
 ```
 
 These timings are irrelevant if you only need to name a single thing, but if you
@@ -118,9 +118,9 @@ sys     0m5.163s
 
 $ time { for i in $(seq 1000); do target/release/petname; done; } > /dev/null
 
-real    0m2.199s
-user    0m1.333s
-sys     0m0.987s
+real    0m2.293s
+user    0m1.044s
+sys     0m1.003s
 ```
 
 To be fair, `/usr/bin/petname` is a shell script. The Go command-line version
@@ -134,12 +134,12 @@ considerably:
 ```shellsession
 $ time target/release/petname --count=10000000 > /dev/null
 
-real    0m1.327s
-user    0m1.322s
-sys     0m0.004s
+real    0m0.785s
+user    0m0.767s
+sys     0m0.016s
 ```
 
-That's ~240,000 (two hundred and forty thousand) times faster, for about 7.5
+That's ~408,000 (four hundred and eight thousand) times faster, for about 12.7
 million petnames a second on this hardware. This is useful if you want to apply
 an external filter to the names being generated:
 
@@ -196,11 +196,8 @@ largely unchanged.
 - The `rand` dependency has been bumped from 0.9 to 0.10. If you depend on
   `rand` types (e.g. `RngCore`, `SmallRng`) directly in your own code, you will
   need to upgrade your `rand` dependency to match.
-- The `Generator` trait has a new required method, `generate_raw`. If you have a
-  custom implementation of `Generator`, you must implement `generate_raw` (which
-  returns `Option<Vec<&'a str>>`). The `generate` method now has a default
-  implementation built on top of `generate_raw`, so you may be able to remove
-  your existing `generate` implementation.
+- The `Generator` trait has changed. The `generate` and `generate_one` methods
+  are gone. The one required method now is `generate_into`.
 - The built-in word lists are now compiled into the library via the `petnames!`
   proc macro rather than via `build.rs`. This is mostly an internal change, but
   it does mean that the `petname-macros` crate is a new compile-time dependency
@@ -279,14 +276,17 @@ After installing the source (see above) run tests with: `cargo test`.
    the top). On macOS the command `cargo run -- -h | pbcopy` is helpful.
    **Note** that `--help` output is not the same as `-h` output: it's more
    verbose and too much for an overview.
-1. Build **and** test. The latter on its own does do a build, but a test build
-   can hide warnings about dead code, so do both.
-   - With default features: `cargo build && cargo test`
-   - Without: `cargo build --no-default-features && cargo test --no-default-features`
+1. Build **and** test all crates in the workspace. Testing on its own does build
+   code, but a test build can hide warnings about dead code, so do both. To test
+   feature combinations, install [cargo-hack][] first, then:
+   - `cargo hack --workspace --feature-powerset build`
+   - `cargo hack --workspace --feature-powerset test`
 1. Commit with message "Bump version to `$VERSION`."
 1. Tag with "v`$VERSION`", e.g. `git tag v1.0.10`.
 1. Push: `git push && git push --tags`.
 1. Publish: `cargo publish`.
+
+[cargo-hack]: https://crates.io/crates/cargo-hack
 
 ## License
 

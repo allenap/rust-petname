@@ -9,6 +9,7 @@
         "petname",
         "Petnames",
         "pname",
+        "powerset",
         "rngs",
         "rustfmt",
         "rustup",
