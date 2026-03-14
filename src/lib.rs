@@ -91,19 +91,11 @@
 //! # The [`Generator`] trait
 //!
 //! Both [`Petnames`] and [`Alliterations`] implement [`Generator`]; this needs
-//! to be in scope in order to generate names. It's [object-safe] so you can use
-//! `Petnames` and `Alliterations` as trait objects:
+//! to be in scope in order to generate names. There are some caveats around its
+//! [object-safety][], so read the trait docs if that affects you.
 //!
-//! [object-safe]:
+//! [object-safety]:
 //!     https://doc.rust-lang.org/reference/items/traits.html#object-safety
-//!
-//! ```rust
-//! use petname::Generator;
-//! # #[cfg(feature = "default-words")] {
-//! let generator: &dyn Generator = &petname::Petnames::default();
-//! let generator: &dyn Generator = &petname::Alliterations::default();
-//! # }
-//! ```
 //!
 
 extern crate alloc;
@@ -133,6 +125,40 @@ pub use petname_macros::petnames;
 ///
 /// There is a default implementation of [`iter`][`Self::iter`]; only
 /// [`generate_into`][`Self::generate_into`] needs to be implemented.
+///
+/// This is _somewhat_ [object-safe] so you can use [`Petnames`] and
+/// [`Alliterations`] as trait objects. The _somewhat_ is because only
+/// [`generate_into`][`Self::generate_into`] will be usable; trying to call
+/// [`iter`][`Self::iter`] on a trait object will not compile.
+///
+/// [object-safe]:
+///     https://doc.rust-lang.org/reference/items/traits.html#object-safety
+///
+/// Here, `generate_into` is fine:
+///
+/// ```rust
+/// use petname::Generator;
+/// let mut buf = String::new();
+/// # #[cfg(all(feature = "default-words", feature = "default-rng"))] {
+/// let petnames: &dyn Generator = &petname::Petnames::default();
+/// petnames.generate_into(&mut buf, &mut rand::rng(), 3, "/");
+/// let alliterations: &dyn Generator = &petname::Alliterations::default();
+/// alliterations.generate_into(&mut buf, &mut rand::rng(), 3, "/");
+/// # }
+/// ```
+///
+/// But `iter` does **not work**:
+///
+/// ```compile_fail
+/// use petname::Generator;
+/// let mut buf = String::new();
+/// # #[cfg(all(feature = "default-words", feature = "default-rng"))] {
+/// let petnames: &dyn Generator = &petname::Petnames::default();
+/// petnames.iter(&mut rand::rng(), 3, "/").next().expect("no names");
+/// let alliterations: &dyn Generator = &petname::Alliterations::default();
+/// alliterations.iter(&mut rand::rng(), 3, "/").next().expect("no names");
+/// # }
+/// ```
 ///
 pub trait Generator<'a> {
     /// Generate a petname into a given [`String`] buffer.
