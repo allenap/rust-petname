@@ -12,8 +12,9 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
-      - run: cargo test
-      - run: cargo test --no-default-features
+      - run: cargo install cargo-hack
+      - run: cargo hack --workspace --feature-powerset build
+      - run: cargo hack --workspace --feature-powerset test
 
   fmt:
     name: Rustfmt
