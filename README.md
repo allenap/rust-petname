@@ -276,14 +276,17 @@ After installing the source (see above) run tests with: `cargo test`.
    the top). On macOS the command `cargo run -- -h | pbcopy` is helpful.
    **Note** that `--help` output is not the same as `-h` output: it's more
    verbose and too much for an overview.
-1. Build **and** test. The latter on its own does do a build, but a test build
-   can hide warnings about dead code, so do both.
-   - With default features: `cargo build && cargo test`
-   - Without: `cargo build --no-default-features && cargo test --no-default-features`
+1. Build **and** test all crates in the workspace. Testing on its own does build
+   code, but a test build can hide warnings about dead code, so do both. To test
+   feature combinations, install [cargo-hack][] first, then:
+   - `cargo hack --workspace --feature-powerset build`
+   - `cargo hack --workspace --feature-powerset test`
 1. Commit with message "Bump version to `$VERSION`."
 1. Tag with "v`$VERSION`", e.g. `git tag v1.0.10`.
 1. Push: `git push && git push --tags`.
 1. Publish: `cargo publish`.
+
+[cargo-hack]: https://crates.io/crates/cargo-hack
 
 ## License
 
