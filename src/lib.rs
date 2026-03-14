@@ -6,7 +6,13 @@
 //! [`Petnames::small`], [`Petnames::medium`], and [`Petnames::large`] to select
 //! a particular built-in word list, or use [`Petnames::default`].
 //!
-//! The other thing you need is a random number generator from [rand][]:
+//! For more flexibility, see the [`petnames!`] macro, with which you can
+//! statically embed your own word lists at compile-time. This is available with
+//! the `macros` feature (enabled by default). The same mechanism is used to
+//! embed the default word lists.
+//!
+//! To generate a petname, the other thing you need is a random number generator
+//! from [rand][]:
 //!
 //! ```rust
 //! use petname::Generator; // Trait needs to be in scope for `generate`.
@@ -31,7 +37,7 @@
 //! let name = petname::petname(7, ":");
 //! ```
 //!
-//! But the most flexible approach is to create an [`Iterator`] with
+//! A more flexible approach is to create an [`Iterator`] with
 //! [`iter`][`Petnames::iter`]:
 //!
 //! ```rust
@@ -61,7 +67,7 @@
 //! ```
 //!
 //! There's another way to generate alliterative petnames which is useful when
-//! you you don't need or want each name to be limited to using the same initial
+//! you don't need or want each name to be limited to using the same initial
 //! letter as the previous generated name. Create the `Petnames` as before, and
 //! then convert it into an [`Alliterations`]:
 //!
@@ -439,8 +445,8 @@ enum List {
 /// Iterator, yielding which word list to use next.
 ///
 /// This yields the appropriate list – [adverbs][List::Adverb],
-/// [adjectives][List::Adjective]s, [nouns][List::Nouns] –  from which to select
-/// a word when constructing a petname of `n` words. For example, if you want 4
+/// [adjectives][List::Adjective], [nouns][List::Noun] – from which to select a
+/// word when constructing a petname of `n` words. For example, if you want 4
 /// words in your petname, this will first yield [List::Adverb], then
 /// [List::Adverb] again, then [List::Adjective], and lastly [List::Noun].
 #[derive(Debug, PartialEq)]
