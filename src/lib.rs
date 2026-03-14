@@ -15,11 +15,13 @@
 //! from [rand][]:
 //!
 //! ```rust
-//! use petname::Generator; // Trait needs to be in scope for `generate`.
-//! # #[cfg(feature = "default-rng")]
+//! use petname::Generator; // Trait needs to be in scope for `iter`.
+//! # #[cfg(feature = "default-rng")] {
 //! let mut rng = rand::rngs::ThreadRng::default();
-//! # #[cfg(all(feature = "default-rng", feature = "default-words"))]
-//! let name = petname::Petnames::default().iter(&mut rng, 7, ":").next().expect("no names");
+//! # #[cfg(feature = "default-words")] {
+//! let petnames = petname::Petnames::default();
+//! let name = petnames.iter(&mut rng, 7, ":").next().expect("no names");
+//! # } }
 //! ```
 //!
 //! There's a [convenience function][petname()] that'll generate a single name
@@ -139,6 +141,28 @@ pub trait Generator<'a> {
     /// # }
     /// ```
     ///
+    /// When looping you might want to check if the buffer has been modified or
+    /// not. An unmodified buffer might mean that the source of names or
+    /// randomness has been exhausted.
+    ///
+    /// ```rust
+    /// # use petname::Generator;
+    /// let mut buf = String::new();
+    /// # #[cfg(all(feature = "default-rng", feature = "default-words"))] {
+    /// let petnames = petname::Petnames::default();
+    /// loop {
+    ///     petnames.generate_into(&mut buf, &mut rand::rng(), 3, "+");
+    ///     if buf.is_empty() {
+    ///         break;  // Source exhausted?
+    ///     } else {
+    ///         println!("Petname: {buf}");
+    ///         buf.clear();  // Reset before next iteration.
+    ///         # break;
+    ///     }
+    /// }
+    /// # }
+    /// ```
+    ///
     /// # Notes
     ///
     /// This constructed name _may_ return fewer words than you request if one
@@ -150,8 +174,10 @@ pub trait Generator<'a> {
 
     /// Iterator yielding petnames.
     ///
-    /// A new [`String`] is allocated for each name yielded. See also the notes
-    /// on [`generate_into`][`Self::generate_into`].
+    /// Note that a new [`String`] is allocated for each name yielded. If this
+    /// is a problem, consider [`generate_into`][`Self::generate_into`] instead.
+    ///
+    /// See also the notes on [`generate_into`][`Self::generate_into`].
     ///
     /// # Examples
     ///
