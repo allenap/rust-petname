@@ -12,32 +12,31 @@
 //! You can bring your own random number generator from [rand][]:
 //!
 //! ```rust
-//! use petname::Generator; // Trait needs to be in scope for `iter`.
 //! # #[cfg(feature = "default-rng")] {
 //! let mut rng = rand::rngs::ThreadRng::default();
 //! # #[cfg(feature = "default-words")] {
 //! let petnames = petname::Petnames::default();
-//! let name = petnames.iter(&mut rng, 7, ":").next().expect("no names");
+//! let name = petnames.namer(7, ":").iter(&mut rng).next().expect("no names");
 //! # } }
 //! ```
 //!
-//! See that call to [`iter`][`Petnames::iter`] above? It returned a standard
+//! See that call to [`namer`][`Petnames::namer`] above? It returned a
+//! [`Namer`]. Calling [`iter`][`Namer::iter`] on that gives a standard
 //! [`Iterator`]. This is more efficient than calling [`petname()`] repeatedly,
 //! plus you get all the features of Rust iterators:
 //!
 //! ```rust
-//! # use petname::Generator; // Trait needs to be in scope for `iter`.
 //! # #[cfg(feature = "default-rng")]
 //! let mut rng = rand::rngs::ThreadRng::default();
 //! # #[cfg(feature = "default-words")]
 //! let petnames = petname::Petnames::default();
 //! # #[cfg(all(feature = "default-rng", feature = "default-words"))]
 //! let ten_thousand_names: Vec<String> =
-//!   petnames.iter(&mut rng, 3, "_").take(10000).collect();
+//!   petnames.namer(3, "_").iter(&mut rng).take(10000).collect();
 //! ```
 //!
 //! 💡 Even more efficient but slightly less convenient is
-//! [`Generator::generate_into`].
+//! [`Namer::generate_into`].
 //!
 //! # Word lists
 //!
@@ -61,12 +60,11 @@
 //! the letter "b":
 //!
 //! ```rust
-//! # use petname::Generator;
 //! # #[cfg(feature = "default-words")] {
 //! let mut petnames = petname::Petnames::default();
 //! petnames.retain(|s| s.starts_with("b"));
 //! # #[cfg(feature = "default-rng")] {
-//! let name = petnames.iter(&mut rand::rng(), 3, ".").next().expect("no names");
+//! let name = petnames.namer(3, ".").iter(&mut rand::rng()).next().expect("no names");
 //! assert!(name.starts_with('b'));
 //! # } }
 //! ```
@@ -79,23 +77,32 @@
 //! before, and then convert it into an [`Alliterations`]:
 //!
 //! ```rust
-//! # use petname::Generator;
 //! # #[cfg(feature = "default-words")] {
 //! let mut petnames = petname::Petnames::default();
 //! let mut alliterations: petname::Alliterations = petnames.into();
 //! # #[cfg(feature = "default-rng")]
-//! alliterations.iter(&mut rand::rng(), 3, "/").next().expect("no names");
+//! alliterations.namer(3, "/").iter(&mut rand::rng()).next().expect("no names");
 //! # }
 //! ```
 //!
 //! # The [`Generator`] trait
 //!
-//! Both [`Petnames`] and [`Alliterations`] implement [`Generator`]; this needs
-//! to be in scope in order to generate names. There are some caveats around its
-//! [object-safety][], so read the trait docs if that affects you.
+//! Both [`Petnames`] and [`Alliterations`] implement [`Generator`]. It's
+//! [object-safe] so you can use them as trait objects:
 //!
-//! [object-safety]:
+//! [object-safe]:
 //!     https://doc.rust-lang.org/reference/items/traits.html#object-safety
+//!
+//! ```rust
+//! use petname::Generator;
+//! let mut buf = String::new();
+//! # #[cfg(all(feature = "default-words", feature = "default-rng"))] {
+//! let petnames: &dyn Generator = &petname::Petnames::default();
+//! petnames.generate_into(&mut buf, &mut rand::rng(), 3, "/");
+//! let alliterations: &dyn Generator = &petname::Alliterations::default();
+//! alliterations.generate_into(&mut buf, &mut rand::rng(), 3, "/");
+//! # }
+//! ```
 //!
 
 extern crate alloc;
@@ -103,7 +110,7 @@ extern crate alloc;
 #[cfg(feature = "macros")]
 extern crate self as petname;
 
-use alloc::{borrow::Cow, boxed::Box, collections::BTreeMap, string::String, vec::Vec};
+use alloc::{borrow::Cow, collections::BTreeMap, string::String, vec::Vec};
 
 use rand::seq::{IndexedRandom, IteratorRandom};
 
@@ -111,7 +118,7 @@ use rand::seq::{IndexedRandom, IteratorRandom};
 #[allow(dead_code)]
 #[cfg(all(feature = "default-rng", feature = "default-words"))]
 pub fn petname(words: u8, separator: &str) -> Option<String> {
-    Petnames::default().iter(&mut rand::rng(), words, separator).next()
+    Petnames::default().namer(words, separator).iter(&mut rand::rng()).next()
 }
 
 /// A word list.
@@ -121,51 +128,60 @@ pub type Words<'a> = Cow<'a, [&'a str]>;
 #[cfg(feature = "macros")]
 pub use petname_macros::petnames;
 
-/// Trait that defines a generator of petnames.
+/// Trait that defines a generator of petnames, as consumed by [`Namer`].
 ///
-/// There is a default implementation of [`iter`][`Self::iter`]; only
-/// [`generate_into`][`Self::generate_into`] needs to be implemented.
+/// The sole required method is [`generate_into`][`Self::generate_into`].
 ///
-/// This is _somewhat_ [object-safe] so you can use [`Petnames`] and
-/// [`Alliterations`] as trait objects. The _somewhat_ is because only
-/// [`generate_into`][`Self::generate_into`] will be usable; trying to call
-/// [`iter`][`Self::iter`] on a trait object will not compile.
+/// This trait is [object-safe] so you can use implementors as trait objects.
 ///
 /// [object-safe]:
 ///     https://doc.rust-lang.org/reference/items/traits.html#object-safety
 ///
-/// Here, `generate_into` is fine:
+pub trait Generator {
+    /// Generate a petname into a given [`String`] buffer.
+    ///
+    /// This method does not clear the buffer. The generated name is pushed at
+    /// the end of the string. The name _may_ contain fewer words than requested
+    /// if one or more of the word lists are empty.
+    ///
+    fn generate_into(&self, buf: &mut String, rng: &mut dyn rand::Rng, words: u8, separator: &str);
+}
+
+/// A configured petname generator.
+///
+/// Created by [`Petnames::namer`] or [`Alliterations::namer`]. Holds a
+/// reference to a word list, a word count, and a separator. Call
+/// [`iter`][`Self::iter`] to get an [`Iterator`] over generated names, or
+/// [`generate_into`][`Self::generate_into`] to write into a buffer directly.
+///
+/// # Examples
 ///
 /// ```rust
-/// use petname::Generator;
+/// # #[cfg(all(feature = "default-rng", feature = "default-words"))] {
+/// let petnames = petname::Petnames::default();
+/// let namer = petnames.namer(3, "-");
+///
+/// // As an iterator:
+/// let names: Vec<String> = namer.iter(&mut rand::rng()).take(10).collect();
+///
+/// // Or writing into a buffer:
 /// let mut buf = String::new();
-/// # #[cfg(all(feature = "default-words", feature = "default-rng"))] {
-/// let petnames: &dyn Generator = &petname::Petnames::default();
-/// petnames.generate_into(&mut buf, &mut rand::rng(), 3, "/");
-/// let alliterations: &dyn Generator = &petname::Alliterations::default();
-/// alliterations.generate_into(&mut buf, &mut rand::rng(), 3, "/");
+/// namer.generate_into(&mut buf, &mut rand::rng());
 /// # }
 /// ```
 ///
-/// But `iter` does **not work**:
-///
-/// ```compile_fail
-/// use petname::Generator;
-/// let mut buf = String::new();
-/// # #[cfg(all(feature = "default-words", feature = "default-rng"))] {
-/// let petnames: &dyn Generator = &petname::Petnames::default();
-/// petnames.iter(&mut rand::rng(), 3, "/").next().expect("no names");
-/// let alliterations: &dyn Generator = &petname::Alliterations::default();
-/// alliterations.iter(&mut rand::rng(), 3, "/").next().expect("no names");
-/// # }
-/// ```
-///
-pub trait Generator<'a> {
+pub struct Namer<'a, G: ?Sized> {
+    generator: &'a G,
+    words: u8,
+    separator: &'a str,
+}
+
+impl<'a, G: Generator + ?Sized> Namer<'a, G> {
     /// Generate a petname into a given [`String`] buffer.
     ///
     /// This can be more efficient than [`iter`][`Self::iter`] when generating
-    /// many names because the buffer can be reused; `iter` creates a new
-    /// `String` on every iteration.
+    /// many names because the buffer can be reused; each name yielded by
+    /// [`iter`][`Self::iter`] allocates a new `String`.
     ///
     /// This method does not clear the buffer. The generated name is pushed at
     /// the end of the string.
@@ -173,11 +189,11 @@ pub trait Generator<'a> {
     /// # Examples
     ///
     /// ```rust
-    /// # use petname::Generator;
-    /// let mut buf = String::new();
     /// # #[cfg(all(feature = "default-rng", feature = "default-words"))] {
-    /// let mut rng = rand::rngs::ThreadRng::default();
-    /// petname::Petnames::default().generate_into(&mut buf, &mut rng, 7, "::");
+    /// let petnames = petname::Petnames::default();
+    /// let namer = petnames.namer(7, "::");
+    /// let mut buf = String::new();
+    /// namer.generate_into(&mut buf, &mut rand::rng());
     /// assert_eq!(7, buf.split("::").count());
     /// # }
     /// ```
@@ -187,12 +203,12 @@ pub trait Generator<'a> {
     /// randomness has been exhausted.
     ///
     /// ```rust
-    /// # use petname::Generator;
-    /// let mut buf = String::new();
     /// # #[cfg(all(feature = "default-rng", feature = "default-words"))] {
     /// let petnames = petname::Petnames::default();
+    /// let namer = petnames.namer(3, "+");
+    /// let mut buf = String::new();
     /// loop {
-    ///     petnames.generate_into(&mut buf, &mut rand::rng(), 3, "+");
+    ///     namer.generate_into(&mut buf, &mut rand::rng());
     ///     if buf.is_empty() {
     ///         break;  // Source exhausted?
     ///     } else {
@@ -204,44 +220,31 @@ pub trait Generator<'a> {
     /// # }
     /// ```
     ///
-    /// # Notes
-    ///
-    /// This constructed name _may_ return fewer words than you request if one
-    /// or more of the word lists are empty. For example, if there are no
-    /// adverbs, requesting 3 or more words may still yield only `["doubtful",
-    /// "salmon"]`.
-    ///
-    fn generate_into(&self, buf: &mut String, rng: &mut dyn rand::Rng, words: u8, separator: &str);
+    pub fn generate_into(&self, buf: &mut String, rng: &mut dyn rand::Rng) {
+        self.generator.generate_into(buf, rng, self.words, self.separator);
+    }
 
     /// Iterator yielding petnames.
     ///
     /// Note that a new [`String`] is allocated for each name yielded. If this
     /// is a problem, consider [`generate_into`][`Self::generate_into`] instead.
     ///
-    /// See also the notes on [`generate_into`][`Self::generate_into`].
-    ///
     /// # Examples
     ///
     /// ```rust
-    /// # use petname::Generator;
     /// # #[cfg(all(feature = "default-rng", feature = "default-words"))] {
-    /// let mut rng = rand::rngs::ThreadRng::default();
     /// let petnames = petname::Petnames::default();
-    /// let mut iter = petnames.iter(&mut rng, 4, "_");
-    /// println!("name: {}", iter.next().unwrap());
+    /// let mut rng = rand::rngs::ThreadRng::default();
+    /// let mut namer = petnames.namer(4, "_");
+    /// println!("name: {}", namer.iter(&mut rng).next().unwrap());
     /// # }
     /// ```
-    fn iter(
-        &'a self,
-        rng: &'a mut dyn rand::Rng,
-        words: u8,
-        separator: &'a str,
-    ) -> Box<dyn Iterator<Item = String> + 'a>
-    where
-        Self: Sized,
-    {
-        let names = Names { generator: self, rng, words, separator };
-        Box::new(names)
+    pub fn iter<'b>(&'b self, rng: &'b mut dyn rand::Rng) -> impl Iterator<Item = String> + 'b {
+        core::iter::from_fn(move || {
+            let mut buf = String::new();
+            self.generate_into(&mut buf, rng);
+            (!buf.is_empty()).then_some(buf)
+        })
     }
 }
 
@@ -295,12 +298,11 @@ impl<'a> Petnames<'a> {
     /// # Examples
     ///
     /// ```rust
-    /// # use petname::Generator;
     /// # #[cfg(feature = "default-words")] {
     /// let mut petnames = petname::Petnames::default();
     /// petnames.retain(|s| s.starts_with("h"));
     /// # #[cfg(feature = "default-rng")]
-    /// assert!(petnames.iter(&mut rand::rng(), 2, ".").next().unwrap().starts_with('h'));
+    /// assert!(petnames.namer(2, ".").iter(&mut rand::rng()).next().unwrap().starts_with('h'));
     /// # }
     /// ```
     ///
@@ -333,9 +335,25 @@ impl<'a> Petnames<'a> {
             .reduce(u128::saturating_mul)
             .unwrap_or(0u128)
     }
+
+    /// Create a [`Namer`] that generates petnames from these word lists.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # #[cfg(all(feature = "default-rng", feature = "default-words"))]
+    /// let name = petname::Petnames::default()
+    ///     .namer(3, "-")
+    ///     .iter(&mut rand::rng())
+    ///     .next()
+    ///     .expect("no names");
+    /// ```
+    pub fn namer<'b>(&'b self, words: u8, separator: &'b str) -> Namer<'b, Self> {
+        Namer { generator: self, words, separator }
+    }
 }
 
-impl<'a> Generator<'a> for Petnames<'a> {
+impl Generator for Petnames<'_> {
     fn generate_into(&self, buf: &mut String, rng: &mut dyn rand::Rng, words: u8, separator: &str) {
         for list in Lists::new(words) {
             match list {
@@ -416,6 +434,23 @@ impl Alliterations<'_> {
             .reduce(u128::saturating_add)
             .unwrap_or(0u128)
     }
+
+    /// Create a [`Namer`] that generates alliterative petnames from these word
+    /// lists.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # #[cfg(all(feature = "default-rng", feature = "default-words"))]
+    /// let name = petname::Alliterations::default()
+    ///     .namer(3, "-")
+    ///     .iter(&mut rand::rng())
+    ///     .next()
+    ///     .expect("no names");
+    /// ```
+    pub fn namer<'b>(&'b self, words: u8, separator: &'b str) -> Namer<'b, Self> {
+        Namer { generator: self, words, separator }
+    }
 }
 
 impl<'a> From<Petnames<'a>> for Alliterations<'a> {
@@ -462,7 +497,7 @@ fn group_words_by_first_letter(words: Words<'_>) -> BTreeMap<char, Vec<&str>> {
     })
 }
 
-impl<'a> Generator<'a> for Alliterations<'a> {
+impl Generator for Alliterations<'_> {
     fn generate_into(&self, buf: &mut String, rng: &mut dyn rand::Rng, words: u8, separator: &str) {
         if let Some(group) = self.groups.values().choose(rng) {
             group.generate_into(buf, rng, words, separator);
@@ -551,30 +586,6 @@ impl Iterator for Lists {
     fn size_hint(&self) -> (usize, Option<usize>) {
         let remaining = self.remaining();
         (remaining, Some(remaining))
-    }
-}
-
-/// Iterator yielding petnames.
-struct Names<'a, GENERATOR>
-where
-    GENERATOR: Generator<'a>,
-{
-    generator: &'a GENERATOR,
-    rng: &'a mut dyn rand::Rng,
-    words: u8,
-    separator: &'a str,
-}
-
-impl<'a, GENERATOR> Iterator for Names<'a, GENERATOR>
-where
-    GENERATOR: Generator<'a>,
-{
-    type Item = String;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let mut buf = String::new();
-        self.generator.generate_into(&mut buf, self.rng, self.words, self.separator);
-        (!buf.is_empty()).then_some(buf)
     }
 }
 

@@ -196,8 +196,17 @@ largely unchanged.
 - The `rand` dependency has been bumped from 0.9 to 0.10. If you depend on
   `rand` types (e.g. `RngCore`, `SmallRng`) directly in your own code, you will
   need to upgrade your `rand` dependency to match.
-- The `Generator` trait has changed. The `generate` and `generate_one` methods
-  are gone. The one required method now is `generate_into`.
+- The `Generator` trait has changed significantly:
+  - The `generate` and `generate_one` methods are gone.
+  - The trait no longer has a lifetime parameter; `Generator<'a>` is now just
+    `Generator`.
+  - The one required method is `generate_into`.
+  - The `iter` method has been renamed to `namer`. It now returns a [`Namer`]
+    directly instead of `Box<dyn Iterator<Item = String>>`, so there is no heap
+    allocation for the iterator itself.
+- [`Namer`] is a new public type (an iterator over generated petnames). It is
+  generic over the generator type, so `Namer<Petnames>` and
+  `Namer<Alliterations>` are both valid.
 - The built-in word lists are now compiled into the library via the `petnames!`
   proc macro rather than via `build.rs`. This is mostly an internal change, but
   it does mean that the `petname-macros` crate is a new compile-time dependency

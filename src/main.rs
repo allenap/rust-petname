@@ -2,7 +2,7 @@ mod cli;
 
 use cli::Cli;
 use petname::Alliterations;
-use petname::{Generator, Petnames};
+use petname::{Generator, Namer, Petnames};
 
 use std::fmt;
 use std::fs;
@@ -113,7 +113,7 @@ where
         if alliterations.cardinality(cli.words) == 0 {
             return Err(Error::Alliteration("word lists have no initial letters in common".to_string()));
         }
-        printer(writer, alliterations, &mut rng, cli.words, &cli.separator, count)
+        printer(writer, &alliterations.namer(cli.words, &cli.separator), &mut rng, count)
     } else if let Some(alliterate_with) = cli.alliterate_with {
         let mut alliterations: Alliterations = petnames.into();
         alliterations.retain(|first_letter, group| {
@@ -124,29 +124,27 @@ where
                 "no petnames begin with the chosen alliteration character".to_string(),
             ));
         }
-        printer(writer, alliterations, &mut rng, cli.words, &cli.separator, count)
+        printer(writer, &alliterations.namer(cli.words, &cli.separator), &mut rng, count)
     } else {
-        printer(writer, petnames, &mut rng, cli.words, &cli.separator, count)
+        printer(writer, &petnames.namer(cli.words, &cli.separator), &mut rng, count)
     }
 }
 
-fn printer<'a, OUT, GENERATOR, RNG>(
+fn printer<OUT, GEN, RNG>(
     writer: &mut OUT,
-    generator: GENERATOR,
+    namer: &Namer<'_, GEN>,
     rng: &mut RNG,
-    words: u8,
-    separator: &str,
     count: Option<usize>,
 ) -> Result<(), Error>
 where
     OUT: io::Write,
-    GENERATOR: Generator<'a>,
+    GEN: Generator,
     RNG: rand::Rng,
 {
     let mut buf = String::new();
     match count {
         None => loop {
-            generator.generate_into(&mut buf, rng, words, separator);
+            namer.generate_into(&mut buf, rng);
             if buf.is_empty() {
                 break;
             } else {
@@ -156,7 +154,7 @@ where
         },
         Some(n) => {
             for _ in 0..n {
-                generator.generate_into(&mut buf, rng, words, separator);
+                namer.generate_into(&mut buf, rng);
                 if buf.is_empty() {
                     break;
                 } else {

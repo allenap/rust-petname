@@ -1,4 +1,4 @@
-use petname::{Generator, Petnames};
+use petname::Petnames;
 
 mod mocks;
 
@@ -51,7 +51,7 @@ fn petnames_generate_uses_adverb_adjective_name() {
         nouns: vec!["noun"].into(),
     };
     assert_eq!(
-        petnames.iter(&mut mocks::StepRng::new(0, 1), 3, "-").next(),
+        petnames.namer(3, "-").iter(&mut mocks::StepRng::new(0, 1)).next(),
         Some("adverb-adjective-noun".into())
     );
 }
@@ -60,7 +60,8 @@ fn petnames_generate_uses_adverb_adjective_name() {
 fn petnames_iter_yields_names() {
     let mut rng = mocks::StepRng::new(0, 1);
     let petnames = Petnames::new("foo", "bar", "baz");
-    let mut names: Box<dyn Iterator<Item = _>> = petnames.iter(&mut rng, 3, ".");
+    let namer = petnames.namer(3, ".");
+    let mut names = namer.iter(&mut rng);
     assert_eq!(Some("bar.foo.baz".to_string()), names.next());
 }
 
@@ -69,7 +70,8 @@ fn petnames_iter_yields_nothing_when_empty() {
     let mut rng = mocks::StepRng::new(0, 1);
     let petnames = Petnames::new("", "", "");
     assert_eq!(0, petnames.cardinality(3));
-    let mut names: Box<dyn Iterator<Item = _>> = petnames.iter(&mut rng, 3, ".");
+    let namer = petnames.namer(3, ".");
+    let mut names = namer.iter(&mut rng);
     assert_eq!(None, names.next());
 }
 
@@ -79,6 +81,6 @@ fn petnames_generate_into_works() {
     let words = ["adj", "adv", "noun"];
     let petnames = Petnames::new(words[0], words[1], words[2]);
     let mut buf = String::new();
-    petnames.generate_into(&mut buf, &mut rng, 3, " ");
+    petnames.namer(3, " ").generate_into(&mut buf, &mut rng);
     assert_eq!("adv adj noun", &buf);
 }
