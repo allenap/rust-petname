@@ -293,7 +293,7 @@ After installing the source (see above) run tests with: `cargo test`.
 1. Commit with message "Bump version to `$VERSION`."
 1. Tag with "v`$VERSION`", e.g. `git tag v1.0.10`.
 1. Push: `git push && git push --tags`.
-1. Publish: `cargo publish`.
+1. Publish: `cargo publish --workspace`.
 
 [cargo-hack]: https://crates.io/crates/cargo-hack
 
