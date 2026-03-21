@@ -1,4 +1,5 @@
-**/*.rs.bk
+*.local
+*.rs.bk
 /.claude/
 /Cargo.lock
 /target/
