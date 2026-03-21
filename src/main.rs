@@ -2,7 +2,7 @@ mod cli;
 
 use cli::Cli;
 use petname::Alliterations;
-use petname::{Generator, Petnames};
+use petname::{Generator, Namer, Petnames};
 
 use std::fmt;
 use std::fs;
@@ -113,7 +113,7 @@ where
         if alliterations.cardinality(cli.words) == 0 {
             return Err(Error::Alliteration("word lists have no initial letters in common".to_string()));
         }
-        printer(writer, alliterations.iter(&mut rng, cli.words, &cli.separator), count)
+        printer(writer, &alliterations.namer(cli.words, &cli.separator), &mut rng, count)
     } else if let Some(alliterate_with) = cli.alliterate_with {
         let mut alliterations: Alliterations = petnames.into();
         alliterations.retain(|first_letter, group| {
@@ -124,26 +124,43 @@ where
                 "no petnames begin with the chosen alliteration character".to_string(),
             ));
         }
-        printer(writer, alliterations.iter(&mut rng, cli.words, &cli.separator), count)
+        printer(writer, &alliterations.namer(cli.words, &cli.separator), &mut rng, count)
     } else {
-        printer(writer, petnames.iter(&mut rng, cli.words, &cli.separator), count)
+        printer(writer, &petnames.namer(cli.words, &cli.separator), &mut rng, count)
     }
 }
 
-fn printer<OUT, NAMES>(writer: &mut OUT, names: NAMES, count: Option<usize>) -> Result<(), Error>
+fn printer<OUT, GEN, RNG>(
+    writer: &mut OUT,
+    namer: &Namer<'_, GEN>,
+    rng: &mut RNG,
+    count: Option<usize>,
+) -> Result<(), Error>
 where
     OUT: io::Write,
-    NAMES: Iterator<Item = String>,
+    GEN: Generator,
+    RNG: rand::Rng,
 {
+    let mut buf = String::new();
     match count {
-        None => {
-            for name in names {
-                writeln!(writer, "{name}").map_err(suppress_disconnect)?;
+        None => loop {
+            namer.generate_into(&mut buf, rng);
+            if buf.is_empty() {
+                break;
+            } else {
+                writeln!(writer, "{buf}").map_err(suppress_disconnect)?;
+                buf.clear();
             }
-        }
+        },
         Some(n) => {
-            for name in names.take(n) {
-                writeln!(writer, "{name}")?;
+            for _ in 0..n {
+                namer.generate_into(&mut buf, rng);
+                if buf.is_empty() {
+                    break;
+                } else {
+                    writeln!(writer, "{buf}")?;
+                    buf.clear();
+                }
             }
         }
     }
