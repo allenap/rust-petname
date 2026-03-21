@@ -2,11 +2,9 @@
 
 Generate human readable random names.
 
-**🚨 UPGRADING FROM 2.x? There are a few breaking changes; please read the
-[notes](#upgrading-from-2x).**
-
-**🚨 UPGRADING FROM 1.x? There are several breaking changes; please read the
-[notes](#upgrading-from-1x).**
+> **🚨 Upgrading?** <br>
+> Check the notes on switching [**from 2.x to 3.x**](#upgrading-from-2x) and
+> [**from 1.x to 2.x**](#upgrading-from-1x).
 
 [Petnames][petname-intro] are useful when you need to name a large number of
 resources – like servers, services, perhaps bicycles for hire – and you want
@@ -181,17 +179,19 @@ be a good starting point.
 [wasm]: https://webassembly.org/
 [smallrng::seed_from_u64]: https://docs.rs/rand/latest/rand/rngs/struct.SmallRng.html#method.seed_from_u64
 
-## Upgrading from 2.x
+## Upgrading
+
+### <a id="upgrading-from-2x"></a>From 2.x to 3.x
 
 Version 3.0 brings a few breaking changes to the API, but the command-line is
 largely unchanged.
 
-### Command-line
+#### Command-line
 
 - One subtle change: if you use `--seed`, the generated names will differ from
   2.x, since `rand` 0.10 produces different output for the same seed.
 
-### Library
+#### Library
 
 - The `rand` dependency has been bumped from 0.9 to 0.10. If you depend on
   `rand` types (e.g. `RngCore`, `SmallRng`) directly in your own code, you will
@@ -218,12 +218,12 @@ largely unchanged.
   let p = petname::petnames!("path/to/my/words");
   ```
 
-## Upgrading from 1.x
+### <a id="upgrading-from-1x"></a>From 1.x to 2.x
 
 Version 2.0 brought several breaking changes to both the API and the
 command-line too. Below are the most important:
 
-### Command-line
+#### Command-line
 
 - The `--complexity <COMPLEXITY>` option has been replaced by `--lists <LISTS>`.
   - For compatibility, `--complexity [0,1,2]` will still work, but its
@@ -240,7 +240,7 @@ command-line too. Below are the most important:
   names being generated.
 - The `--non-repeating` flag is no longer recognised ([#101]).
 
-### Library
+#### Library
 
 - Feature flags have been renamed:
   - `std_rng` is now `default-rng`,
