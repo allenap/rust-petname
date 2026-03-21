@@ -264,18 +264,34 @@ command-line too. Below are the most important:
 
 ## Developing & Contributing
 
-To hack the source:
+To hack the source, [install Cargo][install-cargo], [install
+`cargo-hack`][install-cargo-hack], clone this repository, then:
 
-- [Install Cargo][install-cargo],
-- Clone this repository,
-- Build it: `cargo build`.
-- Optionally, hide noise when using `git blame`: `git config blame.ignoreRevsFile .git-blame-ignore-revs`.
+```shellsession
+# Build with every combination of feature flags:
+$ cargo hack --workspace --feature-powerset build
+
+# Optionally, hide noise when using `git blame`:
+$ git config blame.ignoreRevsFile .git-blame-ignore-revs
+```
 
 [install-cargo]: https://crates.io/install
+[install-cargo-hack]: https://crates.io/crates/cargo-hack#installation
 
-### Running the tests
+### Making changes & running tests
 
-After installing the source (see above) run tests with: `cargo test`.
+After installing the source (see above), make changes and:
+
+```shellsession
+# Run tests with all feature flag combinations:
+cargo hack --workspace --feature-powerset test
+
+# Run Clippy from time to time too:
+$ cargo clippy
+
+# Before committing, format:
+$ cargo fmt
+```
 
 ### Making a release
 
