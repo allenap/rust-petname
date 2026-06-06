@@ -44,8 +44,8 @@ macros = ["dep:petname-macros"]
 
 [dev-dependencies]
 anyhow = "1"
-tempdir = "0.3"
 rand_core = "0.10"
+tempfile = "3"
 
 [dependencies]
 petname-macros = { version = "3.0.0", path = "petname-macros", optional = true }

@@ -248,7 +248,7 @@ mod integration {
     /// and `nouns.txt`.
     #[test]
     fn option_dir_nouns() -> anyhow::Result<()> {
-        let dir = tempdir::TempDir::new("petname")?;
+        let dir = tempfile::TempDir::with_prefix("petname")?;
         fs::write(dir.path().join("adverbs.txt"), "adverb")?;
         fs::write(dir.path().join("adjectives.txt"), "adjective")?;
         fs::write(dir.path().join("nouns.txt"), "noun")?;
@@ -265,7 +265,7 @@ mod integration {
     /// present, `nouns.txt` is preferred.
     #[test]
     fn compat_dir_nouns_before_names() -> anyhow::Result<()> {
-        let dir = tempdir::TempDir::new("petname")?;
+        let dir = tempfile::TempDir::with_prefix("petname")?;
         fs::write(dir.path().join("adverbs.txt"), "adverb")?;
         fs::write(dir.path().join("adjectives.txt"), "adjective")?;
         fs::write(dir.path().join("nouns.txt"), "noun")?;
@@ -283,7 +283,7 @@ mod integration {
     /// Dustin Kirkland's _petname_.
     #[test]
     fn compat_dir_names() -> anyhow::Result<()> {
-        let dir = tempdir::TempDir::new("petname")?;
+        let dir = tempfile::TempDir::with_prefix("petname")?;
         fs::write(dir.path().join("adverbs.txt"), "adverb")?;
         fs::write(dir.path().join("adjectives.txt"), "adjective")?;
         fs::write(dir.path().join("names.txt"), "name")?;
