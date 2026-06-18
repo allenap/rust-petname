@@ -1,0 +1,29 @@
+name: macOS release
+
+on:
+  push:
+    tags:
+      - 'v*' # Triggers on tags like v1.0.0, v0.1.0-alpha, etc.
+  workflow_dispatch:
+
+jobs:
+  publish:
+    name: Publish for macOS
+    runs-on: macos-latest
+    
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo install cargo-hack
+      - run: cargo hack --workspace --feature-powerset build --release
+      - name: Package Binary
+        run: |
+          cd target/release
+          tar -czf rust-petname_darwin_arm64.tar.gz petname
+      - name: Upload to GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+        run: |
+          cd target/release
+          gh release upload ${{ github.ref_name }} rust-petname_darwin_arm64.tar.gz --clobber || \
+          gh release create ${{ github.ref_name }} rust-petname_darwin_arm64.tar.gz --title "Release ${{ github.ref_name }}" --draft=false
