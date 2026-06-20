@@ -17,7 +17,7 @@ on:
         type: boolean
 
 jobs:
-  aarch64-apple-darwin:
+  build-macos-aarch64:
     name: Build macOS ARM
     runs-on: macos-latest
     steps:
@@ -35,7 +35,7 @@ jobs:
           path: target/aarch64-apple-darwin/release/petname
           if-no-files-found: error
 
-  x86_64-apple-darwin:
+  build-macos-x86_64:
     name: Build macOS Intel
     runs-on: macos-latest
     steps:
@@ -53,10 +53,10 @@ jobs:
           path: target/x86_64-apple-darwin/release/petname
           if-no-files-found: error
 
-  macos-universal:
+  build-macos-universal:
     name: Build macOS Universal
     runs-on: macos-latest
-    needs: [aarch64-apple-darwin, x86_64-apple-darwin]
+    needs: [build-macos-aarch64, build-macos-x86_64]
     steps:
       - uses: actions/download-artifact@v8
         with:
@@ -117,7 +117,7 @@ jobs:
 
   create-release:
     name: Create release
-    needs: [macos-universal, build-linux-x86_64, build-linux-aarch64]
+    needs: [build-macos-universal, build-linux-x86_64, build-linux-aarch64]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || inputs.create_release
     steps:
