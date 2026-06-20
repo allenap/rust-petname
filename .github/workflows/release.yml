@@ -78,8 +78,8 @@ jobs:
           path: petname-apple-darwin
           if-no-files-found: error
 
-  build-linux:
-    name: Build Linux
+  build-linux-x86_64:
+    name: Build Linux x86_64
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v6
@@ -92,31 +92,56 @@ jobs:
       - run: cargo build --release --target x86_64-unknown-linux-musl
       - uses: actions/upload-artifact@v7
         with:
-          name: linux
+          name: linux-x86_64
           path: target/x86_64-unknown-linux-musl/release/petname
+          if-no-files-found: error
+
+  build-linux-aarch64:
+    name: Build Linux aarch64
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.tag || github.sha }}
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-unknown-linux-musl
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo binstall --no-confirm cross
+      - run: cross build --release --target aarch64-unknown-linux-musl
+      - uses: actions/upload-artifact@v7
+        with:
+          name: linux-aarch64
+          path: target/aarch64-unknown-linux-musl/release/petname
           if-no-files-found: error
 
   create-release:
     name: Create release
-    needs: [macos-universal, build-linux]
+    needs: [macos-universal, build-linux-x86_64, build-linux-aarch64]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || inputs.create_release
     steps:
       - uses: actions/download-artifact@v8
         with:
-          name: linux
-          path: linux
+          name: linux-x86_64
+          path: linux-x86_64
+      - uses: actions/download-artifact@v8
+        with:
+          name: linux-aarch64
+          path: linux-aarch64
       - uses: actions/download-artifact@v8
         with:
           name: apple-darwin
       - name: Rename executables
         run: |
-          mv -v linux/petname petname-linux
+          mv -v linux-x86_64/petname petname-linux-x86_64
+          mv -v linux-aarch64/petname petname-linux-aarch64
           find .
       - uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ inputs.tag || github.ref_name }}
           files: |
             petname-apple-darwin
-            petname-linux
+            petname-linux-x86_64
+            petname-linux-aarch64
           fail_on_unmatched_files: true
