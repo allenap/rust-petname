@@ -1,0 +1,103 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  aarch64-apple-darwin:
+    name: Build macOS ARM
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build --release --target aarch64-apple-darwin
+      - uses: actions/upload-artifact@v7
+        with:
+          name: aarch64-apple-darwin
+          path: target/aarch64-apple-darwin/release/petname
+          if-no-files-found: error
+
+  x86_64-apple-darwin:
+    name: Build macOS Intel
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-apple-darwin
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build --release --target x86_64-apple-darwin
+      - uses: actions/upload-artifact@v7
+        with:
+          name: x86_64-apple-darwin
+          path: target/x86_64-apple-darwin/release/petname
+          if-no-files-found: error
+
+  macos-universal:
+    name: Build macOS Universal
+    runs-on: macos-latest
+    needs: [aarch64-apple-darwin, x86_64-apple-darwin]
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: x86_64-apple-darwin
+          path: petname-x86_64-apple-darwin
+      - uses: actions/download-artifact@v8
+        with:
+          name: aarch64-apple-darwin
+          path: petname-aarch64-apple-darwin
+      - name: Build Universal macOS Binary
+        run: |
+          lipo -create \
+            -output petname-apple-darwin \
+            petname-x86_64-apple-darwin/petname \
+            petname-aarch64-apple-darwin/petname
+      - uses: actions/upload-artifact@v7
+        with:
+          name: apple-darwin
+          path: petname-apple-darwin
+          if-no-files-found: error
+
+  build-linux:
+    name: Build Linux
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-musl
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build --release --target x86_64-unknown-linux-musl
+      - uses: actions/upload-artifact@v7
+        with:
+          name: linux
+          path: target/x86_64-unknown-linux-musl/release/petname
+          if-no-files-found: error
+
+  create-release:
+    name: Create release
+    needs: [macos-universal, build-linux]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: linux
+          path: linux
+      - uses: actions/download-artifact@v8
+        with:
+          name: apple-darwin
+      - name: Rename executables
+        run: |
+          mv -v linux/petname petname-linux
+          find .
+      - uses: softprops/action-gh-release@v3
+        with:
+          files: |
+            petname-apple-darwin
+            petname-linux
+          fail_on_unmatched_files: true
