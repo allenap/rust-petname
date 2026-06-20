@@ -4,6 +4,17 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to build (e.g. v3.0.0)"
+        required: true
+        type: string
+      create_release:
+        description: "Create a GitHub release"
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   aarch64-apple-darwin:
@@ -11,6 +22,8 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.tag || github.sha }}
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-apple-darwin
@@ -27,6 +40,8 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.tag || github.sha }}
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: x86_64-apple-darwin
@@ -68,6 +83,8 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.tag || github.sha }}
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: x86_64-unknown-linux-musl
@@ -83,6 +100,7 @@ jobs:
     name: Create release
     needs: [macos-universal, build-linux]
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' || inputs.create_release
     steps:
       - uses: actions/download-artifact@v8
         with:
@@ -97,6 +115,7 @@ jobs:
           find .
       - uses: softprops/action-gh-release@v3
         with:
+          tag_name: ${{ inputs.tag || github.ref_name }}
           files: |
             petname-apple-darwin
             petname-linux
