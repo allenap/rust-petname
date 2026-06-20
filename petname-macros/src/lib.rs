@@ -210,6 +210,69 @@ pub fn petnames(input: TokenStream) -> TokenStream {
     expanded.into()
 }
 
+/// Construct a `Turkish` generator from word list files at compile time.
+///
+/// Like [`petnames!`], but for [`petname::lang::Turkish`]. The adjectives file
+/// uses the same whitespace-delimited format, except a token may carry an
+/// emphatic (reduplicated) form after an `=`, e.g. `kırmızı=kıpkırmızı`. The
+/// adverbs and nouns files are plain whitespace-delimited words.
+///
+/// ```ignore
+/// let t = petname::turkish!("words/turkish");
+/// ```
+#[proc_macro]
+pub fn turkish(input: TokenStream) -> TokenStream {
+    let input: PetnamesInput = syn::parse(input).expect("turkish! parse error");
+
+    let manifest_dir = std::env::var_os("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
+    let manifest_path = PathBuf::from(&manifest_dir);
+    let paths = PetnamesPaths::from(input).resolve(&manifest_path);
+
+    let (adjectives, adj_count) = read_and_process_adjectives(&paths.adjectives);
+    let (adv_words, adv_count) = read_and_process(&paths.adverbs);
+    let (noun_words, noun_count) = read_and_process(&paths.nouns);
+
+    fn path_str<'a>(path: &'a Path, name: &'static str) -> &'a str {
+        path.to_str().unwrap_or_else(|| panic!("{name} path not UTF-8: {}", path.display()))
+    }
+
+    let adj_path = path_str(&paths.adjectives, "adjectives");
+    let adv_path = path_str(&paths.adverbs, "adverbs");
+    let noun_path = path_str(&paths.nouns, "nouns");
+
+    let adj_items: Vec<TokenStream2> = adjectives
+        .iter()
+        .map(|(word, emphatic)| {
+            let emphatic = match emphatic {
+                Some(emphatic) => quote! { ::core::option::Option::Some(#emphatic) },
+                None => quote! { ::core::option::Option::None },
+            };
+            quote! { ::petname::lang::turkish::Adjective { word: #word, emphatic: #emphatic } }
+        })
+        .collect();
+
+    let expanded: TokenStream2 = quote! {
+        {
+            // See the note in `petnames!` about `include_str!` being used purely
+            // to register these files as rebuild dependencies.
+            const _: &'static str = include_str!(#adj_path);
+            const _: &'static str = include_str!(#adv_path);
+            const _: &'static str = include_str!(#noun_path);
+            // This is where the word lists are actually embedded.
+            static ADJECTIVES: [::petname::lang::turkish::Adjective<'static>; #adj_count] = [ #( #adj_items ),* ];
+            static ADVERBS: [&'static str; #adv_count] = [ #( #adv_words ),* ];
+            static NOUNS: [&'static str; #noun_count] = [ #( #noun_words ),* ];
+            ::petname::lang::turkish::Turkish {
+                adjectives: ::alloc::borrow::Cow::Borrowed(&ADJECTIVES[..]),
+                adverbs: ::alloc::borrow::Cow::Borrowed(&ADVERBS[..]),
+                nouns: ::alloc::borrow::Cow::Borrowed(&NOUNS[..]),
+            }
+        }
+    };
+
+    expanded.into()
+}
+
 fn read_and_process(path: &Path) -> (Vec<String>, usize) {
     let contents =
         std::fs::read_to_string(path).unwrap_or_else(|e| panic!("could not read {}: {e}", path.display()));
@@ -218,9 +281,40 @@ fn read_and_process(path: &Path) -> (Vec<String>, usize) {
     (words, count)
 }
 
+/// Read adjectives, each an optional `base=emphatic` token, deduplicated by
+/// base form and sorted.
+fn read_and_process_adjectives(path: &Path) -> (Vec<(String, Option<String>)>, usize) {
+    let contents =
+        std::fs::read_to_string(path).unwrap_or_else(|e| panic!("could not read {}: {e}", path.display()));
+    let mut seen = HashSet::new();
+    let mut adjectives: Vec<(String, Option<String>)> = Vec::new();
+    for token in word_tokens(&contents) {
+        let (base, emphatic) = match token.split_once('=') {
+            Some((base, emphatic)) => (base.to_owned(), Some(emphatic.to_owned())),
+            None => (token.to_owned(), None),
+        };
+        if seen.insert(base.clone()) {
+            adjectives.push((base, emphatic));
+        }
+    }
+    adjectives.sort();
+    let count = adjectives.len();
+    (adjectives, count)
+}
+
 fn split_words_deduplicate_and_sort(input: &str) -> Vec<String> {
-    let words = input.split_whitespace().collect::<HashSet<_>>();
+    let words = word_tokens(input).collect::<HashSet<_>>();
     let mut words: Vec<String> = words.into_iter().map(|s| s.to_owned()).collect();
     words.sort();
     words
+}
+
+/// Yield whitespace-delimited word tokens, ignoring `#` line comments. A `#`
+/// begins a comment that runs to the end of the line. No built-in word contains
+/// `#`, so this is safe for the existing word lists.
+fn word_tokens(input: &str) -> impl Iterator<Item = &str> {
+    input.lines().flat_map(|line| {
+        let line = line.split_once('#').map_or(line, |(before, _)| before);
+        line.split_whitespace()
+    })
 }

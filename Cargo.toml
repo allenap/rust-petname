@@ -41,6 +41,10 @@ default-rng = ["rand/thread_rng"]
 default-words = ["macros"]
 # Provides the `petnames!` proc macro.
 macros = ["dep:petname-macros"]
+# Compiles the Turkish generator and enables `--language turkish`. The built-in
+# Turkish word lists (`Turkish::small`) are embedded only when `default-words` is
+# also enabled, just like the English lists.
+lang-turkish = []
 
 [dev-dependencies]
 anyhow = "1"

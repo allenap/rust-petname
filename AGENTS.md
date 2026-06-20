@@ -8,6 +8,7 @@ The crate is `no_std` (with `extern crate alloc`). Feature flags:
 - `default-rng` – enables `rand`'s default thread-local RNG
 - `default-words` – embeds the built-in word lists via the `petnames!` macro
 - `macros` – enables the `petnames!` proc macro (in the `petname-macros` subcrate)
+- `lang-turkish` (not a default) – compiles the `lang::turkish` module and enables `--language turkish`. The built-in lists (`Turkish::small`, via the `turkish!` macro) are embedded only when `default-words` is also on, mirroring the English lists
 
 ## Key types
 
@@ -15,6 +16,10 @@ The crate is `no_std` (with `extern crate alloc`). Feature flags:
 - `Alliterations<'a>` – a `BTreeMap<char, Petnames<'a>>` grouping words by first letter for alliterative generation. Implements `Generator`.
 - `Generator` – trait with a single required method `generate_into`. Object-safe: takes `&mut dyn rand::Rng`.
 - `Namer<'a, G>` – a config struct (word count, separator, reference to a `Generator`). Created by `Petnames::namer` or `Alliterations::namer`. Has `generate_into` and `iter` methods. No trait import needed to use it.
+
+## Languages
+
+Non-English languages live in `src/lang/` – each is a **distinct type** implementing `Generator` (we deliberately duplicate rather than abstract until shared structure is proven). `lang::Turkish<'a>` is the first: like `Petnames` but its adjectives are `Adjective { word, emphatic: Option<&str> }` to carry _pekiştirme_ reduplication (e.g. `kırmızı`→`kıpkırmızı`), used only in two-word names. Word lists are under `words/turkish/` and embedded by the `turkish!` macro; the adjectives file uses `base=emphatic` tokens, and `#` begins a line comment (the `petnames!`/`turkish!` tokenizer now strips `#` comments for all word files). Roadmap: Luxembourgish, French, German, then Spanish/Italian/Portuguese – the later ones add gender agreement, word-order, and join-time sandhi (see `Generator` owning the buffer).
 
 `Namer::generate_into` writes into a caller-supplied `String` buffer (more efficient). `Namer::iter` yields owned `String`s via `core::iter::from_fn`.
 

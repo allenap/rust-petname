@@ -124,9 +124,14 @@ pub fn petname(words: u8, separator: &str) -> Option<String> {
 /// A word list.
 pub type Words<'a> = Cow<'a, [&'a str]>;
 
-// Re-export proc macro.
+// Re-export proc macros.
 #[cfg(feature = "macros")]
 pub use petname_macros::petnames;
+#[cfg(feature = "macros")]
+pub use petname_macros::turkish;
+
+/// Language-specific petname generators.
+pub mod lang;
 
 /// Trait that defines a generator of petnames, as consumed by [`Namer`].
 ///

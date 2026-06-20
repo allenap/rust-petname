@@ -42,6 +42,8 @@ enum Error {
     Randomness(String),
     Cardinality(String),
     Alliteration(String),
+    #[cfg(feature = "lang-turkish")]
+    Unsupported(String),
     Disconnected,
 }
 
@@ -53,6 +55,8 @@ impl fmt::Display for Error {
             Error::Randomness(ref message) => write!(f, "no source of randomness: {message}"),
             Error::Cardinality(ref message) => write!(f, "cardinality is zero: {message}"),
             Error::Alliteration(ref message) => write!(f, "cannot alliterate: {message}"),
+            #[cfg(feature = "lang-turkish")]
+            Error::Unsupported(ref message) => write!(f, "unsupported: {message}"),
             Error::Disconnected => write!(f, "caller disconnected / stopped reading"),
         }
     }
@@ -68,6 +72,23 @@ fn run<OUT>(cli: Cli, writer: &mut OUT) -> Result<(), Error>
 where
     OUT: io::Write,
 {
+    // We're going to need a source of randomness.
+    let mut rng = if let Some(seed) = cli.seed {
+        rand::rngs::StdRng::seed_from_u64(seed)
+    } else {
+        rand::rngs::StdRng::try_from_rng(&mut rand::rngs::SysRng)
+            .map_err(|err| Error::Randomness(err.to_string()))?
+    };
+
+    // Stream, or print a limited number of words?
+    let count = if cli.stream { None } else { Some(cli.count) };
+
+    // Non-English languages use their own generators.
+    #[cfg(feature = "lang-turkish")]
+    if cli.language == cli::Language::Turkish {
+        return run_turkish(&cli, writer, &mut rng, count);
+    }
+
     // Load custom word lists, if specified.
     let words = match cli.directory {
         Some(dirname) => Words::load(dirname)?,
@@ -95,17 +116,6 @@ where
         return Err(Error::Cardinality("no petnames to choose from; try relaxing constraints".to_string()));
     }
 
-    // We're going to need a source of randomness.
-    let mut rng = if let Some(seed) = cli.seed {
-        rand::rngs::StdRng::seed_from_u64(seed)
-    } else {
-        rand::rngs::StdRng::try_from_rng(&mut rand::rngs::SysRng)
-            .map_err(|err| Error::Randomness(err.to_string()))?
-    };
-
-    // Stream, or print a limited number of words?
-    let count = if cli.stream { None } else { Some(cli.count) };
-
     // Get an iterator for the names we want to print out, handling alliteration.
     if cli.alliterate || cli.ubuntu {
         let mut alliterations: Alliterations = petnames.into();
@@ -128,6 +138,41 @@ where
     } else {
         printer(writer, &petnames.namer(cli.words, &cli.separator), &mut rng, count)
     }
+}
+
+/// Generate Turkish names using the [`petname::lang::Turkish`] generator.
+#[cfg(feature = "lang-turkish")]
+fn run_turkish<OUT, RNG>(
+    cli: &Cli,
+    writer: &mut OUT,
+    rng: &mut RNG,
+    count: Option<usize>,
+) -> Result<(), Error>
+where
+    OUT: io::Write,
+    RNG: rand::Rng,
+{
+    if cli.directory.is_some() {
+        return Err(Error::Unsupported("--dir is not supported with --language turkish".to_string()));
+    }
+    if cli.alliterate || cli.ubuntu || cli.alliterate_with.is_some() {
+        return Err(Error::Unsupported("alliteration is not supported with --language turkish".to_string()));
+    }
+
+    let mut turkish = petname::lang::turkish::Turkish::small();
+
+    // If requested, limit the number of letters. Count characters, not bytes,
+    // since Turkish words contain multi-byte code points.
+    if cli.letters != 0 {
+        turkish.retain(|s| s.chars().count() <= cli.letters);
+    }
+
+    // Check cardinality.
+    if turkish.cardinality(cli.words) == 0 {
+        return Err(Error::Cardinality("no petnames to choose from; try relaxing constraints".to_string()));
+    }
+
+    printer(writer, &turkish.namer(cli.words, &cli.separator), rng, count)
 }
 
 fn printer<OUT, GEN, RNG>(
@@ -335,5 +380,20 @@ mod integration {
     fn option_seed() {
         let cli = super::Cli::parse_from(["petname", "--seed=12345", "--words=3"]);
         assert_eq!(run_and_capture(cli), "meaningfully-enthralled-vendace\n");
+    }
+
+    #[cfg(feature = "lang-turkish")]
+    #[test]
+    fn option_language_turkish() {
+        let cli = super::Cli::parse_from(["petname", "--language=turkish", "--words=3"]);
+        assert_eq!(run_and_capture(cli).split('-').count(), 3);
+    }
+
+    #[cfg(feature = "lang-turkish")]
+    #[test]
+    fn turkish_rejects_alliteration() {
+        let cli = super::Cli::parse_from(["petname", "--language=turkish", "--alliterate"]);
+        let mut out = Vec::new();
+        assert!(super::run(cli, &mut out).is_err());
     }
 }
