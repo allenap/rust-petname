@@ -53,31 +53,6 @@ jobs:
           path: target/x86_64-apple-darwin/release/petname
           if-no-files-found: error
 
-  build-macos-universal:
-    name: Build macOS Universal
-    runs-on: macos-latest
-    needs: [build-macos-aarch64, build-macos-x86_64]
-    steps:
-      - uses: actions/download-artifact@v8
-        with:
-          name: x86_64-apple-darwin
-          path: petname-x86_64-apple-darwin
-      - uses: actions/download-artifact@v8
-        with:
-          name: aarch64-apple-darwin
-          path: petname-aarch64-apple-darwin
-      - name: Build Universal macOS Binary
-        run: |
-          lipo -create \
-            -output petname-apple-darwin \
-            petname-x86_64-apple-darwin/petname \
-            petname-aarch64-apple-darwin/petname
-      - uses: actions/upload-artifact@v7
-        with:
-          name: apple-darwin
-          path: petname-apple-darwin
-          if-no-files-found: error
-
   build-linux-x86_64:
     name: Build Linux x86_64
     runs-on: ubuntu-22.04
@@ -117,10 +92,18 @@ jobs:
 
   create-release:
     name: Create release
-    needs: [build-macos-universal, build-linux-x86_64, build-linux-aarch64]
+    needs: [build-macos-aarch64, build-macos-x86_64, build-linux-x86_64, build-linux-aarch64]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || inputs.create_release
     steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: aarch64-apple-darwin
+          path: aarch64-apple-darwin
+      - uses: actions/download-artifact@v8
+        with:
+          name: x86_64-apple-darwin
+          path: x86_64-apple-darwin
       - uses: actions/download-artifact@v8
         with:
           name: linux-x86_64
@@ -129,19 +112,19 @@ jobs:
         with:
           name: linux-aarch64
           path: linux-aarch64
-      - uses: actions/download-artifact@v8
-        with:
-          name: apple-darwin
       - name: Rename executables
         run: |
-          mv -v linux-x86_64/petname petname-linux-x86_64
-          mv -v linux-aarch64/petname petname-linux-aarch64
+          mv -v aarch64-apple-darwin/petname petname-aarch64-apple-darwin
+          mv -v x86_64-apple-darwin/petname petname-x86_64-apple-darwin
+          mv -v linux-x86_64/petname petname-x86_64-unknown-linux-musl
+          mv -v linux-aarch64/petname petname-aarch64-unknown-linux-musl
           find .
       - uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ inputs.tag || github.ref_name }}
           files: |
-            petname-apple-darwin
-            petname-linux-x86_64
-            petname-linux-aarch64
+            petname-aarch64-apple-darwin
+            petname-x86_64-apple-darwin
+            petname-x86_64-unknown-linux-musl
+            petname-aarch64-unknown-linux-musl
           fail_on_unmatched_files: true
