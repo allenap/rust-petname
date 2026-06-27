@@ -20,7 +20,7 @@ pub struct Cli {
     pub separator: String,
 
     /// Language to generate names in
-    #[arg(long, value_name = "LANG", default_value_t)]
+    #[arg(long, visible_alias = "lang", value_name = "LANG", default_value_t)]
     pub language: Language,
 
     /// Use the built-in word lists with small, medium, or large words
