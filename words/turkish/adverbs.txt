@@ -1,0 +1,37 @@
+# Turkish intensifier adverbs for petname generation.
+#
+# These occupy the "adverb" slot before the adjective in names of three or more
+# words, e.g. çok-kırmızı-kedi ("very-red-cat"). Turkish has far fewer genuine
+# degree intensifiers than English has manner adverbs, so this list is short by
+# design rather than padded. One token per line; `#` begins a comment.
+
+çok
+pek
+oldukça
+gayet
+epey
+epeyce
+hayli
+aşırı
+fazla
+fazlasıyla
+ziyadesiyle
+iyice
+adamakıllı
+enikonu
+alabildiğine
+müthiş
+inanılmaz
+fevkalade
+olağanüstü
+acayip
+bayağı
+baya
+resmen
+cidden
+gerçekten
+sahiden
+hakikaten
+tamamen
+büsbütün
+dehşet

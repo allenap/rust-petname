@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+#
+# Check the public API for SemVer violations against the version published on
+# crates.io – the same check CI runs. It verifies that the version in Cargo.toml
+# is bumped adequately for whatever API changes have been made (e.g. a removed
+# or changed public item requires a major bump).
+#
+# Requires cargo-semver-checks:
+#
+#     cargo install cargo-semver-checks --locked
+#     # ... or ...
+#     cargo binstall cargo-semver-checks
+#
+# Any extra arguments are passed through, e.g.:
+#
+#     scripts/semver-checks --baseline-rev v3.0.0
+#
+
+exec cargo semver-checks --workspace --all-features "$@"
+
+# End.

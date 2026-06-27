@@ -35,3 +35,22 @@ jobs:
         with:
           components: clippy
       - run: cargo clippy -- -D warnings
+
+  docs:
+    name: Docs # docs.rs-equivalent build (see `scripts/doc`); fails on warnings.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@nightly
+      - run: cargo doc --no-deps --all-features
+        env:
+          RUSTDOCFLAGS: "--cfg docsrs -D warnings"
+
+  semver:
+    name: SemVer # checks the public API bump is adequate (see `scripts/semver-checks`).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: obi1kenobi/cargo-semver-checks-action@v2
+        with:
+          feature-group: all-features

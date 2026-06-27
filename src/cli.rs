@@ -19,8 +19,12 @@ pub struct Cli {
     #[arg(short, long, value_name = "SEP", default_value = "-")]
     pub separator: String,
 
+    /// Language to generate names in
+    #[arg(long, visible_alias = "lang", value_name = "LANG", default_value_t)]
+    pub language: Language,
+
     /// Use the built-in word lists with small, medium, or large words
-    #[arg(long, value_name = "LIST", default_value_t = WordList::Medium)]
+    #[arg(long, value_name = "LIST", default_value_t)]
     pub lists: WordList,
 
     // For compatibility with upstream.
@@ -69,9 +73,10 @@ pub struct Cli {
     pub seed: Option<u64>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
 pub enum WordList {
     Small,
+    #[default]
     Medium,
     Large,
 }
@@ -98,6 +103,46 @@ impl clap::ValueEnum for WordList {
             Self::Small => PossibleValue::new("small").alias("0"),
             Self::Medium => PossibleValue::new("medium").alias("1"),
             Self::Large => PossibleValue::new("large").alias("2"),
+        })
+    }
+}
+
+/// The language used to generate names.
+///
+/// The `Turkish` variant is only available when the `lang-turkish` feature is
+/// enabled, so the flag offers it only in builds that can honour it.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Language {
+    #[default]
+    English,
+    #[cfg(feature = "lang-turkish")]
+    Turkish,
+}
+
+impl std::fmt::Display for Language {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::English => write!(f, "english"),
+            #[cfg(feature = "lang-turkish")]
+            Self::Turkish => write!(f, "turkish"),
+        }
+    }
+}
+
+impl clap::ValueEnum for Language {
+    fn value_variants<'a>() -> &'a [Self] {
+        &[
+            Self::English,
+            #[cfg(feature = "lang-turkish")]
+            Self::Turkish,
+        ]
+    }
+
+    fn to_possible_value(&self) -> Option<PossibleValue> {
+        Some(match self {
+            Self::English => PossibleValue::new("english"),
+            #[cfg(feature = "lang-turkish")]
+            Self::Turkish => PossibleValue::new("turkish"),
         })
     }
 }
