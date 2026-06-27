@@ -24,7 +24,7 @@ pub struct Cli {
     pub language: Language,
 
     /// Use the built-in word lists with small, medium, or large words
-    #[arg(long, value_name = "LIST", default_value_t = WordList::Medium)]
+    #[arg(long, value_name = "LIST", default_value_t)]
     pub lists: WordList,
 
     // For compatibility with upstream.
@@ -73,9 +73,10 @@ pub struct Cli {
     pub seed: Option<u64>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
 pub enum WordList {
     Small,
+    #[default]
     Medium,
     Large,
 }
