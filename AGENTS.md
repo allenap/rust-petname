@@ -31,6 +31,10 @@ Run tests with `cargo hack --feature-powerset test` to cover all feature combina
 
 Run `scripts/doc` (optionally with `--open`) to build the API docs the way docs.rs does: nightly rustdoc, `--all-features`, and `--cfg docsrs` so that `doc_cfg` labels each gated item with the feature that enables it. It needs the nightly toolchain (`rustup toolchain install nightly`). This is also the build under which the intra-doc links to feature-gated items (e.g. `lang::turkish`) resolve – a plain `cargo doc` (default features) will warn about those, which is expected.
 
+## SemVer
+
+Run `scripts/semver-checks` to verify the public API against the version published on crates.io (needs `cargo install cargo-semver-checks`). CI runs the same check. A failure is prescriptive, not a blocker to suppress: it reports the bump a change requires. For an intentional breaking change, bump `version` in `[workspace.package]` to the next major (e.g. `3.x` → `4.0.0`) – the check then passes, because the major bump is what SemVer requires to accompany the break. A `-alpha`/`-beta` prerelease is **not** needed to make the check pass; that's only for publishing a preview to crates.io ahead of the final release. Bump the major once at the start of a breaking cycle: every later breaking change is then free against the `3.0.0` baseline until `4.0.0` is published, after which the baseline becomes `4.0.0`.
+
 ## Writing style
 
 When writing or editing Markdown intended for **GitHub** (PR descriptions, issue bodies, README prose):
