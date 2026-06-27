@@ -5,7 +5,7 @@ members = ["petname-macros"]
 authors = ["Gavin Panella <gavin@allenap.me>"]
 edition = "2021"
 license = "Apache-2.0"
-version = "3.0.0"
+version = "3.0.1"
 repository = "https://github.com/allenap/rust-petname"
 
 [package]
