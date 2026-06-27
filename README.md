@@ -339,9 +339,9 @@ $ cargo fmt
 1. Bump version in [`Cargo.toml`](Cargo.toml).
 1. Update the dependency on `petnames-macros` too.
 1. Paste updated `-h` output into [`README.md`](README.md) (this file; see near
-   the top). On macOS the command `cargo run -- -h | pbcopy` is helpful.
-   **Note** that `--help` output is not the same as `-h` output: it's more
-   verbose and too much for an overview.
+   the top). On macOS the command `cargo run --all-features -- -h | pbcopy` is
+   helpful. **Note** that `--help` output is not the same as `-h` output: it's
+   more verbose and too much for an overview.
 1. Build **and** test all crates in the workspace. Testing on its own does build
    code, but a test build can hide warnings about dead code, so do both. To test
    feature combinations, install [cargo-hack][] first, then:
