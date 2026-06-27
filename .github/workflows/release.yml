@@ -21,7 +21,7 @@ jobs:
     name: Build macOS ARM
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.tag || github.sha }}
       - uses: dtolnay/rust-toolchain@stable
@@ -39,7 +39,7 @@ jobs:
     name: Build macOS Intel
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.tag || github.sha }}
       - uses: dtolnay/rust-toolchain@stable
@@ -57,7 +57,7 @@ jobs:
     name: Build Linux x86_64
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.tag || github.sha }}
       - uses: dtolnay/rust-toolchain@stable
@@ -75,7 +75,7 @@ jobs:
     name: Build Linux aarch64
     runs-on: ubuntu-22.04-arm
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.tag || github.sha }}
       - uses: dtolnay/rust-toolchain@stable
