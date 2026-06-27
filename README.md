@@ -24,7 +24,8 @@ too.
 Notable features:
 
 - Choose from 3 built-in word lists, or provide your own.
-- A `petnames!` macro to statically embed word lists at compile-time.
+- `english!` (aliased as `petnames!`) and `turkish!` (with feature
+  `lang-turkish`) macros to statically embed word lists at compile-time.
 - Alliterative names, like _viable-vulture_, _proper-pony_, ...
 - Build names with 1-255 components (adjectives, adverbs, nouns).
 - Name components can be unseparated, or joined by any character or string.
@@ -62,6 +63,7 @@ Usage: petname [OPTIONS]
 Options:
   -w, --words <WORDS>             Number of words in name [default: 2]
   -s, --separator <SEP>           Separator between words [default: -]
+      --language <LANG>           Language to generate names in [default: english] [aliases: --lang] [possible values: english, turkish]
       --lists <LIST>              Use the built-in word lists with small, medium, or large words [default: medium] [possible values: small, medium, large]
   -c, --complexity <NUM>          Alias for compatibility with upstream; prefer --lists instead
   -d, --dir <DIR>                 Use custom word lists by specifying a directory containing `adjectives.txt`, `adverbs.txt`, and `nouns.txt`
@@ -83,6 +85,30 @@ unified-platypus
 $ petname -s _ -w 3
 lovely_notable_rooster
 ```
+
+### Languages
+
+Beyond the default English word lists, rust-petname can generate names in other
+languages with their own grammar-aware generators. These are gated behind
+per-language features (so the default build stays small) and selected with
+`--language`.
+
+Turkish is available via the `lang-turkish` feature. It is grammatically simple
+for this purpose – no gender, no adjective agreement, adjective-before-noun
+order – and it models Turkish's distinctive emphatic reduplication
+(_pekiştirme_), so a two-word name may intensify the adjective morphologically:
+
+```console
+$ petname --language turkish --words 2
+kıpkırmızı-kedi
+
+$ petname --language turkish --words 3
+çok-güzel-yıldız
+```
+
+More languages (Luxembourgish, French, German, …) are planned. Each is a
+distinct generator, so languages with grammatical gender, agreement, or
+word-order rules can be modelled properly rather than approximated.
 
 ### Performance
 
@@ -151,8 +177,8 @@ You can use rust-petname in your own Rust projects with `cargo add petname`.
 
 ## Features & `no_std` support
 
-There are a few features that can be selected – or, more correctly,
-_deselected_, since all features are enabled by default:
+There are features that can be selected, and many than can be _deselected_
+(since they're enabled by default):
 
 - `default-rng` enables `std` and `std_rng` in [rand][]. A couple of convenience
   functions depend on this for a default RNG.
@@ -163,10 +189,14 @@ _deselected_, since all features are enabled by default:
   - **NOTE** that `clap` is **not** necessary for the library at all, and you
     can deselect it, but it is presently a default feature since otherwise it's
     inconvenient to build the binary. This will probably change in the future.
-- `macros` enables the `petnames!` macro. It's required for the `default-words`
-  feature, but otherwise it can be deselected.
+- `macros` enables the `english!` macro (and its `petnames!` alias). It's
+  required for the `default-words` feature, but otherwise it can be deselected.
+- `lang-turkish` (not a default) compiles the Turkish generator and enables
+  `--language turkish`. Like the English lists, the built-in Turkish word lists
+  are embedded only when `default-words` is also enabled. See
+  [Languages](#languages).
 
-All of these are required to build the command-line utility.
+All of the default features are required to build the command-line utility.
 
 The library can be built without any default features, and it will work in a
 [`no_std`][no_std] environment, like [Wasm][]. You'll need to figure out a
