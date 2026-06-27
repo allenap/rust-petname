@@ -45,6 +45,17 @@ If you have [installed Cargo][install-cargo], you can install rust-petname with
 `cargo install petname`. This puts a `petname` binary in `~/.cargo/bin`, which
 the Cargo installation process will probably have added to your `PATH`.
 
+> **🍺 [Homebrew][homebrew]** – You can instead install it from the
+> [`allenap/utils`][allenap-utils] tap. The formula is named `rust-petname` and
+> provides the same `petname` command:
+>
+> ```shellsession
+> $ brew install allenap/utils/rust-petname
+> ```
+
+[homebrew]: https://brew.sh/
+[allenap-utils]: https://github.com/allenap/homebrew-utils
+
 The `petname` binary from rust-petname is _mostly_ drop-in compatible with the
 original `petname`. It has more options and it's stricter when validating
 arguments, but for most uses it should behave the same[^differences].
