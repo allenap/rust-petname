@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+#
+# Build the API docs exactly the way docs.rs does: nightly rustdoc, with every
+# feature enabled, and `--cfg docsrs` set so that `doc_cfg` (see the inner
+# attribute in `src/lib.rs`) labels each feature-gated item with the feature
+# that enables it.
+#
+# Requires the nightly toolchain:
+#
+#     rustup toolchain install nightly
+#
+# Any extra arguments are passed through to `cargo doc`, e.g.:
+#
+#     scripts/doc --open
+#
+
+exec env RUSTDOCFLAGS="--cfg docsrs" \
+    cargo +nightly doc --workspace --no-deps --all-features "$@"
+
+# End.

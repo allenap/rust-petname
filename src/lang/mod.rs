@@ -11,5 +11,7 @@
 //! commonality emerges (for example between Germanic languages) it can be
 //! factored out later.
 
+pub mod english;
+
 #[cfg(feature = "lang-turkish")]
 pub mod turkish;

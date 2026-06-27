@@ -44,22 +44,23 @@ impl<'a> Adjective<'a> {
     }
 }
 
-/// Word lists and the logic to combine them into Turkish petnames.
+/// Word lists and the logic to combine them into Turkish _petnames_.
 ///
 /// A petname with `n` words contains, in order:
 ///
 ///   * `n - 2` intensifier adverbs when `n >= 2`, otherwise 0.
 ///   * 1 adjective when `n >= 2`, otherwise 0.
 ///   * 1 noun when `n >= 1`, otherwise 0.
+///
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Turkish<'a> {
+pub struct Petnames<'a> {
     pub adjectives: Cow<'a, [Adjective<'a>]>,
     /// Intensifiers such as `çok` ("very") and `oldukça` ("quite").
     pub adverbs: Cow<'a, [&'a str]>,
     pub nouns: Cow<'a, [&'a str]>,
 }
 
-impl<'a> Turkish<'a> {
+impl<'a> Petnames<'a> {
     /// Constructs a new Turkish generator from the built-in word lists.
     #[cfg(feature = "default-words")]
     pub fn small() -> Self {
@@ -101,7 +102,7 @@ impl<'a> Turkish<'a> {
     }
 }
 
-impl Generator for Turkish<'_> {
+impl Generator for Petnames<'_> {
     fn generate_into(&self, buf: &mut String, rng: &mut dyn rand::Rng, words: u8, separator: &str) {
         // Emphatic (reduplicated) adjectives are themselves a token meaning
         // "very X", so only reach for them when there are no separate adverb
@@ -142,10 +143,10 @@ mod tests {
     use alloc::borrow::Cow;
     use alloc::vec;
 
-    use super::{Adjective, Turkish};
+    use super::{Adjective, Petnames};
 
-    fn sample() -> Turkish<'static> {
-        Turkish {
+    fn sample() -> Petnames<'static> {
+        Petnames {
             adjectives: Cow::Owned(vec![
                 Adjective::emphatic("kırmızı", "kıpkırmızı"),
                 Adjective::plain("güzel"),
@@ -158,7 +159,7 @@ mod tests {
     // Generation needs a seedable RNG, which `StdRng` provides only when
     // `default-rng` is enabled.
     #[cfg(feature = "default-rng")]
-    fn generate(turkish: &Turkish, words: u8, seed: u64) -> alloc::vec::Vec<alloc::string::String> {
+    fn generate(turkish: &Petnames, words: u8, seed: u64) -> alloc::vec::Vec<alloc::string::String> {
         use rand::SeedableRng;
         let namer = turkish.namer(words, "-");
         let mut rng = rand::rngs::StdRng::seed_from_u64(seed);
@@ -212,7 +213,7 @@ mod tests {
     #[cfg(feature = "default-words")]
     #[test]
     fn small_parses_emphatic_and_strips_comments() {
-        let turkish = Turkish::small();
+        let turkish = Petnames::small();
         // An annotated adjective keeps its emphatic form...
         assert!(turkish.adjectives.contains(&Adjective::emphatic("kırmızı", "kıpkırmızı")));
         // ...and a plain one has none.

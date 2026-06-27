@@ -60,9 +60,19 @@ rand = { version = "0.10", default-features = false }
 pkg-fmt = "bin"
 
 [package.metadata.docs.rs]
+# Build with every feature so that gated items (e.g. the Turkish generator) are
+# documented, and set `--cfg docsrs` so that `doc_cfg` (see `src/lib.rs`) labels
+# each with the feature that enables it.
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
 # Limit docs.rs builds to a single tier one target, because they're identical on
 # all. https://blog.rust-lang.org/2020/03/15/docs-rs-opt-into-fewer-targets.html
 targets = ["x86_64-unknown-linux-gnu"]
+
+# `docsrs` is a custom cfg set only by the docs.rs build (and local doc builds
+# that opt in); declare it so that the `unexpected_cfgs` lint stays quiet.
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(docsrs)'] }
 
 # Follow some of the advice from https://github.com/johnthagen/min-sized-rust on
 # how to minimise the compiled (release build) binary size. At the time of

@@ -1,7 +1,11 @@
 #![no_std]
+// On docs.rs (and local doc builds that pass `--cfg docsrs`), label each
+// feature-gated item with the feature that enables it. Nightly-only, hence
+// gated behind `docsrs` so ordinary stable builds ignore it.
+#![cfg_attr(docsrs, feature(doc_cfg))]
 //!
-//! [`petname()`] will generate a single name with a default random number
-//! generator:
+//! [`petname()`] will generate a single (English) name with a default random
+//! number generator:
 //!
 //! ```rust
 //! # #[cfg(all(feature = "default-rng", feature = "default-words"))]
@@ -40,19 +44,22 @@
 //!
 //! # Word lists
 //!
-//! You can populate [`Petnames`] with your own word lists at runtime, but the
-//! word lists from upstream [petname][] are included with the `default-words`
-//! feature (which is enabled by default). See [`Petnames::small`],
-//! [`Petnames::medium`], and [`Petnames::large`] to select a particular
-//! built-in word list, or use [`Petnames::default`].
+//! You can populate a petname generator with your own word lists at runtime,
+//! but word lists are included with the `default-words` feature (which is
+//! enabled by default). For example, see [`lang::english::Petnames::small`]
+//! (and `medium` and `large`) or [`lang::turkish::Petnames::small`] to select a
+//! particular built-in word list – or check out the generators' [`Default`]
+//! implementations.
 //!
 //! ## Embedding your own word lists
 //!
-//! The [`petnames!`] macro will statically embed your own word lists at
-//! compile-time. This is available with the `macros` feature (enabled by
-//! default). This same mechanism is used to embed the default word lists.
+//! The [`english!`] macro – aliased as [`petnames!`] – will statically embed
+//! your own word lists at compile-time. These are available with the `macros`
+//! feature (enabled by default). This same mechanism is used to embed the
+//! default word lists.
 //!
-//! [petname]: https://github.com/dustinkirkland/petname
+//! A [`turkish!`] macro is also available when the `lang-turkish` feature is
+//! enabled.
 //!
 //! ## Basic filtering
 //!
@@ -61,7 +68,7 @@
 //!
 //! ```rust
 //! # #[cfg(feature = "default-words")] {
-//! let mut petnames = petname::Petnames::default();
+//! let mut petnames = petname::lang::english::Petnames::default();
 //! petnames.retain(|s| s.starts_with("b"));
 //! # #[cfg(feature = "default-rng")] {
 //! let name = petnames.namer(3, ".").iter(&mut rand::rng()).next().expect("no names");
@@ -78,7 +85,7 @@
 //!
 //! ```rust
 //! # #[cfg(feature = "default-words")] {
-//! let mut petnames = petname::Petnames::default();
+//! let mut petnames = petname::lang::english::Petnames::default();
 //! let mut alliterations: petname::Alliterations = petnames.into();
 //! # #[cfg(feature = "default-rng")]
 //! alliterations.namer(3, "/").iter(&mut rand::rng()).next().expect("no names");
@@ -112,9 +119,10 @@ extern crate self as petname;
 
 use alloc::{borrow::Cow, collections::BTreeMap, string::String, vec::Vec};
 
-use rand::seq::{IndexedRandom, IteratorRandom};
+use rand::seq::IteratorRandom;
 
-/// Convenience function to generate a new petname from default word lists.
+/// Convenience function to generate a new (English) petname from default word
+/// lists.
 #[allow(dead_code)]
 #[cfg(all(feature = "default-rng", feature = "default-words"))]
 pub fn petname(words: u8, separator: &str) -> Option<String> {
@@ -124,14 +132,21 @@ pub fn petname(words: u8, separator: &str) -> Option<String> {
 /// A word list.
 pub type Words<'a> = Cow<'a, [&'a str]>;
 
-// Re-export proc macros.
+// Re-export the `petnames!` macro – which is just an alias for [`english!`].
 #[cfg(feature = "macros")]
 pub use petname_macros::petnames;
+
+// Re-export language-specific proc macros.
 #[cfg(feature = "macros")]
+pub use petname_macros::english;
+#[cfg(all(feature = "macros", feature = "lang-turkish"))]
 pub use petname_macros::turkish;
 
-/// Language-specific petname generators.
+// Language-specific petname generators.
 pub mod lang;
+
+/// Re-export [`lang::english::Petnames`] as the default.
+pub use crate::lang::english::Petnames;
 
 /// Trait that defines a generator of petnames, as consumed by [`Namer`].
 ///
@@ -250,145 +265,6 @@ impl<'a, G: Generator + ?Sized> Namer<'a, G> {
             self.generate_into(&mut buf, rng);
             (!buf.is_empty()).then_some(buf)
         })
-    }
-}
-
-/// Word lists and the logic to combine them into _petnames_.
-///
-/// A _petname_ with `n` words will contain, in order:
-///
-///   * `n - 2` adverbs when `n >= 2`, otherwise 0 adverbs.
-///   * 1 adjective when `n >= 2`, otherwise 0 adjectives.
-///   * 1 noun when `n >= 1`, otherwise 0 nouns.
-///
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Petnames<'a> {
-    pub adjectives: Words<'a>,
-    pub adverbs: Words<'a>,
-    pub nouns: Words<'a>,
-}
-
-impl<'a> Petnames<'a> {
-    /// Constructs a new `Petnames` from the small word lists.
-    #[cfg(feature = "default-words")]
-    pub fn small() -> Self {
-        petnames!("words/small")
-    }
-
-    /// Constructs a new `Petnames` from the medium word lists.
-    #[cfg(feature = "default-words")]
-    pub fn medium() -> Self {
-        petnames!("words/medium")
-    }
-
-    /// Constructs a new `Petnames` from the large word lists.
-    #[cfg(feature = "default-words")]
-    pub fn large() -> Self {
-        petnames!("words/large")
-    }
-
-    /// Constructs a new `Petnames` from the given word lists.
-    ///
-    /// The words are extracted from the given strings by splitting on whitespace.
-    pub fn new(adjectives: &'a str, adverbs: &'a str, nouns: &'a str) -> Self {
-        Self {
-            adjectives: Cow::Owned(adjectives.split_whitespace().collect()),
-            adverbs: Cow::Owned(adverbs.split_whitespace().collect()),
-            nouns: Cow::Owned(nouns.split_whitespace().collect()),
-        }
-    }
-
-    /// Keep words matching a predicate.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// # #[cfg(feature = "default-words")] {
-    /// let mut petnames = petname::Petnames::default();
-    /// petnames.retain(|s| s.starts_with("h"));
-    /// # #[cfg(feature = "default-rng")]
-    /// assert!(petnames.namer(2, ".").iter(&mut rand::rng()).next().unwrap().starts_with('h'));
-    /// # }
-    /// ```
-    ///
-    /// This is a convenience wrapper that applies the same predicate to the
-    /// adjectives, adverbs, and nouns lists.
-    ///
-    pub fn retain<F>(&mut self, mut predicate: F)
-    where
-        F: FnMut(&str) -> bool,
-    {
-        self.adjectives.to_mut().retain(|word| predicate(word));
-        self.adverbs.to_mut().retain(|word| predicate(word));
-        self.nouns.to_mut().retain(|word| predicate(word));
-    }
-
-    /// Calculate the cardinality of this `Petnames`.
-    ///
-    /// If this is low, names may be repeated by the generator with a higher
-    /// frequency than your use-case may allow.
-    ///
-    /// This can saturate. If the total possible combinations of words exceeds
-    /// `u128::MAX` then this will return `u128::MAX`.
-    pub fn cardinality(&self, words: u8) -> u128 {
-        Lists::new(words)
-            .map(|list| match list {
-                List::Adverb => self.adverbs.len() as u128,
-                List::Adjective => self.adjectives.len() as u128,
-                List::Noun => self.nouns.len() as u128,
-            })
-            .reduce(u128::saturating_mul)
-            .unwrap_or(0u128)
-    }
-
-    /// Create a [`Namer`] that generates petnames from these word lists.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// # #[cfg(all(feature = "default-rng", feature = "default-words"))]
-    /// let name = petname::Petnames::default()
-    ///     .namer(3, "-")
-    ///     .iter(&mut rand::rng())
-    ///     .next()
-    ///     .expect("no names");
-    /// ```
-    pub fn namer<'b>(&'b self, words: u8, separator: &'b str) -> Namer<'b, Self> {
-        Namer { generator: self, words, separator }
-    }
-}
-
-impl Generator for Petnames<'_> {
-    fn generate_into(&self, buf: &mut String, rng: &mut dyn rand::Rng, words: u8, separator: &str) {
-        for list in Lists::new(words) {
-            match list {
-                List::Adverb => {
-                    if let Some(word) = self.adverbs.choose(rng).copied() {
-                        buf.push_str(word);
-                        buf.push_str(separator);
-                    }
-                }
-                List::Adjective => {
-                    if let Some(word) = self.adjectives.choose(rng).copied() {
-                        buf.push_str(word);
-                        buf.push_str(separator);
-                    }
-                }
-                List::Noun => {
-                    if let Some(word) = self.nouns.choose(rng).copied() {
-                        buf.push_str(word);
-                    }
-                }
-            };
-        }
-    }
-}
-
-#[cfg(feature = "default-words")]
-impl Default for Petnames<'_> {
-    /// Constructs a new [`Petnames`] from the default (medium) word lists.
-    fn default() -> Self {
-        Self::medium()
     }
 }
 

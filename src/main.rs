@@ -84,14 +84,26 @@ where
     let count = if cli.stream { None } else { Some(cli.count) };
 
     // Non-English languages use their own generators.
-    #[cfg(feature = "lang-turkish")]
-    if cli.language == cli::Language::Turkish {
-        return run_turkish(&cli, writer, &mut rng, count);
+    match cli.language {
+        cli::Language::English => run_english(&cli, writer, &mut rng, count),
+        #[cfg(feature = "lang-turkish")]
+        cli::Language::Turkish => run_turkish(&cli, writer, &mut rng, count),
     }
+}
 
+fn run_english<OUT, RNG>(
+    cli: &Cli,
+    writer: &mut OUT,
+    rng: &mut RNG,
+    count: Option<usize>,
+) -> Result<(), Error>
+where
+    OUT: io::Write,
+    RNG: rand::Rng,
+{
     // Load custom word lists, if specified.
     let words = match cli.directory {
-        Some(dirname) => Words::load(dirname)?,
+        Some(ref dirname) => Words::load(dirname)?,
         None => Words::Builtin,
     };
 
@@ -123,7 +135,7 @@ where
         if alliterations.cardinality(cli.words) == 0 {
             return Err(Error::Alliteration("word lists have no initial letters in common".to_string()));
         }
-        printer(writer, &alliterations.namer(cli.words, &cli.separator), &mut rng, count)
+        printer(writer, &alliterations.namer(cli.words, &cli.separator), rng, count)
     } else if let Some(alliterate_with) = cli.alliterate_with {
         let mut alliterations: Alliterations = petnames.into();
         alliterations.retain(|first_letter, group| {
@@ -134,13 +146,13 @@ where
                 "no petnames begin with the chosen alliteration character".to_string(),
             ));
         }
-        printer(writer, &alliterations.namer(cli.words, &cli.separator), &mut rng, count)
+        printer(writer, &alliterations.namer(cli.words, &cli.separator), rng, count)
     } else {
-        printer(writer, &petnames.namer(cli.words, &cli.separator), &mut rng, count)
+        printer(writer, &petnames.namer(cli.words, &cli.separator), rng, count)
     }
 }
 
-/// Generate Turkish names using the [`petname::lang::Turkish`] generator.
+/// Generate Turkish names using the [`petname::lang::turkish::Petnames`] generator.
 #[cfg(feature = "lang-turkish")]
 fn run_turkish<OUT, RNG>(
     cli: &Cli,
@@ -159,7 +171,7 @@ where
         return Err(Error::Unsupported("alliteration is not supported with --language turkish".to_string()));
     }
 
-    let mut turkish = petname::lang::turkish::Turkish::small();
+    let mut turkish = petname::lang::turkish::Petnames::small();
 
     // If requested, limit the number of letters. Count characters, not bytes,
     // since Turkish words contain multi-byte code points.
