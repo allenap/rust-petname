@@ -222,6 +222,16 @@ be a good starting point.
 
 ## Upgrading
 
+### <a id="upgrading-from-30x"></a>From 3.0.0 to 3.0.1
+
+3.0.1 is purely additive – nothing is required to upgrade, and the default build
+is unchanged. It adds non-English generators (see [Languages](#languages)). The
+new `--language` flag (alias `--lang`) selects the language; the `lang-turkish`
+feature compiles a Turkish generator and makes `--language turkish` available.
+The word-list macro is now `english!`, with `petnames!` kept as a
+backwards-compatible alias, and a `turkish!` macro is available when the
+`lang-turkish` feature is enabled.
+
 ### <a id="upgrading-from-2x"></a>From 2.x to 3.x
 
 Version 3.0 brings a few breaking changes to the API, but the command-line is
