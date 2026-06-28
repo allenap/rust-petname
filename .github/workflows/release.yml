@@ -28,7 +28,7 @@ jobs:
         with:
           targets: aarch64-apple-darwin
       - uses: Swatinem/rust-cache@v2
-      - run: cargo build --release --target aarch64-apple-darwin
+      - run: cargo build --release --all-features --target aarch64-apple-darwin
       - uses: actions/upload-artifact@v7
         with:
           name: aarch64-apple-darwin
@@ -46,7 +46,7 @@ jobs:
         with:
           targets: x86_64-apple-darwin
       - uses: Swatinem/rust-cache@v2
-      - run: cargo build --release --target x86_64-apple-darwin
+      - run: cargo build --release --all-features --target x86_64-apple-darwin
       - uses: actions/upload-artifact@v7
         with:
           name: x86_64-apple-darwin
@@ -64,7 +64,7 @@ jobs:
         with:
           targets: x86_64-unknown-linux-musl
       - uses: Swatinem/rust-cache@v2
-      - run: cargo build --release --target x86_64-unknown-linux-musl
+      - run: cargo build --release --all-features --target x86_64-unknown-linux-musl
       - uses: actions/upload-artifact@v7
         with:
           name: linux-x86_64
@@ -82,7 +82,7 @@ jobs:
         with:
           targets: aarch64-unknown-linux-musl
       - uses: Swatinem/rust-cache@v2
-      - run: cargo build --release --target aarch64-unknown-linux-musl
+      - run: cargo build --release --all-features --target aarch64-unknown-linux-musl
       - uses: actions/upload-artifact@v7
         with:
           name: linux-aarch64
