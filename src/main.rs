@@ -10,7 +10,7 @@ use std::io;
 use std::path;
 use std::process;
 
-use clap::Parser;
+use clap::{CommandFactory, Parser};
 use rand::SeedableRng;
 
 fn main() {
@@ -69,6 +69,21 @@ impl From<io::Error> for Error {
 }
 
 fn run<OUT>(cli: Cli, writer: &mut OUT) -> Result<(), Error>
+where
+    OUT: io::Write,
+{
+    // Subcommands are additive; handle them before the default path.
+    match cli.command {
+        Some(cli::Command::Completions { shell }) => {
+            let mut command = Cli::command();
+            clap_complete::generate(shell, &mut command, "petname", writer);
+            Ok(())
+        }
+        None => run_default(cli, writer),
+    }
+}
+
+fn run_default<OUT>(cli: Cli, writer: &mut OUT) -> Result<(), Error>
 where
     OUT: io::Write,
 {

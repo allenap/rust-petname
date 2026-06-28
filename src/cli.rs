@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use clap::{builder::PossibleValue, Parser};
+use clap::{builder::PossibleValue, Parser, Subcommand, ValueHint};
 
 /// Generate human readable random names.
 #[derive(Parser)]
@@ -12,11 +12,11 @@ use clap::{builder::PossibleValue, Parser};
 )]
 pub struct Cli {
     /// Number of words in name
-    #[arg(short, long, value_name = "WORDS", default_value_t = 2)]
+    #[arg(short, long, value_name = "WORDS", default_value_t = 2, value_hint = ValueHint::Other)]
     pub words: u8,
 
     /// Separator between words
-    #[arg(short, long, value_name = "SEP", default_value = "-")]
+    #[arg(short, long, value_name = "SEP", default_value = "-", value_hint = ValueHint::Other)]
     pub separator: String,
 
     /// Language to generate names in
@@ -34,11 +34,11 @@ pub struct Cli {
 
     /// Use custom word lists by specifying a directory containing
     /// `adjectives.txt`, `adverbs.txt`, and `nouns.txt`
-    #[arg(short, long = "dir", value_name = "DIR", conflicts_with = "lists")]
+    #[arg(short, long = "dir", value_name = "DIR", conflicts_with = "lists", value_hint = ValueHint::DirPath)]
     pub directory: Option<PathBuf>,
 
     /// Generate multiple names; or use --stream to generate continuously
-    #[arg(long, value_name = "COUNT", default_value_t = 1)]
+    #[arg(long, value_name = "COUNT", default_value_t = 1, value_hint = ValueHint::Other)]
     pub count: usize,
 
     /// Stream names continuously
@@ -46,7 +46,7 @@ pub struct Cli {
     pub stream: bool,
 
     /// Maximum number of letters in each word; 0 for unlimited
-    #[arg(short, long, value_name = "LETTERS", default_value_t = 0)]
+    #[arg(short, long, value_name = "LETTERS", default_value_t = 0, value_hint = ValueHint::Other)]
     pub letters: usize,
 
     /// Generate names where each word begins with the same letter
@@ -54,7 +54,7 @@ pub struct Cli {
     pub alliterate: bool,
 
     /// Generate names where each word begins with the given letter
-    #[arg(short = 'A', long, value_name = "LETTER")]
+    #[arg(short = 'A', long, value_name = "LETTER", value_hint = ValueHint::Other)]
     pub alliterate_with: Option<char>,
 
     // For compatibility with upstream.
@@ -69,8 +69,23 @@ pub struct Cli {
     /// emitted is not guaranteed across versions of rust-petname because the
     /// underlying random number generator in use explicitly does not make that
     /// guarantee.
-    #[arg(long, value_name = "SEED")]
+    #[arg(long, value_name = "SEED", value_hint = ValueHint::Other)]
     pub seed: Option<u64>,
+
+    #[command(subcommand)]
+    pub command: Option<Command>,
+}
+
+/// Subcommands. These are additive: with no subcommand, `petname` generates
+/// names exactly as before.
+#[derive(Subcommand)]
+pub enum Command {
+    /// Print a shell completion script to standard output
+    Completions {
+        /// The shell to generate a completion script for
+        #[arg(value_name = "SHELL")]
+        shell: clap_complete::Shell,
+    },
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
