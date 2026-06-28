@@ -69,7 +69,11 @@ arguments, but for most uses it should behave the same[^differences].
 $ petname -h
 Generate human readable random names
 
-Usage: petname [OPTIONS]
+Usage: petname [OPTIONS] [COMMAND]
+
+Commands:
+  completions  Print a shell completion script to standard output
+  help         Print this message or the help of the given subcommand(s)
 
 Options:
   -w, --words <WORDS>             Number of words in name [default: 2]

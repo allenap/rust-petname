@@ -5,7 +5,7 @@ members = ["petname-macros"]
 authors = ["Gavin Panella <gavin@allenap.me>"]
 edition = "2021"
 license = "Apache-2.0"
-version = "3.0.1"
+version = "3.1.0"
 repository = "https://github.com/allenap/rust-petname"
 
 [package]
@@ -55,7 +55,7 @@ rand_core = "0.10"
 tempfile = "3"
 
 [dependencies]
-petname-macros = { version = "3.0.0", path = "petname-macros", optional = true }
+petname-macros = { version = "3.1.0", path = "petname-macros", optional = true }
 clap = { version = "4", features = ["cargo", "derive"], optional = true }
 clap_complete = { version = "4", optional = true }
 rand = { version = "0.10", default-features = false }
