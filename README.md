@@ -121,6 +121,21 @@ More languages (Luxembourgish, French, German, …) are planned. Each is a
 distinct generator, so languages with grammatical gender, agreement, or
 word-order rules can be modelled properly rather than approximated.
 
+### Shell completions
+
+`petname completions <SHELL>` prints a completion script to standard output, for
+`bash`, `zsh`, `fish`, `elvish`, or `powershell`. Redirect it to the location
+your shell loads completions from, for example:
+
+```shellsession
+$ petname completions zsh > ~/.zfunc/_petname
+$ petname completions bash > /etc/bash_completion.d/petname
+$ petname completions fish > ~/.config/fish/completions/petname.fish
+```
+
+This is an ordinary subcommand, so `petname` on its own still generates names as
+usual. If you installed via Homebrew, the completions are set up for you.
+
 ### Performance
 
 This implementation is considerably faster than the upstream `petname`:

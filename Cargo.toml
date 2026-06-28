@@ -35,6 +35,9 @@ required-features = ["clap", "default-rng", "default-words"]
 # binary. Omitting it from the `default` list means that it must be specified
 # _every time_ you want to build the binary, so it's here as a convenience.
 default = ["clap", "default-rng", "default-words", "macros"]
+# The `clap` feature also pulls in `clap_complete` for the `completions`
+# subcommand. Both are command-line-only; the library needs neither.
+clap = ["dep:clap", "dep:clap_complete"]
 # Allows generating petnames with thread rng.
 default-rng = ["rand/thread_rng"]
 # Allows the default word lists to be used.
@@ -54,6 +57,7 @@ tempfile = "3"
 [dependencies]
 petname-macros = { version = "3.0.0", path = "petname-macros", optional = true }
 clap = { version = "4", features = ["cargo", "derive"], optional = true }
+clap_complete = { version = "4", optional = true }
 rand = { version = "0.10", default-features = false }
 
 [package.metadata.binstall]
