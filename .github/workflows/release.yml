@@ -120,7 +120,7 @@ jobs:
           mv -v linux-x86_64/petname petname-x86_64-unknown-linux-musl
           mv -v linux-aarch64/petname petname-aarch64-unknown-linux-musl
           find .
-      - uses: softprops/action-gh-release@v3
+      - uses: softprops/action-gh-release@v3.0.1
         with:
           tag_name: ${{ inputs.tag || github.ref_name }}
           files: |
