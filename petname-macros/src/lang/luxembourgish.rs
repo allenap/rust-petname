@@ -1,83 +1,23 @@
 use proc_macro::TokenStream;
-use std::{
-    collections::HashMap,
-    path::{Path, PathBuf},
-};
+use std::{collections::HashMap, path::Path};
 
-use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
 
 use crate::{
-    input::PetnamesInput,
-    paths::PetnamesPaths,
+    lang::{embed, resolve, WordList},
     text::{read_and_process, word_tokens},
 };
 
 /// See [`luxembourgish!`][`crate::luxembourgish!`] for documentation.
-pub fn expand(input: TokenStream) -> TokenStream {
-    let input: PetnamesInput = syn::parse(input).expect("luxembourgish! parse error");
-
-    let manifest_dir = std::env::var_os("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
-    let manifest_path = PathBuf::from(&manifest_dir);
-    let paths = PetnamesPaths::from(input).resolve(&manifest_path);
-
-    let (adjectives, adj_count) = read_and_process_adjectives(&paths.adjectives);
-    let (adv_words, adv_count) = read_and_process(&paths.adverbs);
-    let (nouns, noun_count) = read_and_process_nouns(&paths.nouns);
-
-    fn path_str<'a>(path: &'a Path, name: &'static str) -> &'a str {
-        path.to_str().unwrap_or_else(|| panic!("{name} path not UTF-8: {}", path.display()))
-    }
-
-    let adj_path = path_str(&paths.adjectives, "adjectives");
-    let adv_path = path_str(&paths.adverbs, "adverbs");
-    let noun_path = path_str(&paths.nouns, "nouns");
-
-    let adj_items: Vec<TokenStream2> = adjectives
-        .iter()
-        .map(|(masculine, feminine, neuter)| {
-            quote! {
-                ::petname::lang::luxembourgish::Adjective {
-                    masculine: #masculine,
-                    feminine: #feminine,
-                    neuter: #neuter,
-                }
-            }
-        })
-        .collect();
-
-    let noun_items: Vec<TokenStream2> = nouns
-        .iter()
-        .map(|(word, gender)| {
-            let gender = match gender {
-                Gender::Masculine => quote! { ::petname::lang::luxembourgish::Gender::Masculine },
-                Gender::Feminine => quote! { ::petname::lang::luxembourgish::Gender::Feminine },
-                Gender::Neuter => quote! { ::petname::lang::luxembourgish::Gender::Neuter },
-            };
-            quote! { ::petname::lang::luxembourgish::Noun { word: #word, gender: #gender } }
-        })
-        .collect();
-
-    let expanded: TokenStream2 = quote! {
-        {
-            // See the note in `petnames!` about `include_str!` being used purely
-            // to register these files as rebuild dependencies.
-            const _: &'static str = include_str!(#adj_path);
-            const _: &'static str = include_str!(#adv_path);
-            const _: &'static str = include_str!(#noun_path);
-            // This is where the word lists are actually embedded.
-            static ADJECTIVES: [::petname::lang::luxembourgish::Adjective<'static>; #adj_count] = [ #( #adj_items ),* ];
-            static ADVERBS: [&'static str; #adv_count] = [ #( #adv_words ),* ];
-            static NOUNS: [::petname::lang::luxembourgish::Noun<'static>; #noun_count] = [ #( #noun_items ),* ];
-            ::petname::lang::luxembourgish::Petnames {
-                adjectives: ::alloc::borrow::Cow::Borrowed(&ADJECTIVES[..]),
-                adverbs: ::alloc::borrow::Cow::Borrowed(&ADVERBS[..]),
-                nouns: ::alloc::borrow::Cow::Borrowed(&NOUNS[..]),
-            }
-        }
-    };
-
-    expanded.into()
+pub fn expand(input: TokenStream, macro_name: &str) -> TokenStream {
+    let paths = resolve(input, macro_name);
+    embed(
+        "luxembourgish",
+        &paths,
+        read_and_process_adjectives(&paths.adjectives),
+        WordList::strings(read_and_process(&paths.adverbs)),
+        read_and_process_nouns(&paths.nouns),
+    )
 }
 
 /// Gender as parsed from the nouns file.
@@ -94,7 +34,7 @@ enum Gender {
 /// A repeated adjective is dropped, but a repeat that *disagrees* about the
 /// other forms is an error rather than a silent coin-toss: these lists are meant
 /// to be edited by hand, and a contradiction in them is a mistake worth naming.
-fn read_and_process_adjectives(path: &Path) -> (Vec<(String, String, String)>, usize) {
+fn read_and_process_adjectives(path: &Path) -> WordList {
     let contents =
         std::fs::read_to_string(path).unwrap_or_else(|e| panic!("could not read {}: {e}", path.display()));
     let mut seen: HashMap<String, (String, String)> = HashMap::new();
@@ -123,14 +63,28 @@ fn read_and_process_adjectives(path: &Path) -> (Vec<(String, String, String)>, u
         }
     }
     adjectives.sort_by(|a, b| a.1.cmp(&b.1));
-    let count = adjectives.len();
-    (adjectives, count)
+
+    WordList::values(
+        quote! { ::petname::lang::luxembourgish::Adjective<'static> },
+        adjectives
+            .iter()
+            .map(|(masculine, feminine, neuter)| {
+                quote! {
+                    ::petname::lang::luxembourgish::Adjective {
+                        masculine: #masculine,
+                        feminine: #feminine,
+                        neuter: #neuter,
+                    }
+                }
+            })
+            .collect(),
+    )
 }
 
 /// Read nouns, each a `word:gender` token (gender one of `m`, `f`, `n`),
 /// deduplicated by word and sorted. As with the adjectives, a repeat that
 /// disagrees – here about the gender – is an error.
-fn read_and_process_nouns(path: &Path) -> (Vec<(String, Gender)>, usize) {
+fn read_and_process_nouns(path: &Path) -> WordList {
     let contents =
         std::fs::read_to_string(path).unwrap_or_else(|e| panic!("could not read {}: {e}", path.display()));
     let mut seen: HashMap<String, Gender> = HashMap::new();
@@ -163,6 +117,19 @@ fn read_and_process_nouns(path: &Path) -> (Vec<(String, Gender)>, usize) {
         }
     }
     nouns.sort_by(|a, b| a.0.cmp(&b.0));
-    let count = nouns.len();
-    (nouns, count)
+
+    WordList::values(
+        quote! { ::petname::lang::luxembourgish::Noun<'static> },
+        nouns
+            .iter()
+            .map(|(word, gender)| {
+                let gender = match gender {
+                    Gender::Masculine => quote! { ::petname::lang::luxembourgish::Gender::Masculine },
+                    Gender::Feminine => quote! { ::petname::lang::luxembourgish::Gender::Feminine },
+                    Gender::Neuter => quote! { ::petname::lang::luxembourgish::Gender::Neuter },
+                };
+                quote! { ::petname::lang::luxembourgish::Noun { word: #word, gender: #gender } }
+            })
+            .collect(),
+    )
 }
