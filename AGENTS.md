@@ -45,3 +45,5 @@ When writing or editing Markdown intended for **GitHub** (PR descriptions, issue
 - Use ` – ` (space + en-dash + space) rather than ` — ` (space + em-dash + space).
 
 Terminal output and code comments may still be wrapped at ~100 chars.
+
+Git commit messages go the other way: **fill** the body to 80 columns – what `M-q` does in Emacs, i.e. a greedy fill in which each line takes as many words as fit, rather than a cautious wrap that stops well short – and keep the subject line short, imperative, and without a trailing full stop. So fill the commit message, but leave the PR description that explains it unwrapped.
