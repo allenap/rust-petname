@@ -4,6 +4,15 @@
 //! gender and join-time sandhi, which is why the [`Generator`] trait hands the
 //! model the whole buffer.
 //!
+//! <div class="warning">
+//!
+//! The built-in word lists behind [`Petnames::small`] are a best-effort seed
+//! authored by a non-native speaker, awaiting a native-speaker pass – the noun
+//! genders in particular. The rules below are sound; it is the data that may
+//! not be. Corrections are very welcome.
+//!
+//! </div>
+//!
 //! Two features set it apart from English and Turkish:
 //!
 //!   * **Gender agreement.** Every [`Noun`] is masculine, feminine, or neuter,
