@@ -1,12 +1,10 @@
 use std::collections::HashSet;
 use std::path::Path;
 
-pub fn read_and_process(path: &Path) -> (Vec<String>, usize) {
+pub fn read_and_process(path: &Path) -> Vec<String> {
     let contents =
         std::fs::read_to_string(path).unwrap_or_else(|e| panic!("could not read {}: {e}", path.display()));
-    let words = split_words_deduplicate_and_sort(&contents);
-    let count = words.len();
-    (words, count)
+    split_words_deduplicate_and_sort(&contents)
 }
 
 fn split_words_deduplicate_and_sort(input: &str) -> Vec<String> {

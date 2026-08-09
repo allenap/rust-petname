@@ -62,7 +62,7 @@ mod text;
 ///
 #[proc_macro]
 pub fn english(input: TokenStream) -> TokenStream {
-    crate::lang::english::expand(input)
+    crate::lang::english::expand(input, "english")
 }
 
 /// Construct a Turkish petname generator from word list files at compile time.
@@ -77,7 +77,7 @@ pub fn english(input: TokenStream) -> TokenStream {
 /// ```
 #[proc_macro]
 pub fn turkish(input: TokenStream) -> TokenStream {
-    crate::lang::turkish::expand(input)
+    crate::lang::turkish::expand(input, "turkish")
 }
 
 /// Construct a Luxembourgish petname generator from word list files at compile
@@ -94,11 +94,11 @@ pub fn turkish(input: TokenStream) -> TokenStream {
 /// ```
 #[proc_macro]
 pub fn luxembourgish(input: TokenStream) -> TokenStream {
-    crate::lang::luxembourgish::expand(input)
+    crate::lang::luxembourgish::expand(input, "luxembourgish")
 }
 
 /// Alias for [`english!`].
 #[proc_macro]
 pub fn petnames(input: TokenStream) -> TokenStream {
-    crate::lang::english::expand(input)
+    crate::lang::english::expand(input, "petnames")
 }
