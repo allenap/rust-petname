@@ -42,7 +42,7 @@ enum Error {
     Randomness(String),
     Cardinality(String),
     Alliteration(String),
-    #[cfg(feature = "lang-turkish")]
+    #[cfg(any(feature = "lang-turkish", feature = "lang-luxembourgish"))]
     Unsupported(String),
     Disconnected,
 }
@@ -55,7 +55,7 @@ impl fmt::Display for Error {
             Error::Randomness(ref message) => write!(f, "no source of randomness: {message}"),
             Error::Cardinality(ref message) => write!(f, "cardinality is zero: {message}"),
             Error::Alliteration(ref message) => write!(f, "cannot alliterate: {message}"),
-            #[cfg(feature = "lang-turkish")]
+            #[cfg(any(feature = "lang-turkish", feature = "lang-luxembourgish"))]
             Error::Unsupported(ref message) => write!(f, "unsupported: {message}"),
             Error::Disconnected => write!(f, "caller disconnected / stopped reading"),
         }
@@ -101,6 +101,8 @@ where
     // Non-English languages use their own generators.
     match cli.language {
         cli::Language::English => run_english(&cli, writer, &mut rng, count),
+        #[cfg(feature = "lang-luxembourgish")]
+        cli::Language::Luxembourgish => run_luxembourgish(&cli, writer, &mut rng, count),
         #[cfg(feature = "lang-turkish")]
         cli::Language::Turkish => run_turkish(&cli, writer, &mut rng, count),
     }
@@ -200,6 +202,43 @@ where
     }
 
     printer(writer, &turkish.namer(cli.words, &cli.separator), rng, count)
+}
+
+/// Generate Luxembourgish names using the [`petname::lang::luxembourgish::Petnames`] generator.
+#[cfg(feature = "lang-luxembourgish")]
+fn run_luxembourgish<OUT, RNG>(
+    cli: &Cli,
+    writer: &mut OUT,
+    rng: &mut RNG,
+    count: Option<usize>,
+) -> Result<(), Error>
+where
+    OUT: io::Write,
+    RNG: rand::Rng,
+{
+    if cli.directory.is_some() {
+        return Err(Error::Unsupported("--dir is not supported with --language luxembourgish".to_string()));
+    }
+    if cli.alliterate || cli.ubuntu || cli.alliterate_with.is_some() {
+        return Err(Error::Unsupported(
+            "alliteration is not supported with --language luxembourgish".to_string(),
+        ));
+    }
+
+    let mut luxembourgish = petname::lang::luxembourgish::Petnames::small();
+
+    // If requested, limit the number of letters. Count characters, not bytes,
+    // since Luxembourgish words contain multi-byte code points.
+    if cli.letters != 0 {
+        luxembourgish.retain(|s| s.chars().count() <= cli.letters);
+    }
+
+    // Check cardinality.
+    if luxembourgish.cardinality(cli.words) == 0 {
+        return Err(Error::Cardinality("no petnames to choose from; try relaxing constraints".to_string()));
+    }
+
+    printer(writer, &luxembourgish.namer(cli.words, &cli.separator), rng, count)
 }
 
 fn printer<OUT, GEN, RNG>(
@@ -420,6 +459,21 @@ mod integration {
     #[test]
     fn turkish_rejects_alliteration() {
         let cli = super::Cli::parse_from(["petname", "--language=turkish", "--alliterate"]);
+        let mut out = Vec::new();
+        assert!(super::run(cli, &mut out).is_err());
+    }
+
+    #[cfg(feature = "lang-luxembourgish")]
+    #[test]
+    fn option_language_luxembourgish() {
+        let cli = super::Cli::parse_from(["petname", "--language=luxembourgish", "--words=3"]);
+        assert_eq!(run_and_capture(cli).split('-').count(), 3);
+    }
+
+    #[cfg(feature = "lang-luxembourgish")]
+    #[test]
+    fn luxembourgish_rejects_alliteration() {
+        let cli = super::Cli::parse_from(["petname", "--language=luxembourgish", "--alliterate"]);
         let mut out = Vec::new();
         assert!(super::run(cli, &mut out).is_err());
     }

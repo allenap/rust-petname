@@ -130,6 +130,8 @@ impl clap::ValueEnum for WordList {
 pub enum Language {
     #[default]
     English,
+    #[cfg(feature = "lang-luxembourgish")]
+    Luxembourgish,
     #[cfg(feature = "lang-turkish")]
     Turkish,
 }
@@ -138,6 +140,8 @@ impl std::fmt::Display for Language {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::English => write!(f, "english"),
+            #[cfg(feature = "lang-luxembourgish")]
+            Self::Luxembourgish => write!(f, "luxembourgish"),
             #[cfg(feature = "lang-turkish")]
             Self::Turkish => write!(f, "turkish"),
         }
@@ -148,6 +152,8 @@ impl clap::ValueEnum for Language {
     fn value_variants<'a>() -> &'a [Self] {
         &[
             Self::English,
+            #[cfg(feature = "lang-luxembourgish")]
+            Self::Luxembourgish,
             #[cfg(feature = "lang-turkish")]
             Self::Turkish,
         ]
@@ -156,6 +162,8 @@ impl clap::ValueEnum for Language {
     fn to_possible_value(&self) -> Option<PossibleValue> {
         Some(match self {
             Self::English => PossibleValue::new("english"),
+            #[cfg(feature = "lang-luxembourgish")]
+            Self::Luxembourgish => PossibleValue::new("luxembourgish"),
             #[cfg(feature = "lang-turkish")]
             Self::Turkish => PossibleValue::new("turkish"),
         })

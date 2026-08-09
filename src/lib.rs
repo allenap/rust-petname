@@ -58,8 +58,8 @@
 //! feature (enabled by default). This same mechanism is used to embed the
 //! default word lists.
 //!
-//! A [`turkish!`] macro is also available when the `lang-turkish` feature is
-//! enabled.
+//! A [`turkish!`] macro is available when the `lang-turkish` feature is enabled,
+//! and a [`luxembourgish!`] macro when the `lang-luxembourgish` feature is.
 //!
 //! ## Basic filtering
 //!
@@ -139,6 +139,8 @@ pub use petname_macros::petnames;
 // Re-export language-specific proc macros.
 #[cfg(feature = "macros")]
 pub use petname_macros::english;
+#[cfg(all(feature = "macros", feature = "lang-luxembourgish"))]
+pub use petname_macros::luxembourgish;
 #[cfg(all(feature = "macros", feature = "lang-turkish"))]
 pub use petname_macros::turkish;
 

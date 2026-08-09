@@ -48,6 +48,10 @@ macros = ["dep:petname-macros"]
 # Turkish word lists (`Turkish::small`) are embedded only when `default-words` is
 # also enabled, just like the English lists.
 lang-turkish = []
+# Compiles the Luxembourgish generator and enables `--language luxembourgish`.
+# The built-in word lists embed only when `default-words` is also enabled, just
+# like the English and Turkish lists.
+lang-luxembourgish = []
 
 [dev-dependencies]
 anyhow = "1"

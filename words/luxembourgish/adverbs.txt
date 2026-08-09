@@ -1,0 +1,30 @@
+# Luxembourgish intensifier adverbs for petname generation.
+#
+# These precede the adjective in longer names ("ganz-groussen-hond"). One token
+# per line, whitespace-delimited, lower case. `#` begins a comment.
+#
+# ⚠️  SEED LIST — best-effort, native-speaker review welcome.
+
+ganz
+richteg
+wierklech
+immens
+zimlech
+besonnesch
+onheemlech
+ausseruerdentlech
+iwwerdriwwen
+komplett
+total
+absolut
+enorm
+erstaunlech
+ausgesprochen
+relativ
+staark
+déif
+héich
+voll
+super
+mega
+esou

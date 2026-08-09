@@ -80,6 +80,23 @@ pub fn turkish(input: TokenStream) -> TokenStream {
     crate::lang::turkish::expand(input)
 }
 
+/// Construct a Luxembourgish petname generator from word list files at compile
+/// time.
+///
+/// Like [`english!`], but for `petname::lang::luxembourgish::Petnames`. Each
+/// adjective token carries its three gender-inflected forms separated by `:`,
+/// e.g. `groussen:grouss:grousst` (masculine:feminine:neuter). Each noun token
+/// carries its gender, e.g. `kaz:f` (one of `m`, `f`, `n`). The adverbs file is
+/// plain whitespace-delimited words.
+///
+/// ```ignore
+/// let l = petname::luxembourgish!("words/luxembourgish");
+/// ```
+#[proc_macro]
+pub fn luxembourgish(input: TokenStream) -> TokenStream {
+    crate::lang::luxembourgish::expand(input)
+}
+
 /// Alias for [`english!`].
 #[proc_macro]
 pub fn petnames(input: TokenStream) -> TokenStream {
