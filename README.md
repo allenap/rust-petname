@@ -138,6 +138,11 @@ $ petname --language luxembourgish --words 3
 ganz-schéint-haus
 ```
 
+⚠️ The built-in Luxembourgish word lists are a best-effort seed authored by a
+non-native speaker, and are awaiting a native-speaker pass – the noun genders in
+particular. The generator's rules are sound; it is the data that may not be.
+Corrections to [`words/luxembourgish/`](words/luxembourgish/) are very welcome.
+
 More languages (French, German, …) are planned. Each is a distinct generator, so
 languages with grammatical gender, agreement, or word-order rules can be
 modelled properly rather than approximated.
