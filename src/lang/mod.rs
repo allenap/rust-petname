@@ -13,5 +13,8 @@
 
 pub mod english;
 
+#[cfg(feature = "lang-luxembourgish")]
+pub mod luxembourgish;
+
 #[cfg(feature = "lang-turkish")]
 pub mod turkish;

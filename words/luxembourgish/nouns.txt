@@ -1,0 +1,117 @@
+# Luxembourgish nouns for petname generation.
+#
+# One noun per line as `word:gender`, gender one of `m` (masculine), `f`
+# (feminine), `n` (neuter) — the gender an attributive adjective agrees with.
+# Concrete, evocative nouns (animals, nature, food, treasures, objects) in the
+# spirit of the English/Turkish lists. `#` begins a comment.
+#
+# Stored lower case for consistency with the other languages and all-lowercase
+# petname identifiers, even though Luxembourgish capitalises nouns in writing.
+#
+# ⚠️  SEED LIST — best-effort, authored by a non-native speaker. Genders in
+# particular need native-speaker review; correct and extend freely.
+
+# --- Animals ---
+hond:m
+mupp:m
+kaz:f
+päerd:n
+kou:f
+schwäin:n
+schof:n
+geess:f
+vugel:m
+fësch:m
+maus:f
+ratt:f
+bei:f
+spann:f
+päiperlek:m
+fuuss:m
+wollef:m
+bier:m
+léiw:m
+af:m
+hues:m
+igel:m
+kaweechelchen:n
+frosch:m
+schlaang:f
+eil:f
+int:f
+gäns:f
+ochs:m
+hir:n
+réi:n
+mëtsch:f
+
+# --- Nature ---
+bam:m
+blumm:f
+bësch:m
+bierg:m
+floss:m
+séi:m
+mier:n
+wollek:f
+reen:m
+schnéi:m
+wand:m
+sonn:f
+mound:m
+stär:m
+himmel:m
+äerd:f
+steen:m
+fiels:m
+blat:n
+wuerzel:f
+gras:n
+wiss:f
+feld:n
+bléi:f
+donner:m
+blëtz:m
+näwel:m
+äis:n
+feier:n
+liicht:n
+
+# --- Food & drink ---
+brout:n
+kéis:m
+apel:m
+bir:f
+kiischt:f
+noss:f
+zocker:m
+salz:n
+waasser:n
+wäin:m
+béier:n
+mëllech:f
+hunneg:m
+zopp:f
+kuch:m
+
+# --- Treasures & objects ---
+gold:n
+sëlwer:n
+kroun:f
+schwäert:n
+schëff:n
+buch:n
+haus:n
+bréck:f
+duerf:n
+strooss:f
+dier:f
+fënster:f
+luucht:f
+schlëssel:m
+auer:f
+rad:n
+boot:n
+seel:n
+fändel:m
+glas:n

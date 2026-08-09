@@ -1,0 +1,99 @@
+# Luxembourgish adjectives for petname generation.
+#
+# One adjective per line as three colon-separated, gender-inflected forms in the
+# articleless strong nominative:
+#
+#     masculine:feminine:neuter
+#
+# e.g. `groussen:grouss:grousst`. The feminine is the bare lemma; the masculine
+# adds -en (with sandhi: rout->rouden, déif->déiwen, héich->héijen) and the
+# neuter adds -t, except after a stem-final -t or -d, where nothing is added
+# (gutt:gutt, breet:breet, midd:midd). The generator drops a final -n/-nn at a
+# join per the Eifeler Regel, so only these citation forms are stored.
+#
+# A unit test (`small_adjectives_are_regularly_formed`) checks that the masculine
+# ends in -n and that the neuter follows the rule above, so a slip here fails the
+# build rather than showing up in generated names. Real exceptions can be listed
+# in that test.
+#
+# Lines beginning with `#`, and anything after a `#` on a line, are ignored.
+#
+# ⚠️  SEED LIST — best-effort, authored by a non-native speaker. Native-speaker
+# review of forms and genders is needed; correct and extend freely.
+
+# --- Size & shape ---
+groussen:grouss:grousst
+klengen:kleng:klengt
+laangen:laang:laangt
+kuerzen:kuerz:kuerzt
+breeden:breet:breet
+enken:enk:enkt
+décken:déck:déckt
+dënnen:dënn:dënnt
+héijen:héich:héicht
+déiwen:déif:déift
+ronnen:ronn:ronnt
+flaachen:flaach:flaacht
+
+# --- Colours ---
+rouden:rout:rout
+bloen:blo:blot
+gréngen:gréng:gréngt
+gielen:giel:gielt
+schwaarzen:schwaarz:schwaarzt
+wäissen:wäiss:wäisst
+groen:gro:grot
+brongen:brong:brongt
+rosaen:rosa:rosat
+
+# --- Age & condition ---
+alen:al:alt
+jonken:jonk:jonkt
+neien:nei:neit
+frëschen:frësch:frëscht
+propperen:propper:proppert
+knaschtegen:knaschteg:knaschtegt
+glatten:glat:glat
+rauen:rau:raut
+
+# --- Temperature & weather ---
+waarmen:waarm:waarmt
+kalen:kal:kalt
+hellen:hell:hellt
+däischteren:däischter:däischtert
+
+# --- Strength & speed ---
+staarken:staark:staarkt
+schwaachen:schwaach:schwaacht
+séieren:séier:séiert
+luesen:lues:luest
+schwéieren:schwéier:schwéiert
+liichten:liicht:liicht
+
+# --- Taste ---
+séissen:séiss:séisst
+saueren:sauer:sauert
+batteren:batter:battert
+salzegen:salzeg:salzegt
+
+# --- Character & mood ---
+gudden:gutt:gutt
+schlechten:schlecht:schlecht
+schéinen:schéin:schéint
+léiwen:léif:léift
+béisen:béis:béist
+frëndlechen:frëndlech:frëndlecht
+frouen:frou:frout
+trauregen:traureg:trauregt
+roueggen:roueg:rouegt
+monteren:monter:montert
+wëllen:wëll:wëllt
+zammen:zam:zamt
+schlauen:schlau:schlaut
+dommen:domm:dommt
+frechen:frech:frecht
+houfregen:houfreg:houfregt
+flotten:flott:flott
+midden:midd:midd
+mutegen:muteg:mutegt
+scheien:schei:scheit

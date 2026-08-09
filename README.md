@@ -24,8 +24,9 @@ too.
 Notable features:
 
 - Choose from 3 built-in word lists, or provide your own.
-- `english!` (aliased as `petnames!`) and `turkish!` (with feature
-  `lang-turkish`) macros to statically embed word lists at compile-time.
+- `english!` (aliased as `petnames!`), `turkish!`, and `luxembourgish!` macros
+  (the latter two with the `lang-turkish` and `lang-luxembourgish` features) to
+  statically embed word lists at compile-time.
 - Alliterative names, like _viable-vulture_, _proper-pony_, ...
 - Build names with 1-255 components (adjectives, adverbs, nouns).
 - Name components can be unseparated, or joined by any character or string.
@@ -78,7 +79,7 @@ Commands:
 Options:
   -w, --words <WORDS>             Number of words in name [default: 2]
   -s, --separator <SEP>           Separator between words [default: -]
-      --language <LANG>           Language to generate names in [default: english] [aliases: --lang] [possible values: english, turkish]
+      --language <LANG>           Language to generate names in [default: english] [aliases: --lang] [possible values: english, luxembourgish, turkish]
       --lists <LIST>              Use the built-in word lists with small, medium, or large words [default: medium] [possible values: small, medium, large]
   -c, --complexity <NUM>          Alias for compatibility with upstream; prefer --lists instead
   -d, --dir <DIR>                 Use custom word lists by specifying a directory containing `adjectives.txt`, `adverbs.txt`, and `nouns.txt`
@@ -121,9 +122,25 @@ $ petname --language turkish --words 3
 çok-güzel-yıldız
 ```
 
-More languages (Luxembourgish, French, German, …) are planned. Each is a
-distinct generator, so languages with grammatical gender, agreement, or
-word-order rules can be modelled properly rather than approximated.
+Luxembourgish is available via the `lang-luxembourgish` feature. It has
+grammatical gender, so the adjective agrees with the noun (masculine _-en_,
+feminine bare, neuter _-t_), and it applies the Eifeler Regel – a final _-n_ or
+_-nn_ drops before most consonants but is kept before _n, d, t, z, h_ and vowels
+– at the join between words:
+
+```console
+$ petname --language luxembourgish --words 2
+grousse-mupp     # masculine: groussen + mupp, -n elided
+groussen-hond    # masculine: -n kept before h
+grouss-kaz       # feminine: bare form
+
+$ petname --language luxembourgish --words 3
+ganz-schéint-haus
+```
+
+More languages (French, German, …) are planned. Each is a distinct generator, so
+languages with grammatical gender, agreement, or word-order rules can be
+modelled properly rather than approximated.
 
 ### Shell completions
 
@@ -224,6 +241,9 @@ There are features that can be selected, and many than can be _deselected_
 - `lang-turkish` (not a default) compiles the Turkish generator and enables
   `--language turkish`. Like the English lists, the built-in Turkish word lists
   are embedded only when `default-words` is also enabled. See
+  [Languages](#languages).
+- `lang-luxembourgish` (not a default) compiles the Luxembourgish generator and
+  enables `--language luxembourgish`, on the same terms as `lang-turkish`. See
   [Languages](#languages).
 
 All of the default features are required to build the command-line utility.
