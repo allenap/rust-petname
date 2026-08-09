@@ -19,6 +19,20 @@ edition.workspace = true
 license.workspace = true
 repository.workspace = true
 version.workspace = true
+# Development scaffolding that no consumer of the published crate needs. This is
+# a deny-list rather than an `include` allow-list on purpose: getting it wrong
+# here ships a few stray files, whereas getting an allow-list wrong silently
+# drops a `words/` directory and breaks every downstream build. `cargo package
+# --workspace --all-features` guards against that; see "Making a release".
+exclude = [
+    ".git-blame-ignore-revs",
+    ".github/",
+    ".gitignore",
+    ".rustfmt.toml",
+    ".vscode/",
+    "AGENTS.md",
+    "scripts/",
+]
 
 [lib]
 name = "petname"

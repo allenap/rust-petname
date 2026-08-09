@@ -59,3 +59,19 @@ jobs:
       - uses: obi1kenobi/cargo-semver-checks-action@6b69fcf40e9b5fb17adeb57e4b6ecd020649a239 # v2.9
         with:
           feature-group: all-features
+
+  package:
+    name: Package # checks the published archive is complete, i.e. that it builds.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@stable
+      # `cargo package` packs each crate, unpacks it again, and builds *that*, so
+      # this fails if a file the build needs never made it into the archive. The
+      # files in question are the word lists, which the macros read from disk at
+      # compile time and which nothing else would notice the absence of.
+      #
+      # `--all-features` is what makes it worth running: the default features
+      # only reach `words/{small,medium,large}`, so a default-feature package
+      # step would happily ship without `words/turkish` or `words/luxembourgish`.
+      - run: cargo package --workspace --all-features

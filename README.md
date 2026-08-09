@@ -394,7 +394,16 @@ $ cargo fmt
    feature combinations, install [cargo-hack][] first, then:
    - `cargo hack --workspace --feature-powerset build`
    - `cargo hack --workspace --feature-powerset test`
-1. Commit with message "Bump version to `$VERSION`."
+1. Check that the crate that would be published is complete:
+   `cargo package --workspace --all-features`. This packs each crate, unpacks it
+   again, and builds _that_, so it fails if anything the build needs is missing
+   from the archive — in practice the `words/` lists, which the macros read from
+   disk at compile time. **Note** that `--all-features` is what gives this teeth:
+   the default features only reach `words/{small,medium,large}`, so without it a
+   missing `words/turkish` or `words/luxembourgish` would sail through. CI runs
+   the same check.
+1. Commit with message "Bump version to `$VERSION`", e.g. "Bump version to
+   3.2.0".
 1. Tag with "v`$VERSION`", e.g. `git tag v1.0.10`.
 1. Push: `git push && git push --tags`.
 1. Publish: `cargo publish --workspace`.
