@@ -70,12 +70,20 @@ impl<'a> Petnames<'a> {
     /// Keep words matching a predicate.
     ///
     /// This is a convenience wrapper that applies the same predicate to the
-    /// adjectives (by their base form), adverbs, and nouns lists.
+    /// adjectives (by their base form), adverbs, and nouns lists. An emphatic
+    /// form that fails the predicate is dropped on its own, leaving the base
+    /// form in play – so a limit on word length, say, holds for the generated
+    /// name and not merely for the base form.
     pub fn retain<F>(&mut self, mut predicate: F)
     where
         F: FnMut(&str) -> bool,
     {
-        self.adjectives.to_mut().retain(|adjective| predicate(adjective.word));
+        self.adjectives.to_mut().retain_mut(|adjective| {
+            if adjective.emphatic.is_some_and(|emphatic| !predicate(emphatic)) {
+                adjective.emphatic = None;
+            }
+            predicate(adjective.word)
+        });
         self.adverbs.to_mut().retain(|word| predicate(word));
         self.nouns.to_mut().retain(|word| predicate(word));
     }
@@ -234,5 +242,14 @@ mod tests {
         assert!(turkish.adverbs.iter().all(|word| word.chars().count() <= 5));
         assert!(turkish.nouns.iter().all(|word| word.chars().count() <= 5));
         assert_eq!(turkish.adverbs.len(), 1); // only "çok" remains.
+    }
+
+    #[test]
+    fn retain_drops_an_over_long_emphatic_but_keeps_its_base() {
+        let mut turkish = sample();
+        turkish.retain(|word| word.chars().count() <= 7);
+        // "kırmızı" (7) stays, but its emphatic "kıpkırmızı" (10) – which would
+        // otherwise be emitted in a two-word name – does not.
+        assert!(turkish.adjectives.contains(&Adjective::plain("kırmızı")));
     }
 }
