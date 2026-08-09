@@ -58,6 +58,15 @@
 //! feature (enabled by default). This same mechanism is used to embed the
 //! default word lists.
 //!
+//! ```rust
+//! # #[cfg(feature = "macros")] {
+//! // Paths are resolved relative to the `Cargo.toml` of the crate being
+//! // compiled, and default to `adjectives.txt`, `adverbs.txt`, and `nouns.txt`
+//! // within the given directory.
+//! let petnames = petname::petnames!("words/small");
+//! # }
+//! ```
+//!
 //! A [`turkish!`] macro is available when the `lang-turkish` feature is enabled,
 //! and a [`luxembourgish!`] macro when the `lang-luxembourgish` feature is.
 //!

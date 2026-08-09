@@ -28,6 +28,8 @@ Non-English languages live in `src/lang/` – each is a **distinct type** implem
 
 Run tests with `cargo hack --feature-powerset test` to cover all feature combinations. CI uses `cargo hack` for this purpose.
 
+Anything the word-list macros expand to has to resolve in the _calling_ crate, which is a trap because `petname`'s own use of them sits inside a crate with `extern crate alloc` and `extern crate self as petname` already in scope – so an expansion can work in-tree and fail for everyone else. `tests/macros.rs` and the `petnames!` doctest in `src/lib.rs` both compile as separate crates and exist to catch that.
+
 ## Docs
 
 Run `scripts/doc` (optionally with `--open`) to build the API docs the way docs.rs does: nightly rustdoc, `--all-features`, and `--cfg docsrs` so that `doc_cfg` labels each gated item with the feature that enables it. It needs the nightly toolchain (`rustup toolchain install nightly`). This is also the build under which the intra-doc links to feature-gated items (e.g. `lang::turkish`) resolve – a plain `cargo doc` (default features) will warn about those, which is expected.

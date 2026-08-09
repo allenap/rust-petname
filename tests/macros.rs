@@ -3,13 +3,12 @@
 //! The built-in lists all use the single-directory form, so without these the
 //! named-argument half of the macros' documented interface – and the input
 //! parser that backs it – is never exercised.
+//!
+//! Being an integration test, this also compiles as a crate of its own, which
+//! is the only way to catch an expansion that happens to resolve inside
+//! `petname` but nowhere else.
 
 #![cfg(all(feature = "macros", feature = "default-words"))]
-
-// The macros expand to `::alloc::borrow::Cow::Borrowed(…)`, so every crate that
-// uses them must have `alloc` in its extern prelude. `petname` itself does, so
-// the built-in lists compile; nothing outside it does by default.
-extern crate alloc;
 
 use petname::Petnames;
 
