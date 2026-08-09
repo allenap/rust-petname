@@ -34,7 +34,6 @@ exclude = [
     "/.github/",
     "/.gitignore",
     "/.rustfmt.toml",
-    "/.vscode/",
     "/AGENTS.md",
     "/scripts/",
 ]
