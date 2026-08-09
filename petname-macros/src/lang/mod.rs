@@ -81,10 +81,15 @@ pub(crate) fn embed(
             static ADJECTIVES: [#adj_element; #adj_count] = [ #( #adj_items ),* ];
             static ADVERBS: [#adv_element; #adv_count] = [ #( #adv_items ),* ];
             static NOUNS: [#noun_element; #noun_count] = [ #( #noun_items ),* ];
+            // Each field is a `Cow`, but naming it would mean naming `alloc`,
+            // which is only in the extern prelude of crates that declare it –
+            // `petname` does, so the built-in lists compiled, but nothing
+            // outside it does. `From` reaches the same `Cow::Borrowed` through
+            // the known field type, and needs nothing in scope.
             ::petname::lang::#lang::Petnames {
-                adjectives: ::alloc::borrow::Cow::Borrowed(&ADJECTIVES[..]),
-                adverbs: ::alloc::borrow::Cow::Borrowed(&ADVERBS[..]),
-                nouns: ::alloc::borrow::Cow::Borrowed(&NOUNS[..]),
+                adjectives: ::core::convert::From::from(&ADJECTIVES[..]),
+                adverbs: ::core::convert::From::from(&ADVERBS[..]),
+                nouns: ::core::convert::From::from(&NOUNS[..]),
             }
         }
     };

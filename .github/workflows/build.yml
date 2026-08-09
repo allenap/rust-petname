@@ -1,5 +1,10 @@
 name: rust-petname CI
 
+# Third-party actions are pinned to a commit hash, with the version they
+# correspond to in a trailing comment; Dependabot updates both. The exception is
+# `dtolnay/rust-toolchain`, where the ref is not a version but the toolchain to
+# install – `@stable` and `@nightly` are branches that are meant to move.
+
 on:
   push:
   schedule:
@@ -10,7 +15,7 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo install cargo-hack
       - run: cargo hack --workspace --feature-powerset build
@@ -20,7 +25,7 @@ jobs:
     name: Rustfmt
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
@@ -30,7 +35,7 @@ jobs:
     name: Clippy # i.e. `cargo check` plus extra linting.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
@@ -40,7 +45,7 @@ jobs:
     name: Docs # docs.rs-equivalent build (see `scripts/doc`); fails on warnings.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: dtolnay/rust-toolchain@nightly
       - run: cargo doc --no-deps --all-features
         env:
@@ -50,7 +55,7 @@ jobs:
     name: SemVer # checks the public API bump is adequate (see `scripts/semver-checks`).
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: obi1kenobi/cargo-semver-checks-action@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: obi1kenobi/cargo-semver-checks-action@6b69fcf40e9b5fb17adeb57e4b6ecd020649a239 # v2.9
         with:
           feature-group: all-features
