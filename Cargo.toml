@@ -24,14 +24,19 @@ version.workspace = true
 # here ships a few stray files, whereas getting an allow-list wrong silently
 # drops a `words/` directory and breaks every downstream build. `cargo package
 # --workspace --all-features` guards against that; see "Making a release".
+#
+# These are gitignore-style patterns, so each is anchored with a leading `/`:
+# every one of these is scaffolding that belongs at the root of the crate, and
+# unanchored they would read as `**/…` and quietly take a nested `words/scripts`
+# or the like with them.
 exclude = [
-    ".git-blame-ignore-revs",
-    ".github/",
-    ".gitignore",
-    ".rustfmt.toml",
-    ".vscode/",
-    "AGENTS.md",
-    "scripts/",
+    "/.git-blame-ignore-revs",
+    "/.github/",
+    "/.gitignore",
+    "/.rustfmt.toml",
+    "/.vscode/",
+    "/AGENTS.md",
+    "/scripts/",
 ]
 
 [lib]
