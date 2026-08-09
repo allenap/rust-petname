@@ -79,7 +79,7 @@ Commands:
 Options:
   -w, --words <WORDS>             Number of words in name [default: 2]
   -s, --separator <SEP>           Separator between words [default: -]
-      --language <LANG>           Language to generate names in [default: english] [aliases: --lang] [possible values: english, luxembourgish, turkish]
+      --language <LANG>           Language to generate names in [default: english] [alias: --lang] [possible values: english, luxembourgish, turkish]
       --lists <LIST>              Use the built-in word lists with small, medium, or large words [default: medium] [possible values: small, medium, large]
   -c, --complexity <NUM>          Alias for compatibility with upstream; prefer --lists instead
   -d, --dir <DIR>                 Use custom word lists by specifying a directory containing `adjectives.txt`, `adverbs.txt`, and `nouns.txt`
